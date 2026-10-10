@@ -11,7 +11,7 @@ Suche in ganzen Sätzen („Oma und Anna Weihnachten 2019 am Strand“), tippe d
 - 🔌 **Geräte koppeln sich selbst:** Adresse am Fernseher öffnen, in der App erscheint er, Namen eingeben. Keine Codes, keine Konfigurationsdateien, alles steht in der Oberfläche.
 - 👨‍👩‍👧 **Für Familien gemacht:** gemeinsame PIN oder das eigene Immich-Konto jeder Person, Notizen und Grüße mit Foto, Gäste-Upload per QR-Code für Feste, Termine aus dem Handy-Kalender.
 - 🛡 **Sicher gebaut:** Es kann nie ein Foto löschen.
-- 🍎 Eine iPhone-App (jetzt über TestFlight, bald im App Store); unter Android läuft die Web-Oberfläche.
+- 📱 **Funktioniert schon heute auf jedem Handy** über die Web-Oberfläche (zum Home-Bildschirm hinzufügen). Eine eigene **iPhone-App folgt später**.
 
 *Ehrliche Grenzen:* ein junges Ein-Mann-Projekt; der Fernseher braucht einen halbwegs aktuellen Browser; Docker ist nötig.
 
@@ -82,7 +82,7 @@ Weitere Wege:
 - **Anderer Port:** `./install.sh --port 80` (dann genügt am Fernseher die reine IP-Adresse).
 - **Per Hand** (ohne Skript): `cp .env.example .env`, `docker compose up -d`, `docker compose logs showcase` zeigt den Einrichtungs-Code, dann `http://<server>:8090/setup/` öffnen. Lieber ohne Assistent? `RAHMEN_IMMICH_URL` und `RAHMEN_IMMICH_KEY` in die `.env` eintragen; Werte aus der `.env` haben immer Vorrang.
 - **NAS und Heimserver mit Oberfläche:** Fertige Anleitungen für **Synology** (Container Manager), **Unraid** (Vorlage), **TrueNAS** und **Portainer** liegen in `examples/`.
-- Auf dem iPhone ohne App: Teilen → „Zum Home-Bildschirm“. Mit App (die iPhone-App kommt bald in den App Store, bis dahin über TestFlight): sie **findet den Server im WLAN selbst**.
+- Auf dem iPhone ohne App: Teilen → „Zum Home-Bildschirm“. Mit der iPhone-App (folgt später): sie **findet den Server im WLAN selbst**.
 
 ## Was kann als Bilderrahmen dienen?
 Jedes Gerät mit einem **Webbrowser**, das eine Adresse öffnen kann. **Ein Kiosk-Modus oder Zusatz-Apps wie Fully Kiosk sind nicht nötig** – der Browser genügt. Die Seite bittet den Browser, den Bildschirm wach zu halten; wo das nicht klappt, stellst du die Auto-Sperre des Geräts auf „Nie“. Ein Kiosk-Modus (Vollbild, nichts anderes erreichbar) ist nur ein Komfort, den du bei Bedarf dazunehmen kannst.
