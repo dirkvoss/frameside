@@ -231,6 +231,7 @@ The interface and the sentence search work in **German, English, Spanish, French
 
 ## Security
 - The app can **never delete photos**; its API key has no delete rights.
+- **Your own API key?** The setup wizard creates a key with the right permissions. If you create one by hand, use the list in `.env.example`. Add the optional read-only right `face.read` so crop and zoom follow the faces in a photo (without it the frame uses the image centre). Existing key: Immich → Account → API keys → edit permissions.
 - Sign-in with PIN or Immich account, locked after failed attempts (per IP and per email). Every person gets an own, revocable key. Sessions last 90 days; writing requests need an own header.
 - The container runs as non-root with a read-only file system, no Linux capabilities and a memory limit.
 - The TV/frame pages show photos **without sign-in** to devices in a trusted network (`RAHMEN_WEB_LAN`) – keep that network small.

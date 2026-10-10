@@ -233,6 +233,7 @@ Oberfläche und Satzsuche gibt es auf **Deutsch, Englisch, Spanisch, Französisc
 
 ## Sicherheit
 - Die App kann **nie Fotos löschen**; ihr API-Schlüssel hat keine Löschrechte.
+- **Eigener API-Schlüssel?** Der Einrichtungsassistent legt einen Schlüssel mit den passenden Rechten an. Wer einen von Hand anlegt, nimmt die Liste aus `.env.example`. Dazu das optionale, nur lesende Recht `face.read`, damit Zuschnitt und Zoom nach den Gesichtern im Foto ausgerichtet werden (ohne es zeigt der Rahmen die Bildmitte). Bei einem vorhandenen Schlüssel: Immich → Konto → API-Schlüssel → Rechte ändern.
 - Anmeldung per PIN oder Immich-Konto, nach Fehlversuchen gesperrt (je IP und je E-Mail). Jede Person bekommt einen eigenen, widerrufbaren Schlüssel. Sitzungen laufen 90 Tage, schreibende Aufrufe brauchen einen eigenen Header.
 - Der Container läuft ohne Root, mit schreibgeschütztem Dateisystem, ohne Linux-Capabilities und mit Speichergrenze.
 - Die Fernseher- und Rahmen-Seiten zeigen Fotos **ohne Anmeldung** für Geräte im vertrauten Netz (`RAHMEN_WEB_LAN`) – dieses Netz klein halten.
