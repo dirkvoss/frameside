@@ -5,6 +5,7 @@ name: Benachrichtigung
 # Der Workflow checkt keinen Code aus und fuehrt keinen Code aus Pull Requests aus; Texte von Fremden laufen nur als Umgebungsvariablen durch.
 
 on:
+  workflow_dispatch:                 # manueller Test: Actions -> Benachrichtigung -> Run workflow
   issues:
     types: [opened, reopened]
   issue_comment:
@@ -39,7 +40,7 @@ jobs:
           STERNE: ${{ github.event.repository.stargazers_count }}
         run: |
           if [ -z "$PUSHOVER_USER" ] || [ -z "$PUSHOVER_TOKEN" ]; then echo "Pushover nicht eingerichtet."; exit 0; fi
-          if [ "$WER" = "$BESITZER" ] || [ "$WER" = "dependabot[bot]" ]; then echo "Eigene Aktion, keine Meldung."; exit 0; fi
+          if [ "$EREIGNIS" != "workflow_dispatch" ] && { [ "$WER" = "$BESITZER" ] || [ "$WER" = "dependabot[bot]" ]; }; then echo "Eigene Aktion, keine Meldung."; exit 0; fi
           case "$EREIGNIS" in
             issues)              KOPF="Neues Issue von $WER" ;;
             issue_comment)       KOPF="Kommentar von $WER" ;;
@@ -47,12 +48,13 @@ jobs:
             discussion_comment)  KOPF="Antwort in Diskussion von $WER" ;;
             watch)               KOPF="⭐ Neuer Stern von $WER (jetzt $STERNE)" ;;
             fork)                KOPF="Fork von $WER" ;;
+            workflow_dispatch)   KOPF="Test: es funktioniert" ;;
             pull_request_target) KOPF="Pull Request von $WER" ;;
             *)                   KOPF="$EREIGNIS von $WER" ;;
           esac
           NACHRICHT="${TITEL:-}"
           if [ -n "$TEXT" ]; then NACHRICHT="$NACHRICHT"$'\n'"$TEXT"; fi
-          [ -n "$NACHRICHT" ] || NACHRICHT="$LINK"
+          [ -n "$NACHRICHT" ] || NACHRICHT="Die Benachrichtigung ist eingerichtet. $LINK"
           curl -fsS https://api.pushover.net/1/messages.json \
             --form-string "token=$PUSHOVER_TOKEN" --form-string "user=$PUSHOVER_USER" \
             --form-string "title=Frameside: ${KOPF:0:80}" --form-string "message=${NACHRICHT:0:500}" \
