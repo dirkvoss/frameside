@@ -763,6 +763,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       <div class="tvfeld versteckt" id="gfKennungZeile"><span>Kennung (z. B. für Home Assistant)</span><code id="gfKennung"></code></div>
       <label class="tvfeld"><span>Name</span> <input id="gfName" type="text" maxlength="60" autocomplete="off" aria-label="Name"></label>
       <label class="tvfeld"><span>Hintergrund</span> <select id="gfFuellung" aria-label="Hintergrund"><option value="">Standard</option><option value="unscharf">Unscharf</option><option value="zuschnitt">Zuschnitt</option><option value="balken">Schwarze Balken</option></select></label>
+      <label class="tvfeld"><span>Bildschärfe</span> <select id="gfQualitaet" aria-label="Bildschärfe"><option value="">Automatisch (empfohlen)</option><option value="standard">Standard</option><option value="hoch">Hoch (für 4K-Bildschirme)</option></select></label>
       <div class="nur-gf-rahmen">
         <div class="gf">
           <label class="tvfeld nur-gf-dauer"><span>Sekunden pro Foto</span> <input id="gfSek" type="number" min="3" max="120" inputmode="numeric" aria-label="Sekunden pro Foto"></label>
@@ -2206,7 +2207,7 @@ async function geraetDialogOeffnen(id) {
   } catch (e) { fehler(e); return; }
   gfArt = g.art; $("#geraetTitel").textContent = RW_T(id ? "Gerät einstellen" : "Gerät hinzufügen");
   $("#gfArtZeile").classList.remove("versteckt"); $("#gfArt").value = g.art; gfArtAnpassen();
-  $("#gfName").value = g.name; $("#gfFuellung").value = g.fuellung || "";
+  $("#gfName").value = g.name; $("#gfFuellung").value = g.fuellung || ""; $("#gfQualitaet").value = g.qualitaet || "";
   $("#gfAlarm").value = g.alarm_min == null ? "" : g.alarm_min; $("#gfWartung").classList.toggle("versteckt", !id); $("#gfWartungErg").classList.add("versteckt");
   $("#gfSek").value = g.sek || ""; gfLed = layoutEditor($("#gfLayout"), g.layout || std, std);
   $("#gfBewegung").checked = !!g.bewegung; $("#gfPaare").checked = !!g.paare; $("#gfErinnerungen").value = g.erinnerungen || ""; $("#gfFavoriten").value = g.favoriten || ""; $("#gfGeburtstagsfotos").checked = g.geburtstagsfotos !== false;
@@ -2477,7 +2478,7 @@ $("#gfSpeichern").addEventListener("click", async () => {
   const name = $("#gfName").value.trim(); if (!name) { toast(RW_T("Bitte einen Namen eingeben."), true); $("#gfName").focus(); return; }
   const von = $("#gfNachtVon").value, bis = $("#gfNachtBis").value;
   if (!!von !== !!bis) { toast(RW_T("Nachtruhe: bitte „von“ und „bis“ ausfüllen oder beide leer lassen."), true); return; }
-  const daten = { name, fuellung: $("#gfFuellung").value };
+  const daten = { name, fuellung: $("#gfFuellung").value, qualitaet: $("#gfQualitaet").value };
   if (gfId) daten.adb_host = $("#gfAdb").value.trim();
   daten.art = $("#gfArt").value;
   {

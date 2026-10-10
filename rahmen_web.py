@@ -85,7 +85,7 @@ UID_CTX = contextvars.ContextVar("rahmen_uid", default=None)
 KEY_NAME = "Frameside"
 KEY_RECHTE = ["asset.read", "asset.view", "asset.statistics", "timeline.read", "person.read", "album.create", "album.read", "album.update",
               "album.delete", "albumAsset.create", "albumAsset.delete", "map.read", "user.read",
-              "asset.upload"]       # keine Foto-Loeschrechte; user.read = eigenes Profil (Name); asset.upload = Fotos vom Handy ins EIGENE Immich-Konto senden
+              "asset.upload", "face.read"]       # face.read: Gesichtsposition fuer den Zuschnitt (optional, nur lesen); keine Foto-Loeschrechte; user.read = eigenes Profil (Name); asset.upload = Fotos vom Handy ins EIGENE Immich-Konto senden
 MODUS = os.environ.get("RAHMEN_WEB_MODUS", "beides").strip().lower()
 if MODUS not in ("rahmen", "tv", "beides"):
     MODUS = "beides"
@@ -678,7 +678,7 @@ def konfig(ziel: str = ""):
     return {"name": APP_NAME, "version": VERSION, "modus": MODUS, "auth": AUTH, "musik_upload": MUSIK_UPLOAD, "hochladen": bool(UPLOAD_KEY) or AUTH != "pin", "hochladen_mb": UPLOAD_MAX_MB, "konfiguriert": konfiguriert(), "tv_url": tv_url(), "beispiele": BEISPIELE, "beispiele_en": BEISPIELE_EN,
             "ziele": {k: v for k, v in TV_ZIELE.items() if k not in TV_VERSTECKT and k not in RAHMEN_ZIELE},
             "rahmen": list(RAHMEN_ZIELE), "rahmen_namen": dict(RAHMEN_ZIELE), "rahmen_sek": gwert(z, "sek", std_sek()), "rahmen_fuellung": gwert(z, "fuellung", std_fuellung_rahmen()), "tv_fuellung": gwert(z, "fuellung", std_fuellung_tv()),
-            "rahmen_anzeige": gwert(z, "anzeige", std_anzeige()), "rahmen_layout": layout_fuer(z), "rahmen_bewegung": bool((GERAETE.get(z) or {}).get("bewegung")), "rahmen_paare": bool((GERAETE.get(z) or {}).get("paare")), "rahmen_nacht": rahmen_nacht(z), "rahmen_zusatz": zusatz_liste(z), "koppeln": True,
+            "rahmen_anzeige": gwert(z, "anzeige", std_anzeige()), "rahmen_layout": layout_fuer(z), "rahmen_bewegung": bool((GERAETE.get(z) or {}).get("bewegung")), "rahmen_paare": bool((GERAETE.get(z) or {}).get("paare")), "rahmen_nacht": rahmen_nacht(z), "rahmen_qualitaet": (GERAETE.get(z) or {}).get("qualitaet") or "", "rahmen_zusatz": zusatz_liste(z), "koppeln": True,
             "alle_ziele": {k: v for k, v in TV_ZIELE.items() if k not in TV_VERSTECKT}}
 
 
@@ -1241,12 +1241,65 @@ def suchen(text: str, maximum: int = 400, lang: str = "de", _=Depends(anmeldung)
 def vorschau(asset_id: str, s: str = "thumb", _=Depends(geraet)):
     if not ID_RE.match(asset_id):
         raise HTTPException(400, "ungueltig")
-    groesse = "preview" if s == "gross" else "thumbnail"
-    try:
-        roh, typ = immich_roh(f"/assets/{asset_id}/thumbnail?size={groesse}", schluessel=None if UID_CTX.get() else geraete_schluessel(asset_id))
-    except urllib.error.HTTPError as e:
-        raise HTTPException(404 if e.code in (400, 403, 404) else 502, "Foto nicht verfuegbar")
+    groesse = "preview" if s in ("gross", "voll") else "thumbnail"
+    schluessel = None if UID_CTX.get() else geraete_schluessel(asset_id)
+    roh = typ = None
+    if s == "voll":                                      # scharfes Bild fuer grosse Bildschirme (4K); zu grosse oder nicht darstellbare Dateien fallen auf die Vorschau zurueck
+        try:
+            roh, typ = immich_roh(f"/assets/{asset_id}/thumbnail?size=fullsize", schluessel=schluessel)
+            if len(roh) > VOLL_MAX_BYTES or not (typ or "").startswith(("image/jpeg", "image/webp", "image/png")):
+                roh = None
+        except (urllib.error.URLError, OSError):
+            roh = None
+    if roh is None:
+        try:
+            roh, typ = immich_roh(f"/assets/{asset_id}/thumbnail?size={groesse}", schluessel=schluessel)
+        except urllib.error.HTTPError as e:
+            raise HTTPException(404 if e.code in (400, 403, 404) else 502, "Foto nicht verfuegbar")
     return Response(roh, media_type=typ, headers={"Cache-Control": "private, max-age=604800, immutable"})
+
+
+VOLL_MAX_BYTES = 12 * 1024 * 1024
+FOKUS = {}                                               # Foto-ID -> (x, y) in Prozent oder None; nur im Speicher
+
+
+@app.get("/api/fokus/{asset_id}")
+def fokus(asset_id: str, _=Depends(geraet)):
+    """Wo im Foto sind Gesichter? Mittelpunkt in Prozent (fuer Zuschnitt und Zoom). Ohne Gesichter oder ohne Recht face.read: leere Antwort."""
+    if not ID_RE.match(asset_id):
+        raise HTTPException(400, "ungueltig")
+    if asset_id not in FOKUS:
+        if len(FOKUS) > 4000:
+            FOKUS.clear()
+        ergebnis = None
+        try:
+            roh, _typ = immich_roh(f"/faces?id={asset_id}", timeout=10, schluessel=None if UID_CTX.get() else geraete_schluessel(asset_id))
+            ergebnis = fokus_aus_gesichtern(json.loads(roh))
+        except (urllib.error.URLError, OSError, ValueError):
+            ergebnis = None
+        FOKUS[asset_id] = ergebnis
+    f = FOKUS[asset_id]
+    return {"x": f[0], "y": f[1]} if f else {}
+
+
+def fokus_aus_gesichtern(gesichter):
+    """Mittelpunkt aller Gesichter (nach Flaeche gewichtet) in Prozent der Bildbreite/-hoehe; None ohne Gesichter."""
+    summe = sx = sy = 0.0
+    for g in gesichter if isinstance(gesichter, list) else []:
+        try:
+            b, h = float(g["imageWidth"]), float(g["imageHeight"])
+            x1, x2, y1, y2 = float(g["boundingBoxX1"]), float(g["boundingBoxX2"]), float(g["boundingBoxY1"]), float(g["boundingBoxY2"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if b <= 0 or h <= 0 or x2 <= x1 or y2 <= y1:
+            continue
+        flaeche = (x2 - x1) * (y2 - y1)
+        summe += flaeche
+        sx += flaeche * ((x1 + x2) / 2 / b)
+        sy += flaeche * ((y1 + y2) / 2 / h)
+    if summe <= 0:
+        return None
+    return (round(min(max(sx / summe, 0), 1) * 100, 1), round(min(max(sy / summe, 0), 1) * 100, 1))
 
 
 # --------------------------------------------------------------------------- Shows / Verlauf / Zurueck
@@ -3077,7 +3130,7 @@ RAHMEN_NUR_FELDER = ("sek", "anzeige", "quellen", "zeitplan", "erinnerungen", "f
 
 def geraet_ansicht(z, e):
     t = TV.get(z) or {}
-    return {"layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
+    return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
             "kalender_gesetzt": bool(e.get("kalender_url")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
             "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
@@ -3097,6 +3150,11 @@ def geraet_felder(daten, art):
     setzen, weg = {}, []
     if "name" in daten:
         setzen["name"] = name_pruefen(daten["name"])
+    if "qualitaet" in daten:
+        v = str(daten["qualitaet"] or "")
+        if v not in ("", "standard", "hoch"):
+            raise HTTPException(400, "Unbekannte Bildschärfe")
+        (setzen.__setitem__("qualitaet", v) if v else weg.append("qualitaet"))
     if "fuellung" in daten:
         v = str(daten["fuellung"] or "")
         if v and v not in FUELLUNGEN:

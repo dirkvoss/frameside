@@ -1,6 +1,14 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.25.0]
+### Neu
+- **Schärfere Fotos auf 4K-Fernsehern:** Große Bildschirme bekommen das Foto jetzt in voller Auflösung (Immich „fullsize“) statt der Vorschau von etwa 1440 Pixeln. Zu große oder nicht darstellbare Dateien (über 12 MB, Formate wie HEIC) fallen automatisch auf die Vorschau zurück. Je Gerät einstellbar unter ⚙ → „Bildschärfe“ (Automatisch, Standard, Hoch).
+- **Zuschnitt und Zoom mit Gesichtern:** Im Modus „Zuschnitt“ und beim sanften Zoom richtet sich der Bildausschnitt nach den Gesichtern im Foto, damit keine Köpfe abgeschnitten werden. Dafür braucht der Immich-Schlüssel das Leserecht `face.read`; neue Einrichtungen legen es an, bei älteren Schlüsseln bleibt es bei der Bildmitte. Es wird nichts geändert oder gelöscht.
+- **Abwechslungsreicher Zoom:** Statt nur hinein und heraus gibt es jetzt sechs sanfte Bewegungen (Zoom und leichte Schwenks), passend zur Anzeigedauer.
+- **Einbrennschutz:** Die Einblendungen (Uhr, Wetter, Termine …) wandern alle vier Minuten unmerklich um wenige Pixel. Das schont OLED-Bildschirme.
+- **Rahmen läuft bei Netzausfall weiter:** Mit HTTPS merkt sich der Rahmen zuletzt gesehene Fotos und zeigt sie bei kurzem Netzausfall weiter (bis zu 150 Fotos auf dem Gerät).
+
 ## [2.24.0]
 ### Neu
 - **PIN ändern in der Oberfläche und in der App:** Einstellungen (Konto-Menü → ⚙) → „Zugang (PIN)“. Von außen braucht es die bisherige PIN, im vertrauten Heimnetz nicht (zum Beispiel wenn man sie vergessen hat). Falsche Versuche werden wie bei der Anmeldung gezählt und gesperrt, sehr leichte PINs (123456, lauter gleiche Ziffern) werden abgelehnt. Das eigene Gerät bleibt angemeldet, alle anderen geben die neue PIN einmal ein. Bisher ging das nur per Befehl auf dem Server.

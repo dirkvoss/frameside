@@ -1,4 +1,5 @@
 """App-Verhalten gegen ein Schein-Immich: Zugang, Konfiguration, Filter (API-Weg), Fernseher, Rahmen-Player, Modi."""
+import json
 import os
 
 H = {"X-Rahmen": "1"}
@@ -374,3 +375,42 @@ def test_startfunktionen_laufen_ueber_den_lebenszyklus(app_laden):
     assert len(w._START) >= 5
     with TestClient(w.app, client=("192.168.1.50", 50000)):
         assert os.path.exists(w.SELBSTTEST_FILE)                 # selbsttest_geheimnis() lief beim Start
+
+
+def test_fokus_aus_gesichtern(app_laden):
+    w, client, _ = app_laden()
+    f = w.fokus_aus_gesichtern([{"imageWidth": 1000, "imageHeight": 500, "boundingBoxX1": 100, "boundingBoxX2": 300, "boundingBoxY1": 50, "boundingBoxY2": 250}])
+    assert f == (20.0, 30.0)
+    zwei = w.fokus_aus_gesichtern([{"imageWidth": 1000, "imageHeight": 1000, "boundingBoxX1": 0, "boundingBoxX2": 100, "boundingBoxY1": 0, "boundingBoxY2": 100},
+                                   {"imageWidth": 1000, "imageHeight": 1000, "boundingBoxX1": 500, "boundingBoxX2": 900, "boundingBoxY1": 500, "boundingBoxY2": 900}])
+    assert zwei[0] > 50 and zwei[1] > 50                                  # das groessere Gesicht zaehlt mehr
+    assert w.fokus_aus_gesichtern([]) is None and w.fokus_aus_gesichtern("x") is None and w.fokus_aus_gesichtern([{"imageWidth": 0}]) is None
+
+
+def test_fokus_endpoint_und_bildschaerfe(app_laden, monkeypatch):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    c = client("192.168.1.50")
+    aid = "11111111-2222-3333-4444-555555555555"
+    gesicht = [{"imageWidth": 200, "imageHeight": 100, "boundingBoxX1": 20, "boundingBoxX2": 60, "boundingBoxY1": 10, "boundingBoxY2": 50}]
+    aufrufe = []
+
+    def roh(pfad, timeout=60, schluessel=None):
+        aufrufe.append(pfad)
+        if pfad.startswith("/faces"):
+            return json.dumps(gesicht).encode(), "application/json"
+        if "size=fullsize" in pfad:
+            return b"G" * 100, "image/jpeg"
+        return b"V", "image/jpeg"
+    monkeypatch.setattr(w, "immich_roh", roh)
+    assert c.get(f"/api/fokus/{aid}").json() == {"x": 20.0, "y": 30.0}
+    c.get(f"/api/fokus/{aid}")
+    assert aufrufe.count(f"/faces?id={aid}") == 1                         # gemerkt, nicht jedes Mal gefragt
+    assert c.get(f"/api/vorschau/{aid}?s=voll").content == b"G" * 100
+    assert c.get(f"/api/vorschau/{aid}?s=gross").content == b"V"
+    monkeypatch.setattr(w, "VOLL_MAX_BYTES", 10)                          # zu gross -> Vorschau
+    assert c.get(f"/api/vorschau/{aid}?s=voll").content == b"V"
+    app = client("192.168.1.50")
+    z = app.post("/api/verwaltung/geraete", json={"art": "tv", "name": "TV"}, headers=H).json()["id"]
+    assert app.put(f"/api/verwaltung/geraete/{z}", json={"qualitaet": "hoch"}, headers=H).status_code == 200
+    assert app.get(f"/api/config?ziel={z}").json()["rahmen_qualitaet"] == "hoch"
+    assert app.put(f"/api/verwaltung/geraete/{z}", json={"qualitaet": "mega"}, headers=H).status_code == 400

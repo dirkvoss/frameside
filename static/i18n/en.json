@@ -685,7 +685,10 @@
   "Die beiden neuen PINs sind nicht gleich.": "The two new PINs don't match.",
   "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben.": "The new PIN is active. Other phones and tablets have to enter it once.",
   "Die bisherige PIN stimmt nicht.": "The current PIN is wrong.",
-  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Please don't choose an easy-to-guess PIN (for example 123456 or all the same digits)."
+  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Please don't choose an easy-to-guess PIN (for example 123456 or all the same digits).",
+  "Bildschärfe": "Image sharpness",
+  "Automatisch (empfohlen)": "Automatic (recommended)",
+  "Hoch (für 4K-Bildschirme)": "High (for 4K screens)"
  },
  "muster": [
   [
