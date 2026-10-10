@@ -689,7 +689,7 @@
   "Bildschärfe": "Netteté de l’image",
   "Automatisch (empfohlen)": "Automatique (recommandé)",
   "Hoch (für 4K-Bildschirme)": "Élevée (pour écrans 4K)",
-  "Der Code am Fernseher gilt nicht mehr. Lade die Seite dort neu und scanne den neuen Code.": "Le code sur le téléviseur n’est plus valable. Rechargez la page là-bas et scannez le nouveau code."
+  "Der Code am Fernseher gilt nicht mehr oder gehört zu einem anderen Server. Lade die Seite dort neu und scanne den neuen Code.": "Le code sur le téléviseur n’est plus valable ou appartient à un autre serveur. Rechargez la page là-bas et scannez le nouveau code."
  },
  "muster": [
   [

@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.26.1]
+### Behoben
+- **QR-Scan in der App („QR-Code am Gerät scannen“):** Er öffnet jetzt gleich „Gerät gefunden“ mit Namensfeld (statt den Code nur zu übernehmen und ein vorhandenes Gerät zu verlangen). Gehört der Code zu einem anderen Server oder ist er abgelaufen, steht ein klarer Hinweis da.
+
 ## [2.26.0]
 ### Neu
 - **Frameside TV: App für Android TV, Google TV und Fire TV** (Ordner `android/`, APK im Release). Sie öffnet die Fernseher-Seite im Vollbild, **findet den Server im Heimnetz selbst**, hält den Bildschirm an und arbeitet als **Bildschirmschoner** (Einstellungen → Geräteeinstellungen → Bildschirmschoner → Frameside). Die Kopplung ist dieselbe wie im Browser. Getestet auf einer NVIDIA Shield (Android 11, 4K). Menü per Menü-Taste oder langem Druck auf Zurück.

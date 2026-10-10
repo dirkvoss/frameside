@@ -2403,7 +2403,7 @@ async function assiSuchen() {
     const d = await api("koppeln/wartend"), vorher = Array.from($("#assiWartend").querySelectorAll("strong")).length;
     if (d.geraete.length !== vorher) assiWartendZeichnen(d.geraete);
     $("#assiFindStatus").textContent = d.geraete.length ? "" : RW_T("Suche nach Geräten …");
-    if (assiZielCode && !d.geraete.some(g => g.code === assiZielCode)) $("#assiFindStatus").textContent = RW_T("Der Code am Fernseher gilt nicht mehr. Lade die Seite dort neu und scanne den neuen Code.");
+    if (assiZielCode && !d.geraete.some(g => g.code === assiZielCode)) $("#assiFindStatus").textContent = RW_T("Der Code am Fernseher gilt nicht mehr oder gehört zu einem anderen Server. Lade die Seite dort neu und scanne den neuen Code.");
   } catch (e) {}
 }
 function assiOeffnen(zielCode) {
@@ -2529,7 +2529,7 @@ window.rwQrErgebnis = text => {
   const m = /koppeln=([A-Za-z0-9]{6})\b/.exec(text || "") || /^([A-Za-z0-9]{6})$/.exec((text || "").trim());
   if (!m) { toast(RW_T("Das ist kein Kopplungs-QR-Code. Er steht auf dem Bildschirm des Fernsehers oder Tablets."), true); return; }
   $("#koppelCode").value = m[1].toUpperCase();
-  if ($("#koppelZiel").options.length === 1) $("#koppelBtn").click(); else toast(RW_T("Code übernommen – jetzt das Gerät wählen und koppeln."));
+  assiOeffnen(m[1].toUpperCase());                        // gleich "Gerät gefunden" mit Namensfeld, wie bei „Gerät hinzufügen“
 };
 $("#koppelBtn").addEventListener("click", async () => {
   const code = $("#koppelCode").value.trim().toUpperCase(), ziel = $("#koppelZiel").value;

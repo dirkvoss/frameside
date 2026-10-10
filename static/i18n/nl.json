@@ -689,7 +689,7 @@
   "Bildschärfe": "Beeldscherpte",
   "Automatisch (empfohlen)": "Automatisch (aanbevolen)",
   "Hoch (für 4K-Bildschirme)": "Hoog (voor 4K-schermen)",
-  "Der Code am Fernseher gilt nicht mehr. Lade die Seite dort neu und scanne den neuen Code.": "De code op de tv is niet meer geldig. Laad de pagina daar opnieuw en scan de nieuwe code."
+  "Der Code am Fernseher gilt nicht mehr oder gehört zu einem anderen Server. Lade die Seite dort neu und scanne den neuen Code.": "De code op de tv is niet meer geldig of hoort bij een andere server. Laad de pagina daar opnieuw en scan de nieuwe code."
  },
  "muster": [
   [
