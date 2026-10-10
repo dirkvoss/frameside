@@ -5,6 +5,16 @@
 **Show your [Immich](https://immich.app) photos on the TV and on a picture frame – and let the whole family do it from their phone.**
 Search in plain sentences ("Grandma and Anna, Christmas 2019, on the beach"), tap the photos you like, give the show a name and send it to the living-room TV or the picture frame in the hallway. Optional background music, videos, and a continuous slideshow when nobody has asked for anything.
 
+**What makes Frameside different**
+- 📲 **The family chooses, the screen obeys:** search, tap photos, send them to the TV or a frame – with a remote control on the phone, instead of a screen that only shows random photos on its own.
+- 📺 **TVs without an app:** any TV with a web browser works; picture frames run in a plain tablet browser.
+- 🔌 **Devices pair themselves:** open the address on the TV, it appears in the app, give it a name. No codes, no config files – everything is set up in the interface.
+- 👨‍👩‍👧 **Made for families:** shared PIN or each person's own Immich account, notes and greetings with a photo, guest uploads by QR code for parties, appointments from the phone calendar.
+- 🛡 **Safe by design:** it can never delete a photo.
+- 🍎 An iPhone app (TestFlight now, App Store soon); Android uses the web interface.
+
+*Honest limits:* a young one-person project; TVs need a modern-enough browser; Docker is required.
+
 🇩🇪 [Deutsche Anleitung](README.de.md) · ☕ [Say thanks on Ko-fi](https://ko-fi.com/frameside) (Frameside is free; donations are voluntary)
 
 > Frameside is an independent community project. It is not affiliated with, endorsed by, or part of the Immich project. "Immich" is the name of the software it works with.

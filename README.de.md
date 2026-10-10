@@ -5,6 +5,16 @@
 **Zeige deine [Immich](https://immich.app)-Fotos auf dem Fernseher und im Bilderrahmen – und lass die ganze Familie das vom Handy aus tun.**
 Suche in ganzen Sätzen („Oma und Anna Weihnachten 2019 am Strand“), tippe die Fotos an, gib der Show einen Namen und schick sie an den Fernseher im Wohnzimmer oder den Bilderrahmen im Flur. Mit Hintergrundmusik, Videos und einem Dauerprogramm, wenn gerade niemand etwas ausgewählt hat.
 
+**Was Frameside besonders macht**
+- 📲 **Die Familie bestimmt, der Bildschirm gehorcht:** suchen, Fotos antippen, an Fernseher oder Rahmen schicken – mit Fernbedienung am Handy, statt eines Bildschirms, der nur von allein zufällige Fotos zeigt.
+- 📺 **Fernseher ohne App:** jeder Fernseher mit Browser genügt; Bilderrahmen laufen im ganz normalen Tablet-Browser.
+- 🔌 **Geräte koppeln sich selbst:** Adresse am Fernseher öffnen, in der App erscheint er, Namen eingeben. Keine Codes, keine Konfigurationsdateien, alles steht in der Oberfläche.
+- 👨‍👩‍👧 **Für Familien gemacht:** gemeinsame PIN oder das eigene Immich-Konto jeder Person, Notizen und Grüße mit Foto, Gäste-Upload per QR-Code für Feste, Termine aus dem Handy-Kalender.
+- 🛡 **Sicher gebaut:** Es kann nie ein Foto löschen.
+- 🍎 Eine iPhone-App (jetzt über TestFlight, bald im App Store); unter Android läuft die Web-Oberfläche.
+
+*Ehrliche Grenzen:* ein junges Ein-Mann-Projekt; der Fernseher braucht einen halbwegs aktuellen Browser; Docker ist nötig.
+
 🇬🇧 [English instructions](README.md) · ☕ [Danke sagen auf Ko-fi](https://ko-fi.com/frameside) (Frameside ist kostenlos, Spenden sind freiwillig)
 
 > Frameside ist ein unabhängiges Community-Projekt und steht in keiner Verbindung zum Immich-Projekt oder dessen Betreibern. „Immich“ ist der Name der Software, mit der es zusammenarbeitet.
