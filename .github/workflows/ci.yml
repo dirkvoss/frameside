@@ -58,7 +58,7 @@ jobs:
           buildkitd-config-inline: |
             [registry."docker.io"]
               mirrors = ["mirror.gcr.io"]
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -91,7 +91,7 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"; else echo "version=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
       - name: Image bauen und Rauchtest
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -132,7 +132,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Veroeffentlichen (nur bei Versions-Tag)
         id: bauen
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
