@@ -6,3 +6,11 @@ db.env
 data/
 state/
 .DS_Store
+
+# Android-TV-App
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+*.keystore
+*.jks

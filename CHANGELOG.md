@@ -1,6 +1,13 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.26.0]
+### Neu
+- **Frameside TV: App für Android TV, Google TV und Fire TV** (Ordner `android/`, APK im Release). Sie öffnet die Fernseher-Seite im Vollbild, **findet den Server im Heimnetz selbst**, hält den Bildschirm an und arbeitet als **Bildschirmschoner** (Einstellungen → Geräteeinstellungen → Bildschirmschoner → Frameside). Die Kopplung ist dieselbe wie im Browser. Getestet auf einer NVIDIA Shield (Android 11, 4K). Menü per Menü-Taste oder langem Druck auf Zurück.
+### Behoben
+- **QR-Code am Fernseher:** Scannt man ihn mit der App, öffnet sich jetzt gleich „Gerät gefunden“ mit Namensfeld (statt des alten Kopplungsdialogs ohne Namen). Ist der Code abgelaufen, steht ein Hinweis da.
+- **Fernseher-Seite in der Android-TV-App:** Die Seite passt sich der Bildschirmgröße der App an (der WebView meldet dort nur 960 × 540 Pixel).
+
 ## [2.25.0]
 ### Neu
 - **Schärfere Fotos auf 4K-Fernsehern:** Große Bildschirme bekommen das Foto jetzt in voller Auflösung (Immich „fullsize“) statt der Vorschau von etwa 1440 Pixeln. Zu große oder nicht darstellbare Dateien (über 12 MB, Formate wie HEIC) fallen automatisch auf die Vorschau zurück. Je Gerät einstellbar unter ⚙ → „Bildschärfe“ (Automatisch, Standard, Hoch).

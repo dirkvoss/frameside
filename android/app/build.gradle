@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.dirkvoss.frameside.tv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.dirkvoss.frameside.tv"
+        minSdk 21            // Android TV ab 5.0 (aeltere Fernseher, Fire TV Gen 2)
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            // Schluessel NICHT im Repository: Pfad und Passwoerter kommen aus Umgebungsvariablen (siehe android/README.md)
+            if (System.getenv("FRAMESIDE_KEYSTORE")) {
+                storeFile file(System.getenv("FRAMESIDE_KEYSTORE"))
+                storePassword System.getenv("FRAMESIDE_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("FRAMESIDE_KEY_ALIAS") ?: "frameside"
+                keyPassword System.getenv("FRAMESIDE_KEY_PASSWORD") ?: System.getenv("FRAMESIDE_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (System.getenv("FRAMESIDE_KEYSTORE")) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

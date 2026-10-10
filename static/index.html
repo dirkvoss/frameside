@@ -2374,8 +2374,10 @@ function assiVerbinden(id, art, fertig) {
   assiTimer = setInterval(pruefen, 2500); pruefen();
 }
 let assiSuche = 0;
+let assiZielCode = "", assiZielErledigt = false;       // Code aus dem QR-Code am Fernseher: diese Karte steht oben und wartet auf den Namen
 function assiWartendZeichnen(liste) {
   const box = $("#assiWartend"); box.textContent = "";
+  liste = liste.slice().sort((a, b) => (b.code === assiZielCode) - (a.code === assiZielCode));
   for (const g of liste) {
     const k = document.createElement("div"); k.className = "gf"; k.style.cssText = "border:1px solid var(--rand,#8884);border-radius:12px;padding:10px;margin:8px 0";
     const t = document.createElement("strong"); t.textContent = (g.art === "tv" ? "📺 " : "🖼 ") + RW_T(g.geraet) + " " + RW_T("gefunden"); k.appendChild(t);
@@ -2391,6 +2393,7 @@ function assiWartendZeichnen(liste) {
       catch (e) { fehler(e); b.disabled = false; }
     });
     k.append(n, a, b); box.appendChild(k);
+    if (g.code === assiZielCode) { k.style.borderColor = "#d9a441"; k.style.borderWidth = "2px"; if (!assiZielErledigt) { assiZielErledigt = true; setTimeout(() => n.focus(), 50); } }
   }
 }
 async function assiSuchen() {
@@ -2400,16 +2403,18 @@ async function assiSuchen() {
     const d = await api("koppeln/wartend"), vorher = Array.from($("#assiWartend").querySelectorAll("strong")).length;
     if (d.geraete.length !== vorher) assiWartendZeichnen(d.geraete);
     $("#assiFindStatus").textContent = d.geraete.length ? "" : RW_T("Suche nach Geräten …");
+    if (assiZielCode && !d.geraete.some(g => g.code === assiZielCode)) $("#assiFindStatus").textContent = RW_T("Der Code am Fernseher gilt nicht mehr. Lade die Seite dort neu und scanne den neuen Code.");
   } catch (e) {}
 }
-function assiOeffnen() {
+function assiOeffnen(zielCode) {
+  assiZielCode = typeof zielCode === "string" ? zielCode : ""; assiZielErledigt = false;
   $("#assiTitel").textContent = RW_T("Gerät hinzufügen"); $("#assiFinden").classList.remove("versteckt"); $("#assiHandarbeit").classList.remove("versteckt"); $("#assiHandarbeit").open = false; $("#assiSchritt2").classList.add("versteckt");
   $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, "");
   $("#assiName").value = ""; $("#assiArt").value = "rahmen"; $("#assiWartend").textContent = ""; $("#assiDialog").classList.remove("versteckt");
   clearInterval(assiSuche); assiSuche = setInterval(assiSuchen, 2500); assiSuchen();
 }
 function assiSchliessen() { clearInterval(assiTimer); clearInterval(assiSuche); $("#assiDialog").classList.add("versteckt"); geraeteNeuLesen(); }
-$("#geraetNeu").addEventListener("click", assiOeffnen);
+$("#geraetNeu").addEventListener("click", () => assiOeffnen());
 $("#assiAbbrechen").addEventListener("click", () => { clearInterval(assiSuche); $("#assiDialog").classList.add("versteckt"); });
 $("#assiZu").addEventListener("click", assiSchliessen);
 $("#assiEinst").addEventListener("click", () => { const id = assiId; assiSchliessen(); geraetDialogOeffnen(id); });
@@ -2550,7 +2555,7 @@ $("#abmelden").addEventListener("click", async () => {
 async function start() {
   $("#loginAnsicht").classList.add("versteckt"); $("#appAnsicht").classList.remove("versteckt");
   if (!start.fertig) { start.fertig = true; konfigLaden(); laden(); try { await facettenLaden(); } catch (e) {} }
-  try { const kc = new URLSearchParams(location.search).get("koppeln"); if (kc) { await konfigLaden(); geraeteOeffnen(kc.toUpperCase()); history.replaceState(null, "", location.pathname); } } catch (e) {}
+  try { const kc = new URLSearchParams(location.search).get("koppeln"); if (kc) { await konfigLaden(); geraeteOeffnen(kc.toUpperCase()); assiOeffnen(kc.toUpperCase()); history.replaceState(null, "", location.pathname); } } catch (e) {}
   aktualisiere(); statusLaden(); wechsle(tab); benutzerZeigen();
 }
 // ---------------------------------------------------------------- Selbst-Aktualisierung

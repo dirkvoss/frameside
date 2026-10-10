@@ -688,7 +688,8 @@
   "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Please don't choose an easy-to-guess PIN (for example 123456 or all the same digits).",
   "Bildschärfe": "Image sharpness",
   "Automatisch (empfohlen)": "Automatic (recommended)",
-  "Hoch (für 4K-Bildschirme)": "High (for 4K screens)"
+  "Hoch (für 4K-Bildschirme)": "High (for 4K screens)",
+  "Der Code am Fernseher gilt nicht mehr. Lade die Seite dort neu und scanne den neuen Code.": "The code on the TV is no longer valid. Reload the page there and scan the new code."
  },
  "muster": [
   [
