@@ -11,7 +11,7 @@ Search in plain sentences ("Grandma and Anna, Christmas 2019, on the beach"), ta
 - 🔌 **Devices pair themselves:** open the address on the TV, it appears in the app, give it a name. No codes, no config files – everything is set up in the interface.
 - 👨‍👩‍👧 **Made for families:** shared PIN or each person's own Immich account, notes and greetings with a photo, guest uploads by QR code for parties, appointments from the phone calendar.
 - 🛡 **Safe by design:** it can never delete a photo.
-- 🍎 An iPhone app (TestFlight now, App Store soon); Android uses the web interface.
+- 📱 **Works on every phone today** through the web interface (add it to the home screen). A native **iPhone app follows later**.
 
 *Honest limits:* a young one-person project; TVs need a modern-enough browser; Docker is required.
 
@@ -82,7 +82,7 @@ More ways:
 - **Different port:** `./install.sh --port 80` (then the TV only needs the plain IP address).
 - **By hand** (no script): `cp .env.example .env`, `docker compose up -d`, `docker compose logs showcase` shows the setup code, then open `http://<server>:8090/setup/`. Prefer no wizard? Put `RAHMEN_IMMICH_URL` and `RAHMEN_IMMICH_KEY` into `.env`; values from `.env` always win.
 - **NAS and home servers with a UI:** ready-made guides for **Synology** (Container Manager), **Unraid** (template), **TrueNAS** and **Portainer** are in `examples/`.
-- On the iPhone without the app: Share → "Add to Home Screen". With the app (iPhone app coming to the App Store soon, available via TestFlight until then): it **finds the server on your Wi-Fi by itself**.
+- On the iPhone without the app: Share → "Add to Home Screen". With the iPhone app (it follows later): it **finds the server on your Wi-Fi by itself**.
 
 ## What can be used as a picture frame?
 Any device with a **web browser** that can open an address. **A kiosk mode or add-on apps such as Fully Kiosk are not required** – the browser is enough. The page asks the browser to keep the screen awake; where that does not work, set the device's auto-lock to "Never". A kiosk mode (full screen, nothing else reachable) is only a convenience you can add if you like.
