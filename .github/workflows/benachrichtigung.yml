@@ -1,0 +1,59 @@
+name: Benachrichtigung
+
+# Schickt dem Maintainer eine Pushover-Nachricht aufs Handy, wenn jemand etwas im Repo tut (Issue, Diskussion, Kommentar, Stern, Fork, Pull Request).
+# Braucht zwei Repository-Secrets (Settings -> Secrets and variables -> Actions): PUSHOVER_USER und PUSHOVER_TOKEN. Fehlen sie, passiert nichts.
+# Der Workflow checkt keinen Code aus und fuehrt keinen Code aus Pull Requests aus; Texte von Fremden laufen nur als Umgebungsvariablen durch.
+
+on:
+  issues:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+  discussion:
+    types: [created]
+  discussion_comment:
+    types: [created]
+  watch:
+    types: [started]
+  fork:
+  pull_request_target:
+    types: [opened]
+
+permissions: {}
+
+jobs:
+  melden:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pushover senden
+        env:
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          EREIGNIS: ${{ github.event_name }}
+          AKTION: ${{ github.event.action }}
+          WER: ${{ github.actor }}
+          BESITZER: ${{ github.repository_owner }}
+          TITEL: ${{ github.event.issue.title || github.event.discussion.title || github.event.pull_request.title }}
+          TEXT: ${{ github.event.comment.body }}
+          LINK: ${{ github.event.comment.html_url || github.event.issue.html_url || github.event.discussion.html_url || github.event.pull_request.html_url || github.event.repository.html_url }}
+          STERNE: ${{ github.event.repository.stargazers_count }}
+        run: |
+          if [ -z "$PUSHOVER_USER" ] || [ -z "$PUSHOVER_TOKEN" ]; then echo "Pushover nicht eingerichtet."; exit 0; fi
+          if [ "$WER" = "$BESITZER" ] || [ "$WER" = "dependabot[bot]" ]; then echo "Eigene Aktion, keine Meldung."; exit 0; fi
+          case "$EREIGNIS" in
+            issues)              KOPF="Neues Issue von $WER" ;;
+            issue_comment)       KOPF="Kommentar von $WER" ;;
+            discussion)          KOPF="Neue Diskussion von $WER" ;;
+            discussion_comment)  KOPF="Antwort in Diskussion von $WER" ;;
+            watch)               KOPF="⭐ Neuer Stern von $WER (jetzt $STERNE)" ;;
+            fork)                KOPF="Fork von $WER" ;;
+            pull_request_target) KOPF="Pull Request von $WER" ;;
+            *)                   KOPF="$EREIGNIS von $WER" ;;
+          esac
+          NACHRICHT="${TITEL:-}"
+          if [ -n "$TEXT" ]; then NACHRICHT="$NACHRICHT"$'\n'"$TEXT"; fi
+          [ -n "$NACHRICHT" ] || NACHRICHT="$LINK"
+          curl -fsS https://api.pushover.net/1/messages.json \
+            --form-string "token=$PUSHOVER_TOKEN" --form-string "user=$PUSHOVER_USER" \
+            --form-string "title=Frameside: ${KOPF:0:80}" --form-string "message=${NACHRICHT:0:500}" \
+            --form-string "url=$LINK" --form-string "url_title=Auf GitHub öffnen" > /dev/null
