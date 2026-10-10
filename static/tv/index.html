@@ -24,6 +24,18 @@ body.zuschnitt .bild { object-fit: cover; }
 @keyframes kb2 { from { transform: scale(1.08); } to { transform: scale(1); } }
 body.bewegung .bild.an.kb1 { -webkit-animation: kb1 14s ease-out forwards; animation: kb1 14s ease-out forwards; }
 body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; animation: kb2 14s ease-out forwards; }
+@-webkit-keyframes kb3 { from { -webkit-transform: scale(1.07) translate(-1.6%,0); transform: scale(1.07) translate(-1.6%,0); } to { -webkit-transform: scale(1.07) translate(1.6%,0); transform: scale(1.07) translate(1.6%,0); } }
+@keyframes kb3 { from { transform: scale(1.07) translate(-1.6%,0); } to { transform: scale(1.07) translate(1.6%,0); } }
+body.bewegung .bild.an.kb3 { -webkit-animation: kb3 14s ease-out forwards; animation: kb3 14s ease-out forwards; }
+@-webkit-keyframes kb4 { from { -webkit-transform: scale(1.07) translate(1.6%,0); transform: scale(1.07) translate(1.6%,0); } to { -webkit-transform: scale(1.07) translate(-1.6%,0); transform: scale(1.07) translate(-1.6%,0); } }
+@keyframes kb4 { from { transform: scale(1.07) translate(1.6%,0); } to { transform: scale(1.07) translate(-1.6%,0); } }
+body.bewegung .bild.an.kb4 { -webkit-animation: kb4 14s ease-out forwards; animation: kb4 14s ease-out forwards; }
+@-webkit-keyframes kb5 { from { -webkit-transform: scale(1.07) translate(0,1.4%); transform: scale(1.07) translate(0,1.4%); } to { -webkit-transform: scale(1.07) translate(0,-1.4%); transform: scale(1.07) translate(0,-1.4%); } }
+@keyframes kb5 { from { transform: scale(1.07) translate(0,1.4%); } to { transform: scale(1.07) translate(0,-1.4%); } }
+body.bewegung .bild.an.kb5 { -webkit-animation: kb5 14s ease-out forwards; animation: kb5 14s ease-out forwards; }
+@-webkit-keyframes kb6 { from { -webkit-transform: scale(1) translate(0,0); transform: scale(1) translate(0,0); } to { -webkit-transform: scale(1.09) translate(-1%,-1%); transform: scale(1.09) translate(-1%,-1%); } }
+@keyframes kb6 { from { transform: scale(1) translate(0,0); } to { transform: scale(1.09) translate(-1%,-1%); } }
+body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; animation: kb6 14s ease-out forwards; }
 #nacht { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 40; display: none; }
 #mitte { background: -webkit-radial-gradient(50% 38%, circle, #2b3a52 0%, #151b27 55%, #07090e 100%); background: radial-gradient(circle at 50% 38%, #2b3a52 0%, #151b27 55%, #07090e 100%); position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: -webkit-flex; display: flex;
   -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
@@ -150,14 +162,14 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
     if (st === 200 && d && d.alle_ziele && d.alle_ziele[ziel] && ziel !== "test") { extras = true; layoutSetzen(d.rahmen_layout); nacht = d.rahmen_nacht || ""; ambientAnzeige(); }
     if (st === 200 && d && d.rahmen) { for (var r = 0; r < d.rahmen.length; r++) if (d.rahmen[r] === ziel) { rahmenModus = true; rahmenSek = d.rahmen_sek || 8; anzeige = d.rahmen_anzeige || []; layoutSetzen(d.rahmen_layout); ambientAnzeige(); nacht = d.rahmen_nacht || ""; if (!laeuft && !pinModus) startAmbient(); } }
     fuellung = (rahmenModus ? d.rahmen_fuellung : d.tv_fuellung) || "balken";
-    bewegungWunsch = !!d.rahmen_bewegung; paareWunsch = !!d.rahmen_paare; bewegung = extras && bewegungWunsch; paare = extras && paareWunsch;
+    qualitaet = d.rahmen_qualitaet || ""; bewegungWunsch = !!d.rahmen_bewegung; paareWunsch = !!d.rahmen_paare; bewegung = extras && bewegungWunsch; paare = extras && paareWunsch;
     document.body.className = (fuellung === "zuschnitt" ? "zuschnitt" : "") + (bewegung ? " bewegung" : "");
   });
   var seq = -1, liste = [], idx = 0, sek = 8, laeuft = false, pausiert = false, timer = 0, marke = 0, vorn = null, name = "", titelTimer = 0, pin = "";
   var bildA = document.getElementById("bildA"), bildB = document.getElementById("bildB");
   var mitte = document.getElementById("mitte"), mitteTitel = document.getElementById("mitteTitel"), mitteText = document.getElementById("mitteText");
   var punkt = document.getElementById("punkt"), pinpunkte = document.getElementById("pinpunkte");
-  var fuellung = "balken", anzeige = [], nacht = "", bgA = document.getElementById("bgA"), bgB = document.getElementById("bgB"), nachtEl = document.getElementById("nacht"), letzterWechsel = new Date().getTime(), letzterErfolg = new Date().getTime(), verbinde = true, pinModus = false, rahmenModus = false, extras = false, schlicht = false, bewegungWunsch = false, paareWunsch = false, rahmenSek = 8, ambient = false;
+  var fuellung = "balken", anzeige = [], nacht = "", bgA = document.getElementById("bgA"), bgB = document.getElementById("bgB"), nachtEl = document.getElementById("nacht"), letzterWechsel = new Date().getTime(), letzterErfolg = new Date().getTime(), verbinde = true, pinModus = false, rahmenModus = false, extras = false, schlicht = false, bewegungWunsch = false, paareWunsch = false, qualitaet = "", fokusCache = {}, rahmenSek = 8, ambient = false;
   var vid = document.getElementById("vid"), videoSet = {}, maxv = 60, videoTimer = 0, musikPausiert = false, imVideo = false;
   var audio = null, musikKey = "", laut = 0.3, musikBlockiert = false, fade = 1.2;
 
@@ -263,7 +275,7 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
     api("/api/config?ziel=" + encodeURIComponent(ziel || ""), function (st, c) {
       if (st !== 200 || !c) return;
       layoutSetzen(c.rahmen_layout); zusatzLaden(true); nacht = c.rahmen_nacht || ""; nachtPruefen();
-      bewegungWunsch = !!c.rahmen_bewegung; paareWunsch = !!c.rahmen_paare; bewegung = ex() && bewegungWunsch; paare = ex() && paareWunsch;
+      qualitaet = c.rahmen_qualitaet || ""; bewegungWunsch = !!c.rahmen_bewegung; paareWunsch = !!c.rahmen_paare; bewegung = ex() && bewegungWunsch; paare = ex() && paareWunsch;
       document.body.className = (fuellung === "zuschnitt" ? "zuschnitt" : "") + (bewegung ? " bewegung" : "");
       if (laeuft && liste.length) bildUnterschrift(liste[idx]);
     });
@@ -384,13 +396,36 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
     }
   }
   setInterval(nachtPruefen, 20000);
+  var driftNr = 0;
+  function driften() {                                           // Einbrennschutz: Einblendungen wandern langsam um wenige Pixel (kaum sichtbar, schont OLED-Bildschirme)
+    var P = [[0, 0], [10, 6], [-8, 10], [6, -9], [-10, -5], [4, 8]], p = P[driftNr++ % P.length], t = "translate(" + p[0] + "px," + p[1] + "px)";
+    ebene.style.webkitTransition = ebene.style.transition = "-webkit-transform 40s linear, transform 40s linear"; ebene.style.webkitTransform = ebene.style.transform = t;
+  }
+  setInterval(driften, 240000);
   function zeigeTitel(text) {
     if (!EL.titel || (lay && lay.titel && !lay.titel.an)) return;
     EL.titel.textContent = text; EL.titel.className = "el titel an"; clearTimeout(titelTimer);
     titelTimer = setTimeout(titelAus, 6000);
   }
   function mischen(a) { var l = a.slice(), i, j, t; for (i = l.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = l[i]; l[i] = l[j]; l[j] = t; } return l; }
-  function quelle(i) { return "/api/vorschau/" + liste[i] + "?s=gross"; }
+  function scharf() {                                            // grosse Bildschirme (4K) bekommen das Bild in voller Aufloesung, kleine die normale Vorschau
+    if (qualitaet === "hoch") return true;
+    if (qualitaet === "standard") return false;
+    return Math.max(screen.width || 0, screen.height || 0) * (window.devicePixelRatio || 1) >= 2500;
+  }
+  function quelle(i) { return "/api/vorschau/" + liste[i] + (scharf() ? "?s=voll" : "?s=gross"); }
+  function fokusHolen(id, cb) {                                  // Mittelpunkt der Gesichter (Prozent) fuer Zuschnitt und Zoom; leer = Bildmitte
+    if (!(fuellung === "zuschnitt" || bewegung)) return;
+    if (fokusCache[id] !== undefined) { if (cb && fokusCache[id]) cb(fokusCache[id]); return; }
+    fokusCache[id] = null;
+    api("/api/fokus/" + id, function (st, d) { if (st === 200 && d && d.x != null) { fokusCache[id] = d; if (cb) cb(d); } });
+  }
+  function fokusAnwenden(bild, f) {
+    if (!f) return;
+    var o = f.x + "% " + f.y + "%";
+    if (fuellung === "zuschnitt") bild.style.objectPosition = o;
+    bild.style.webkitTransformOrigin = bild.style.transformOrigin = o;
+  }
   function plane() { clearTimeout(timer); if (laeuft && !pausiert) timer = setTimeout(function () { zeige(idx + weiter); }, sek * 1000); }
   var fehler = 0;
   function videoAus() {                                          // Video beenden/ausblenden und Musik wieder aufnehmen
@@ -472,7 +507,9 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
       if (m !== marke) return;
       fehler = 0; letzterWechsel = new Date().getTime();
       if (bewegung) { neu.style.webkitAnimationDuration = neu.style.animationDuration = (sek + fade + 1) + "s"; }
-      neu.className = "bild an" + (bewegung ? (idx % 2 ? " kb2" : " kb1") : "");
+      neu.style.objectPosition = ""; neu.style.webkitTransformOrigin = neu.style.transformOrigin = "";
+      neu.className = "bild an" + (bewegung ? " kb" + ((idx * 5 + 1) % 6 + 1) : "");
+      (function (bild, id) { fokusHolen(id, function (f) { if (bild.className.indexOf(" an") > 0 && liste[idx] === id) fokusAnwenden(bild, f); }); })(neu, liste[idx]);
       if (alt) alt.className = "bild";
       if (fuellung === "unscharf") {                                       // unscharfe Fortsetzung des Fotos statt schwarzer Raender
         var bn = (neu === bildA) ? bgA : bgB, ba = (neu === bildA) ? bgB : bgA;
@@ -482,6 +519,7 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
       if (musikPausiert) { musikPausiert = false; if (audio) { try { audio.play(); } catch (e3) {} } }
       vorn = neu; mitte.className = "versteckt";
       var n = new Image(); n.src = quelle((idx + weiter) % liste.length);          // naechstes vorladen
+      fokusHolen(liste[(idx + weiter) % liste.length]);
       plane();
     };
     neu.onerror = function () {
@@ -656,5 +694,6 @@ body.bewegung .bild.an.kb2 { -webkit-animation: kb2 14s ease-out forwards; anima
   document.addEventListener("visibilitychange", an);
 })();
 </script>
+<script>try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function () {}); } catch (e) {}</script>
 </body>
 </html>

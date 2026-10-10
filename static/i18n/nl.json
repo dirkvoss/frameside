@@ -685,7 +685,10 @@
   "Die beiden neuen PINs sind nicht gleich.": "De twee nieuwe pincodes zijn niet gelijk.",
   "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben.": "De nieuwe pincode geldt. Andere telefoons en tablets moeten die één keer invoeren.",
   "Die bisherige PIN stimmt nicht.": "De huidige pincode klopt niet.",
-  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Kies geen makkelijk te raden pincode (bijvoorbeeld 123456 of allemaal dezelfde cijfers)."
+  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Kies geen makkelijk te raden pincode (bijvoorbeeld 123456 of allemaal dezelfde cijfers).",
+  "Bildschärfe": "Beeldscherpte",
+  "Automatisch (empfohlen)": "Automatisch (aanbevolen)",
+  "Hoch (für 4K-Bildschirme)": "Hoog (voor 4K-schermen)"
  },
  "muster": [
   [
