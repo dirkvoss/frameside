@@ -109,6 +109,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write            # fuer die Signatur des Images (cosign, ohne Schluessel)
     env:
       IMAGE: ghcr.io/${{ github.repository }}
     steps:
@@ -121,24 +122,59 @@ jobs:
               mirrors = ["mirror.gcr.io"]
       - name: Version bestimmen
         id: v
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          { echo "version=$V"; echo "minor=${V%.*}"; echo "major=${V%%.*}"; } >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Veroeffentlichen (nur bei Versions-Tag)
+        id: bauen
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          provenance: mode=max                          # Herkunftsnachweis und Software-Stueckliste (SBOM) am Image
+          sbom: true
           build-args: SHOWCASE_VERSION=${{ steps.v.outputs.version }}
           tags: |
             ${{ env.IMAGE }}:${{ steps.v.outputs.version }}
+            ${{ env.IMAGE }}:${{ steps.v.outputs.minor }}
+            ${{ env.IMAGE }}:${{ steps.v.outputs.major }}
             ${{ env.IMAGE }}:latest
           cache-from: type=gha
+      - name: Image signieren (cosign, ohne eigenen Schluessel)
+        continue-on-error: true
+        uses: sigstore/cosign-installer@v3
+      - name: Signatur anbringen
+        continue-on-error: true
+        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.bauen.outputs.digest }}"
       - name: Unter dem alten Namen weiter anbieten (Uebergang, bestehende Installationen und Server)
         continue-on-error: true
         run: |
           docker buildx imagetools create -t ghcr.io/${{ github.repository_owner }}/immich-showcase:${{ steps.v.outputs.version }} -t ghcr.io/${{ github.repository_owner }}/immich-showcase:latest ${{ env.IMAGE }}:${{ steps.v.outputs.version }}
+
+  release:
+    # Legt das GitHub-Release an (Notizen aus .github/release-notes/<Version>.md, sonst aus dem CHANGELOG). Gibt es das Release schon, passiert nichts.
+    needs: [publish]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitHub-Release anlegen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then echo "Release $GITHUB_REF_NAME gibt es schon."; exit 0; fi
+          if [ -f ".github/release-notes/$V.md" ]; then cp ".github/release-notes/$V.md" notes.md
+          else awk -v v="$V" 'index($0, "## [" v "]") == 1 {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > notes.md; fi
+          [ -s notes.md ] || echo "See CHANGELOG.md" > notes.md
+          TITEL="$V"
+          if head -n1 notes.md | grep -q '^# '; then TITEL="$V – $(head -n1 notes.md | sed 's/^# //')"; sed -i 1d notes.md; fi
+          gh release create "$GITHUB_REF_NAME" --title "$TITEL" --notes-file notes.md --latest

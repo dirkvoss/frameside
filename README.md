@@ -231,6 +231,7 @@ The interface and the sentence search work in **German, English, Spanish, French
 
 ## Security
 - The app can **never delete photos**; its API key has no delete rights.
+- **Verify the image (from the next release on):** images carry a build provenance and an SBOM and are signed with [cosign](https://github.com/sigstore/cosign) (keyless). Check with `cosign verify ghcr.io/dirkvoss/frameside:<version> --certificate-identity-regexp 'https://github.com/dirkvoss/frameside/' --certificate-oidc-issuer https://token.actions.githubusercontent.com`. Tags: `2.25.0` (exact), `2.25` (patch updates), `2` (minor updates), `latest`.
 - **Your own API key?** The setup wizard creates a key with the right permissions. If you create one by hand, use the list in `.env.example`. Add the optional read-only right `face.read` so crop and zoom follow the faces in a photo (without it the frame uses the image centre). Existing key: Immich → Account → API keys → edit permissions.
 - Sign-in with PIN or Immich account, locked after failed attempts (per IP and per email). Every person gets an own, revocable key. Sessions last 90 days; writing requests need an own header.
 - The container runs as non-root with a read-only file system, no Linux capabilities and a memory limit.
