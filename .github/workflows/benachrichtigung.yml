@@ -2,6 +2,7 @@ name: Benachrichtigung
 
 # Schickt dem Maintainer eine Pushover-Nachricht aufs Handy, wenn jemand etwas im Repo tut (Issue, Diskussion, Kommentar, Stern, Fork, Pull Request).
 # Braucht zwei Repository-Secrets (Settings -> Secrets and variables -> Actions): PUSHOVER_USER und PUSHOVER_TOKEN. Fehlen sie, passiert nichts.
+# Optional PUSHOVER_DEVICE: nur an dieses Geraet senden (sonst an alle Geraete des Kontos).
 # Der Workflow checkt keinen Code aus und fuehrt keinen Code aus Pull Requests aus; Texte von Fremden laufen nur als Umgebungsvariablen durch.
 
 on:
@@ -30,6 +31,7 @@ jobs:
         env:
           PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_DEVICE: ${{ secrets.PUSHOVER_DEVICE }}          # optional: nur an dieses Geraet (Name bei Pushover), sonst an alle
           EREIGNIS: ${{ github.event_name }}
           AKTION: ${{ github.event.action }}
           WER: ${{ github.actor }}
@@ -55,7 +57,8 @@ jobs:
           NACHRICHT="${TITEL:-}"
           if [ -n "$TEXT" ]; then NACHRICHT="$NACHRICHT"$'\n'"$TEXT"; fi
           [ -n "$NACHRICHT" ] || NACHRICHT="Die Benachrichtigung ist eingerichtet. $LINK"
-          curl -fsS https://api.pushover.net/1/messages.json \
+          GERAET=(); if [ -n "$PUSHOVER_DEVICE" ]; then GERAET=(--form-string "device=$PUSHOVER_DEVICE"); fi
+          curl -fsS https://api.pushover.net/1/messages.json "${GERAET[@]}" \
             --form-string "token=$PUSHOVER_TOKEN" --form-string "user=$PUSHOVER_USER" \
             --form-string "title=Frameside: ${KOPF:0:80}" --form-string "message=${NACHRICHT:0:500}" \
             --form-string "url=$LINK" --form-string "url_title=Auf GitHub öffnen" > /dev/null
