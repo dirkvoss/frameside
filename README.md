@@ -6,7 +6,7 @@
 Search in plain sentences ("Grandma and Anna, Christmas 2019, on the beach"), tap the photos you like, give the show a name and send it to the living-room TV or the picture frame in the hallway. Optional background music, videos, and a continuous slideshow when nobody has asked for anything.
 
 **What makes Frameside different**
-- 📲 **The family chooses, the screen obeys:** search, tap photos, send them to the TV or a frame – with a remote control on the phone, instead of a screen that only shows random photos on its own.
+- 📲 **The family chooses, the screen obeys:** search, tap photos, send them to the TV or a frame – from the phone, with a remote control, not just a screen that plays photos on its own.
 - 📺 **TVs without an app:** any TV with a web browser works; picture frames run in a plain tablet browser.
 - 🔌 **Devices pair themselves:** open the address on the TV, it appears in the app, give it a name. No codes, no config files – everything is set up in the interface.
 - 👨‍👩‍👧 **Made for families:** shared PIN or each person's own Immich account, notes and greetings with a photo, guest uploads by QR code for parties, appointments from the phone calendar.
