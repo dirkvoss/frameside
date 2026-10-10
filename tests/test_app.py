@@ -1,4 +1,6 @@
 """App-Verhalten gegen ein Schein-Immich: Zugang, Konfiguration, Filter (API-Weg), Fernseher, Rahmen-Player, Modi."""
+import os
+
 H = {"X-Rahmen": "1"}
 
 
@@ -323,3 +325,52 @@ def test_diagnose_braucht_anmeldung(app_laden):
 def test_frische_installation_legt_keine_beispielgeraete_an(app_laden):
     w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
     assert "lg" not in w.TV_ZIELE and "shield" not in w.TV_ZIELE
+
+
+def test_pin_aendern_von_aussen_braucht_die_bisherige_pin(app_laden, monkeypatch):
+    w, client, _ = app_laden()
+    monkeypatch.setattr(w.time, "sleep", lambda s: None)
+    c = client("10.0.0.5")
+    assert c.put("/api/zugang/pin", json={"neu": "482915"}, headers=H).status_code == 401           # nicht angemeldet
+    c.post("/api/login", json={"pin": "123456"}, headers=H)
+    assert c.put("/api/zugang/pin", json={"alt": "000001", "neu": "482915"}, headers=H).status_code == 401   # falsche bisherige PIN
+    assert c.put("/api/zugang/pin", json={"alt": "123456", "neu": "4829"}, headers=H).status_code == 400     # zu kurz
+    assert c.put("/api/zugang/pin", json={"alt": "123456", "neu": "111111"}, headers=H).status_code == 400   # zu leicht
+    assert c.put("/api/zugang/pin", json={"alt": "123456", "neu": "123456"}, headers=H).status_code == 400
+    assert c.put("/api/zugang/pin", json={"alt": "123456", "neu": "482915"}, headers=H).json()["ok"] is True
+    assert c.get("/api/neueste").status_code == 200                                                   # der Aufrufer bleibt angemeldet
+    assert w.pin_pruefen("482915") and not w.pin_pruefen("123456")
+    anderer = client("10.0.0.6")                                                                      # andere Geraete: altes Cookie gilt nicht mehr, neue PIN schon
+    assert anderer.post("/api/login", json={"pin": "123456"}, headers=H).status_code == 401
+    assert anderer.post("/api/login", json={"pin": "482915"}, headers=H).json()["ok"] is True
+
+
+def test_pin_aendern_im_heimnetz_ohne_bisherige_pin(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    c = client("192.168.1.50")
+    assert c.put("/api/zugang/pin", json={"neu": "482915"}, headers=H).json()["ok"] is True
+    assert w.pin_pruefen("482915")
+    assert client("10.0.0.9").put("/api/zugang/pin", json={"neu": "593026"}, headers=H).status_code == 401  # von aussen weiter nur mit PIN
+
+
+def test_pin_aendern_sperrt_nach_fehlversuchen(app_laden, monkeypatch):
+    w, client, _ = app_laden()
+    monkeypatch.setattr(w.time, "sleep", lambda s: None)
+    c = client("10.0.0.5")
+    c.post("/api/login", json={"pin": "123456"}, headers=H)
+    for _ in range(w.FEHLVERSUCHE):
+        assert c.put("/api/zugang/pin", json={"alt": "000001", "neu": "482915"}, headers=H).status_code == 401
+    assert c.put("/api/zugang/pin", json={"alt": "123456", "neu": "482915"}, headers=H).status_code == 429
+
+
+def test_pin_aendern_gibt_es_im_reinen_immich_betrieb_nicht(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_AUTH="immich")
+    assert client("10.0.0.5").put("/api/zugang/pin", json={"neu": "482915"}, headers=H).status_code in (400, 401)
+
+
+def test_startfunktionen_laufen_ueber_den_lebenszyklus(app_laden):
+    from fastapi.testclient import TestClient
+    w, client, _ = app_laden()
+    assert len(w._START) >= 5
+    with TestClient(w.app, client=("192.168.1.50", 50000)):
+        assert os.path.exists(w.SELBSTTEST_FILE)                 # selbsttest_geheimnis() lief beim Start
