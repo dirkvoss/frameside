@@ -178,3 +178,11 @@ jobs:
           TITEL="$V"
           if head -n1 notes.md | grep -q '^# '; then TITEL="$V – $(head -n1 notes.md | sed 's/^# //')"; sed -i 1d notes.md; fi
           gh release create "$GITHUB_REF_NAME" --title "$TITEL" --notes-file notes.md --latest
+          # Die Android-TV-App (Frameside-TV.apk) soll am neuesten Release immer hängen, damit der feste Link /releases/latest/download/Frameside-TV.apk funktioniert:
+          # Hat dieses Release keine eigene APK, wird die des vorigen Releases übernommen.
+          if ! gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name' | grep -q '^Frameside-TV.apk$'; then
+            VORIGES=$(gh release list --limit 10 --json tagName -q '.[].tagName' | grep -v "^$GITHUB_REF_NAME$" | head -1)
+            if [ -n "$VORIGES" ] && gh release download "$VORIGES" --pattern 'Frameside-TV.apk' --dir apk 2>/dev/null; then
+              gh release upload "$GITHUB_REF_NAME" apk/Frameside-TV.apk
+            fi
+          fi
