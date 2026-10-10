@@ -6,7 +6,7 @@
 Suche in ganzen Sätzen („Oma und Anna Weihnachten 2019 am Strand“), tippe die Fotos an, gib der Show einen Namen und schick sie an den Fernseher im Wohnzimmer oder den Bilderrahmen im Flur. Mit Hintergrundmusik, Videos und einem Dauerprogramm, wenn gerade niemand etwas ausgewählt hat.
 
 **Was Frameside besonders macht**
-- 📲 **Die Familie bestimmt, der Bildschirm gehorcht:** suchen, Fotos antippen, an Fernseher oder Rahmen schicken – mit Fernbedienung am Handy, statt eines Bildschirms, der nur von allein zufällige Fotos zeigt.
+- 📲 **Die Familie bestimmt, der Bildschirm gehorcht:** suchen, Fotos antippen, an Fernseher oder Rahmen schicken – vom Handy aus, mit Fernbedienung, nicht nur ein Bildschirm, der von allein Fotos abspielt.
 - 📺 **Fernseher ohne App:** jeder Fernseher mit Browser genügt; Bilderrahmen laufen im ganz normalen Tablet-Browser.
 - 🔌 **Geräte koppeln sich selbst:** Adresse am Fernseher öffnen, in der App erscheint er, Namen eingeben. Keine Codes, keine Konfigurationsdateien, alles steht in der Oberfläche.
 - 👨‍👩‍👧 **Für Familien gemacht:** gemeinsame PIN oder das eigene Immich-Konto jeder Person, Notizen und Grüße mit Foto, Gäste-Upload per QR-Code für Feste, Termine aus dem Handy-Kalender.
