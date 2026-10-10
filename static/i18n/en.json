@@ -674,7 +674,18 @@
   "Hisense-Fernseher": "Hisense TV",
   "Android-Tablet": "Android tablet",
   "Einfache Diashow (nur Fotos, ohne Uhr, Wetter und Termine)": "Simple slideshow (photos only, no clock, weather or appointments)",
-  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "On your phone open Frameside, tap “Devices” and “＋ Add device”. This device appears there by itself. If not, enter this code:"
+  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "On your phone open Frameside, tap “Devices” and “＋ Add device”. This device appears there by itself. If not, enter this code:",
+  "Zugang (PIN)": "Access (PIN)",
+  "Hier änderst du die gemeinsame PIN. Im Heimnetz brauchst du die bisherige PIN nicht, zum Beispiel wenn du sie vergessen hast.": "Change the shared PIN here. At home you don't need the current PIN, for example if you forgot it.",
+  "Bisherige PIN": "Current PIN",
+  "Neue PIN (6 Ziffern)": "New PIN (6 digits)",
+  "Neue PIN wiederholen": "Repeat new PIN",
+  "PIN ändern": "Change PIN",
+  "Die neue PIN muss genau 6 Ziffern haben.": "The new PIN must have exactly 6 digits.",
+  "Die beiden neuen PINs sind nicht gleich.": "The two new PINs don't match.",
+  "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben.": "The new PIN is active. Other phones and tablets have to enter it once.",
+  "Die bisherige PIN stimmt nicht.": "The current PIN is wrong.",
+  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Please don't choose an easy-to-guess PIN (for example 123456 or all the same digits)."
  },
  "muster": [
   [

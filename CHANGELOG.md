@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.24.0]
+### Neu
+- **PIN ändern in der Oberfläche und in der App:** Einstellungen (Konto-Menü → ⚙) → „Zugang (PIN)“. Von außen braucht es die bisherige PIN, im vertrauten Heimnetz nicht (zum Beispiel wenn man sie vergessen hat). Falsche Versuche werden wie bei der Anmeldung gezählt und gesperrt, sehr leichte PINs (123456, lauter gleiche Ziffern) werden abgelehnt. Das eigene Gerät bleibt angemeldet, alle anderen geben die neue PIN einmal ein. Bisher ging das nur per Befehl auf dem Server.
+### Geändert
+- Das Protokoll ist aufgeräumt: keine „on_event is deprecated“-Warnungen mehr (Startfunktionen laufen über den neuen Lebenszyklus von FastAPI).
+
 ## [2.23.1]
 ### Geändert
 - Texte nach dem neuen Ablauf: Einrichtungsassistent, Installationsskript und „Alles in Ordnung?“ erklären jetzt, dass Fernseher und Tablets von selbst in der App erscheinen (kein Code mehr nötig). Die Zeile zur Version heißt in „Alles in Ordnung?“ jetzt „Frameside“.

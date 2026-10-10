@@ -675,6 +675,14 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       <p class="tipp">Damit die Suche „Oma“ versteht, obwohl die Person in Immich anders heißt.</p>
       <div id="eAliase"></div>
       <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eAliasNeu" type="button">＋ Spitzname</button></div>
+      <div id="ePinBlock">
+      <h3>Zugang (PIN)</h3>
+      <p class="tipp">Hier änderst du die gemeinsame PIN. Im Heimnetz brauchst du die bisherige PIN nicht, zum Beispiel wenn du sie vergessen hast.</p>
+      <label class="tvfeld"><span>Bisherige PIN</span> <input id="ePinAlt" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" aria-label="Bisherige PIN"></label>
+      <label class="tvfeld"><span>Neue PIN (6 Ziffern)</span> <input id="ePinNeu" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" aria-label="Neue PIN"></label>
+      <label class="tvfeld"><span>Neue PIN wiederholen</span> <input id="ePinNeu2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" aria-label="Neue PIN wiederholen"></label>
+      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="ePinSetzen" type="button">PIN ändern</button></div>
+      </div>
       <h3>iPhone-App verbinden</h3>
       <p class="tipp">In der App „Frameside“ den QR-Code scannen – sie trägt die Adresse dieses Servers selbst ein.</p>
       <div id="eAppQr" style="width:180px;max-width:60%;margin:6px auto;background:#fff;padding:10px;border-radius:12px"></div>
@@ -2242,6 +2250,7 @@ function aliasZeile(a) {
   z.append(n, document.createTextNode("="), pe, weg); return z;
 }
 function einstFuellen(d) {
+  $("#ePinBlock").classList.toggle("versteckt", !!konfig && konfig.auth === "immich");
   einstDaten = d; einstWetter = d.wetter;
   $("#eSek").value = d.sek || ""; $("#eSek").placeholder = String(d.standard.sek);
   $("#eFuellungR").value = d.fuellung_rahmen || ""; $("#eFuellungT").value = d.fuellung_tv || "";
@@ -2318,6 +2327,15 @@ $("#eKalTest").addEventListener("click", () => einstTest("kalender"));
 $("#ePoTest").addEventListener("click", () => einstTest("pushover"));
 $("#eMonatTest").addEventListener("click", () => einstTest("monatsbrief"));
 $("#eKalWeg").addEventListener("click", async () => { try { const r = await api("einstellungen", { method: "PUT", body: JSON.stringify({ kalender_url: null }) }); einstFuellen(r.einstellungen); } catch (e) { fehler(e); } });
+$("#ePinSetzen").addEventListener("click", async () => {
+  const alt = $("#ePinAlt").value.trim(), neu = $("#ePinNeu").value.trim();
+  if (!/^\d{6}$/.test(neu)) { toast(RW_T("Die neue PIN muss genau 6 Ziffern haben."), true); return; }
+  if (neu !== $("#ePinNeu2").value.trim()) { toast(RW_T("Die beiden neuen PINs sind nicht gleich."), true); return; }
+  const b = $("#ePinSetzen"); b.disabled = true;
+  try { const r = await api("zugang/pin", { method: "PUT", body: JSON.stringify({ alt, neu }) }); for (const x of ["#ePinAlt", "#ePinNeu", "#ePinNeu2"]) $(x).value = ""; toast(r.nachricht || RW_T("Gespeichert.")); }
+  catch (e) { fehler(e); }
+  b.disabled = false;
+});
 $("#ePoWeg").addEventListener("click", async () => { try { const r = await api("einstellungen", { method: "PUT", body: JSON.stringify({ pushover: null }) }); einstFuellen(r.einstellungen); } catch (e) { fehler(e); } });
 
 let assiTimer = 0, assiId = null;

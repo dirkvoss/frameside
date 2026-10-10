@@ -11,6 +11,7 @@ gemerkt (signierter Cookie). 5 Fehlversuche je IP -> 15 Minuten Sperre, viele Fe
 
 import base64
 import collections
+import contextlib
 import contextvars
 import datetime
 import hashlib
@@ -138,7 +139,23 @@ ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 AUTH_LOCK = threading.Lock()
 CACHE = {}
 
-app = FastAPI(title="Rahmen-Web", docs_url=None, redoc_url=None, openapi_url=None)
+_START = []
+
+
+def beim_start(funktion):
+    """Merkt eine Funktion, die beim Start des Dienstes einmal laeuft (Ersatz fuer das veraltete app.on_event)."""
+    _START.append(funktion)
+    return funktion
+
+
+@contextlib.asynccontextmanager
+async def _lebenszyklus(_app):
+    for f in list(_START):
+        f()
+    yield
+
+
+app = FastAPI(title="Rahmen-Web", docs_url=None, redoc_url=None, openapi_url=None, lifespan=_lebenszyklus)
 
 
 # --------------------------------------------------------------------------- Hilfen
@@ -214,6 +231,19 @@ def pin_pruefen(pin):
     except (OSError, ValueError):
         return False
     return hmac.compare_digest(pin_hash(pin, bytes.fromhex(salz)).split("$")[2], h)
+
+
+def pin_setzen(pin):
+    """Speichert eine neue PIN (nur als scrypt-Hash). Alle bisherigen PIN-Sitzungen werden damit ungueltig."""
+    os.makedirs(os.path.dirname(PIN_FILE) or ".", exist_ok=True)
+    fd = os.open(PIN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.write(fd, pin_hash(pin).encode())
+    finally:
+        os.close(fd)
+
+
+SCHWACHE_PINS = {"123456", "654321", "012345", "123123", "121212", "112233", "000000"}
 
 
 def pin_version():
@@ -335,7 +365,7 @@ def selbsttest_ok(request: Request):
     return bool(soll) and hmac.compare_digest(gesendet, soll)
 
 
-@app.on_event("startup")
+@beim_start
 def selbsttest_geheimnis():
     try:
         fd = os.open(SELBSTTEST_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -602,6 +632,39 @@ def login_immich(request: Request, response: Response, daten: dict):
     return {"ok": True, "name": antwort.get("name") or email}
 
 
+@app.put("/api/zugang/pin")
+def pin_aendern(request: Request, response: Response, daten: dict, a=Depends(anmeldung), _=Depends(csrf)):
+    """Gemeinsame PIN aendern. Im vertrauten Netz genuegt die Anmeldung dort (PIN vergessen); von aussen braucht es die bisherige PIN."""
+    if AUTH == "immich":
+        raise HTTPException(400, "In diesem Betrieb meldet sich jede Person mit ihrem Immich-Konto an; es gibt keine gemeinsame PIN.")
+    if a.get("typ") == "immich":
+        raise HTTPException(403, "Die gemeinsame PIN kann nur mit der PIN oder im Heimnetz geändert werden.")
+    neu, alt = str(daten.get("neu", "")), str(daten.get("alt", ""))
+    if not re.fullmatch(r"\d{6}", neu):
+        raise HTTPException(400, "Die neue PIN muss genau 6 Ziffern haben.")
+    if len(set(neu)) == 1 or neu in SCHWACHE_PINS:
+        raise HTTPException(400, "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).")
+    if not a.get("lan"):
+        ip = client_ip(request)
+        jetzt = time.time()
+        with AUTH_LOCK:
+            st = lies_json(AUTH_STATE, {"fehl": {}, "global": [], "alarm": 0})
+            fehl = [t for t in st["fehl"].get(ip, []) if jetzt - t < SPERRE_SEK]
+            if len(fehl) >= FEHLVERSUCHE:
+                raise HTTPException(429, "Zu viele Versuche. Bitte später erneut versuchen.")
+            if not (re.fullmatch(r"\d{6}", alt) and pin_pruefen(alt)):
+                st["fehl"][ip] = fehl + [jetzt]
+                schreibe_json(AUTH_STATE, st)
+                time.sleep(1)
+                raise HTTPException(401, "Die bisherige PIN stimmt nicht.")
+    pin_setzen(neu)
+    H.log.info("PIN geaendert (von %s)", client_ip(request))
+    if a.get("typ") == "pin":                         # die PIN-Sitzung des Aufrufers bleibt gueltig, alle anderen melden sich neu an
+        response.set_cookie(COOKIE, sitzung_ausstellen(), max_age=COOKIE_TAGE * 86400, httponly=True,
+                            samesite="strict", secure=request.headers.get("x-forwarded-proto") == "https")
+    return {"ok": True, "nachricht": "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben."}
+
+
 @app.post("/api/logout")
 def logout(response: Response, _=Depends(csrf)):
     response.delete_cookie(COOKIE)
@@ -639,7 +702,7 @@ def setup_code_erzeugen():
     H.log.warning("=" * 66)
 
 
-@app.on_event("startup")
+@beim_start
 def setup_start():
     setup_code_erzeugen()
 
@@ -2974,7 +3037,7 @@ def fully_wache_schleife():
         time.sleep(60)
 
 
-@app.on_event("startup")
+@beim_start
 def fully_wache_starten():
     threading.Thread(target=fully_wache_schleife, daemon=True).start()
 
@@ -3861,7 +3924,7 @@ def rahmen_wache_schleife():
             H.log.warning("Weitere Ueberwachung: %s", e)
 
 
-@app.on_event("startup")
+@beim_start
 def rahmen_wache_starten():
     threading.Thread(target=rahmen_wache_schleife, daemon=True).start()
 
@@ -4109,7 +4172,7 @@ def video_vorbereiter():
         time.sleep(1800)
 
 
-@app.on_event("startup")
+@beim_start
 def video_vorbereiter_starten():
     threading.Thread(target=video_vorbereiter, daemon=True).start()
 
@@ -4456,9 +4519,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 3 and sys.argv[1] == "--set-pin":
         if not re.fullmatch(r"\d{6}", sys.argv[2]):
             sys.exit("Die PIN muss genau 6 Ziffern haben.")
-        fd = os.open(PIN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        os.write(fd, pin_hash(sys.argv[2]).encode())
-        os.close(fd)
+        pin_setzen(sys.argv[2])
         print("PIN gesetzt; alle gemerkten Geraete muessen sich neu anmelden.")
     else:
         sys.exit("Aufruf: rahmen_web.py --set-pin 123456   (Dienst: uvicorn rahmen_web:app)")

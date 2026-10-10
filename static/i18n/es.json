@@ -674,7 +674,18 @@
   "Hisense-Fernseher": "Televisor Hisense",
   "Android-Tablet": "Tableta Android",
   "Einfache Diashow (nur Fotos, ohne Uhr, Wetter und Termine)": "Presentación sencilla (solo fotos, sin reloj, tiempo ni citas)",
-  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "Abre Frameside en el móvil, toca «Dispositivos» y «＋ Añadir dispositivo». Este dispositivo aparece allí solo. Si no, introduce este código:"
+  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "Abre Frameside en el móvil, toca «Dispositivos» y «＋ Añadir dispositivo». Este dispositivo aparece allí solo. Si no, introduce este código:",
+  "Zugang (PIN)": "Acceso (PIN)",
+  "Hier änderst du die gemeinsame PIN. Im Heimnetz brauchst du die bisherige PIN nicht, zum Beispiel wenn du sie vergessen hast.": "Aquí cambias el PIN compartido. En casa no necesitas el PIN actual, por ejemplo si lo has olvidado.",
+  "Bisherige PIN": "PIN actual",
+  "Neue PIN (6 Ziffern)": "PIN nuevo (6 dígitos)",
+  "Neue PIN wiederholen": "Repite el PIN nuevo",
+  "PIN ändern": "Cambiar PIN",
+  "Die neue PIN muss genau 6 Ziffern haben.": "El PIN nuevo debe tener exactamente 6 dígitos.",
+  "Die beiden neuen PINs sind nicht gleich.": "Los dos PIN nuevos no coinciden.",
+  "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben.": "El PIN nuevo ya vale. Otros móviles y tabletas deben introducirlo una vez.",
+  "Die bisherige PIN stimmt nicht.": "El PIN actual no es correcto.",
+  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Evita un PIN fácil de adivinar (por ejemplo 123456 o todas las cifras iguales)."
  },
  "muster": [
   [

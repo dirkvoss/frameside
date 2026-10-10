@@ -674,7 +674,18 @@
   "Hisense-Fernseher": "Hisense-tv",
   "Android-Tablet": "Android-tablet",
   "Einfache Diashow (nur Fotos, ohne Uhr, Wetter und Termine)": "Eenvoudige diavoorstelling (alleen foto’s, zonder klok, weer en afspraken)",
-  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "Open Frameside op je telefoon, tik op ‘Apparaten’ en ‘＋ Apparaat toevoegen’. Dit apparaat verschijnt daar vanzelf. Zo niet, voer deze code in:"
+  "Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:": "Open Frameside op je telefoon, tik op ‘Apparaten’ en ‘＋ Apparaat toevoegen’. Dit apparaat verschijnt daar vanzelf. Zo niet, voer deze code in:",
+  "Zugang (PIN)": "Toegang (pincode)",
+  "Hier änderst du die gemeinsame PIN. Im Heimnetz brauchst du die bisherige PIN nicht, zum Beispiel wenn du sie vergessen hast.": "Hier wijzig je de gedeelde pincode. Thuis heb je de huidige pincode niet nodig, bijvoorbeeld als je die vergeten bent.",
+  "Bisherige PIN": "Huidige pincode",
+  "Neue PIN (6 Ziffern)": "Nieuwe pincode (6 cijfers)",
+  "Neue PIN wiederholen": "Nieuwe pincode herhalen",
+  "PIN ändern": "Pincode wijzigen",
+  "Die neue PIN muss genau 6 Ziffern haben.": "De nieuwe pincode moet precies 6 cijfers hebben.",
+  "Die beiden neuen PINs sind nicht gleich.": "De twee nieuwe pincodes zijn niet gelijk.",
+  "Die neue PIN gilt. Andere Handys und Tablets müssen sie einmal eingeben.": "De nieuwe pincode geldt. Andere telefoons en tablets moeten die één keer invoeren.",
+  "Die bisherige PIN stimmt nicht.": "De huidige pincode klopt niet.",
+  "Bitte keine leicht zu erratende PIN wählen (zum Beispiel 123456 oder lauter gleiche Ziffern).": "Kies geen makkelijk te raden pincode (bijvoorbeeld 123456 of allemaal dezelfde cijfers)."
  },
  "muster": [
   [
