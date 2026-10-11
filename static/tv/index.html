@@ -392,9 +392,20 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
       if (m) { h1 = +m[1]; m1 = +m[2]; h2 = +m[3]; m2 = +m[4]; var d = new Date(); jetzt = d.getHours() * 60 + d.getMinutes(); a = h1 * 60 + m1; b = h2 * 60 + m2; an = a <= b ? (jetzt >= a && jetzt < b) : (jetzt >= a || jetzt < b); }
     }
     nachtEl.style.display = an ? "block" : "none";
-    if (window.fully && nacht && extras && an !== nachtPruefen.aus) {          // in Fully: Bildschirm wirklich aus/an (nur beim Wechsel, damit Handeingriffe nicht ueberstimmt werden)
-      nachtPruefen.aus = an;
-      try { if (an) { if (window.fully.turnScreenOff) window.fully.turnScreenOff(true); } else if (window.fully.turnScreenOn) window.fully.turnScreenOn(); } catch (e) {}
+    if (window.fully && nacht && extras && an !== nachtPruefen.aus) {          // in Fully: nachts Helligkeit 0 + schwarzer Schirm (nur beim Wechsel, damit Handeingriffe nicht ueberstimmt werden)
+      nachtPruefen.aus = an;                                                    // Bewusst KEIN turnScreenOff: Fully friert die Seite dabei ein, sie koennte morgens nicht mehr aufwachen.
+      try {
+        var f = window.fully;
+        if (an) {
+          var hell = f.getScreenBrightness ? +f.getScreenBrightness() : -1;
+          if (hell > 0) { try { localStorage.setItem("frameHelligkeit", String(hell)); } catch (e1) {} }
+          if (f.setScreenBrightness) f.setScreenBrightness(0);
+        } else {
+          var alt = 0; try { alt = +localStorage.getItem("frameHelligkeit") || 0; } catch (e2) {}
+          if (f.turnScreenOn) f.turnScreenOn();
+          if (f.setScreenBrightness) f.setScreenBrightness(alt > 0 ? alt : 160);
+        }
+      } catch (e) {}
     }
   }
   setInterval(nachtPruefen, 20000);

@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.26.2]
+### Behoben
+- **Rahmen mit Fully Kiosk wachte morgens nicht mehr auf:** Die Nachtruhe schaltete den Bildschirm ganz aus, dabei friert Fully die Seite ein, und sie konnte sich um das Ende der Nachtruhe nicht mehr selbst einschalten (auch Antippen half nicht). Jetzt stellt die Seite nachts die **Helligkeit auf 0** und zeigt schwarz, läuft aber weiter und stellt die Helligkeit am Ende der Nachtruhe von selbst wieder her. Wer den Bildschirm wirklich ausschalten möchte, nutzt dafür eine eigene Automatik (siehe README).
+
 ## [2.26.1]
 ### Behoben
 - **QR-Scan in der App („QR-Code am Gerät scannen“):** Er öffnet jetzt gleich „Gerät gefunden“ mit Namensfeld (statt den Code nur zu übernehmen und ein vorhandenes Gerät zu verlangen). Gehört der Code zu einem anderen Server oder ist er abgelaufen, steht ein klarer Hinweis da.
