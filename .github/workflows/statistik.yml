@@ -1,0 +1,74 @@
+name: Statistik
+
+# Taeglich morgens: zaehlt Docker-Downloads (GitHub-Pakete frameside und immich-showcase), Sterne, Forks und Issues, haengt eine Zeile an
+# stats/verlauf.csv (eigener Zweig "stats", nicht main) und meldet dem Maintainer per Pushover, wenn es etwas Neues gibt.
+# Eigene Pulls (Release, Deploy, Tests) sind nicht von fremden zu trennen: Tage mit einem neuen Release gelten als "eigene Aktivitaet";
+# nur der Zuwachs an ruhigen Tagen wird als wahrscheinlich fremd gemeldet (ein Nutzer zaehlt oft 2-4 Pulls).
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  zaehlen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Zahlen holen, vergleichen, melden
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_DEVICE: ${{ secrets.PUSHOVER_DEVICE }}
+        run: |
+          set -euo pipefail
+          OWNER="${REPO%%/*}"; NAME="${REPO##*/}"
+          HEUTE=$(date -u +%F)
+          # --- Zahlen
+          PAKETE=$(gh api graphql -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){stargazerCount forkCount issues(states:OPEN){totalCount} packages(first:10){nodes{name statistics{downloadsTotalCount}}}}}' -f o="$OWNER" -f n="$NAME")
+          STERNE=$(jq -r '.data.repository.stargazerCount' <<<"$PAKETE")
+          FORKS=$(jq -r '.data.repository.forkCount' <<<"$PAKETE")
+          ISSUES=$(jq -r '.data.repository.issues.totalCount' <<<"$PAKETE")
+          NEU=$(jq -r '[.data.repository.packages.nodes[]|select(.name=="frameside")][0].statistics.downloadsTotalCount // 0' <<<"$PAKETE")
+          ALT=$(jq -r '[.data.repository.packages.nodes[]|select(.name=="immich-showcase")][0].statistics.downloadsTotalCount // 0' <<<"$PAKETE")
+          echo "Sterne $STERNE, Forks $FORKS, offene Issues $ISSUES, Downloads frameside $NEU, immich-showcase $ALT"
+          # --- Verlauf aus dem Zweig "stats"
+          git config --global user.name "github-actions[bot]"; git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" repo
+          cd repo
+          if git ls-remote --exit-code --heads origin stats >/dev/null 2>&1; then git checkout --quiet stats; else git checkout --quiet --orphan stats; git rm -rf --quiet . 2>/dev/null || true; fi
+          mkdir -p stats
+          [ -f stats/verlauf.csv ] || echo "datum,frameside,immich_showcase,sterne,forks,issues,eigene_aktivitaet,fremd_pulls_ruhig_gesamt" > stats/verlauf.csv
+          VORZEILE=$(tail -n1 stats/verlauf.csv)
+          if [ "${VORZEILE%%,*}" = "datum" ]; then ERSTER=1; else ERSTER=0; fi
+          IFS=, read -r VD VNEU VALT VSTERNE VFORKS VISSUES VEIGEN VGESAMT <<<"$VORZEILE"
+          # eigene Aktivitaet: ein Release oder Tag seit dem letzten Lauf (also in den letzten ~26 Stunden)?
+          SEIT=$(date -u -d "26 hours ago" +%FT%TZ)
+          EIGEN=$(gh api "repos/$REPO/releases?per_page=5" --jq "[.[]|select(.published_at > \"$SEIT\")]|length")
+          if [ "$ERSTER" = "1" ]; then
+            DNEU=0; DALT=0; GESAMT=0; MELDUNG="Statistik gestartet. Stand: frameside $NEU, immich-showcase $ALT Downloads, $STERNE Sterne."
+          else
+            DNEU=$((NEU - VNEU)); DALT=$((ALT - VALT)); GESAMT=${VGESAMT:-0}
+            MELDUNG=""
+            if [ "$EIGEN" = "0" ] && [ $((DNEU + DALT)) -gt 0 ]; then
+              GESAMT=$((GESAMT + DNEU + DALT))
+              MELDUNG="📦 Neue Downloads an einem ruhigen Tag: +$DNEU frameside, +$DALT immich-showcase (wahrscheinlich fremde Nutzer; ein Nutzer zählt oft 2–4). Seit Start insgesamt $GESAMT."
+            fi
+            [ "$STERNE" -gt "$VSTERNE" ] && MELDUNG="$MELDUNG ⭐ Sterne: $STERNE (+$((STERNE - VSTERNE)))"
+            [ "$FORKS" -gt "$VFORKS" ] && MELDUNG="$MELDUNG 🍴 Forks: $FORKS"
+            [ "$ISSUES" -gt "$VISSUES" ] && MELDUNG="$MELDUNG 💬 Offene Issues: $ISSUES"
+          fi
+          echo "$HEUTE,$NEU,$ALT,$STERNE,$FORKS,$ISSUES,$EIGEN,$GESAMT" >> stats/verlauf.csv
+          git add stats/verlauf.csv; git commit --quiet -m "Statistik $HEUTE"; git push --quiet origin stats
+          echo "Meldung: ${MELDUNG:-keine Neuigkeiten}"
+          # --- Pushover (nur bei Neuigkeiten)
+          if [ -n "${MELDUNG// /}" ] && [ -n "${PUSHOVER_USER:-}" ] && [ -n "${PUSHOVER_TOKEN:-}" ]; then
+            GERAET=(); if [ -n "${PUSHOVER_DEVICE:-}" ]; then GERAET=(--form-string "device=$PUSHOVER_DEVICE"); fi
+            curl -fsS https://api.pushover.net/1/messages.json "${GERAET[@]}" --form-string "token=$PUSHOVER_TOKEN" --form-string "user=$PUSHOVER_USER" \
+              --form-string "title=Frameside Statistik" --form-string "message=$MELDUNG" --form-string "url=https://github.com/$REPO" > /dev/null
+          fi
