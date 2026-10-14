@@ -702,6 +702,17 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       <div class="assi-adr"><code id="assiFindAdresse"></code></div>
       <div id="assiWartend"></div>
       <p class="assi-status" id="assiFindStatus">Suche nach Geräten …</p>
+      <details class="gfdetails" id="assiApp"><summary>Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)</summary>
+        <p class="tipp">Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.</p>
+        <ol class="tipp" style="padding-left:20px;margin:6px 0">
+          <li>Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.</li>
+          <li>Die geladene Datei öffnen und „Installieren“ bestätigen. Beim ersten Mal erlaubt man dem Browser einmalig „Apps aus dieser Quelle installieren“.</li>
+          <li>Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf <b>Verbinden</b>.</li>
+        </ol>
+        <div id="assiAppQr" style="max-width:180px;margin:8px auto"></div>
+        <div class="assi-adr"><code id="assiAppLink">github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk</code></div>
+        <p class="tipp">Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.</p>
+      </details>
     </div>
     <details class="gfdetails" id="assiHandarbeit"><summary>Gerät von Hand hinzufügen</summary>
     <div id="assiSchritt1" class="gf">
@@ -849,6 +860,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
               <label class="tvfeld"><span>Passwort</span> <input id="gfFullyPw" type="password" autocomplete="new-password" aria-label="Passwort"></label>
               <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfFullyTest" type="button">Verbindung testen</button></div>
               <p class="tipp versteckt" id="gfFullyErg" role="status"></p>
+              <p class="tipp"><b>Voraussetzung:</b> Server und Tablet müssen sich im selben Netz erreichen können (und in Fully ist „Remote Administration“ eingeschaltet). Sonst bleibt „Verbindung testen“ ohne Antwort – dann hilft die Einstellungsdatei weiter unten.</p>
               <h4 style="margin:14px 0 4px">Tablet als Bilderrahmen einrichten</h4>
               <p class="tipp">Frameside stellt Fully Kiosk für den Rahmenbetrieb ein (Adresse, Bildschirm immer an, kein Neuladen jede Minute, Start nach Neustart ...). Du beantwortest nur diese Fragen; später kannst du sie ändern und mit „Prüfen“ kontrollieren, ob am Tablet noch alles stimmt.</p>
               <label class="tvfeld"><span>Ausrichtung</span> <select id="gfAusr" aria-label="Ausrichtung"><option value="auto">Automatisch</option><option value="quer">Querformat</option><option value="hoch">Hochformat</option></select></label>
@@ -2429,6 +2441,7 @@ function assiOeffnen(zielCode) {
   assiZielCode = typeof zielCode === "string" ? zielCode : ""; assiZielErledigt = false;
   $("#assiTitel").textContent = RW_T("Gerät hinzufügen"); $("#assiFinden").classList.remove("versteckt"); $("#assiHandarbeit").classList.remove("versteckt"); $("#assiHandarbeit").open = false; $("#assiSchritt2").classList.add("versteckt");
   $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, "");
+  if (!$("#assiAppQr").innerHTML) { try { const qr = qrcode(0, "M"); qr.addData("https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk"); qr.make(); $("#assiAppQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { /* ohne QR bleibt der Link */ } }
   $("#assiName").value = ""; $("#assiArt").value = "rahmen"; $("#assiWartend").textContent = ""; $("#assiDialog").classList.remove("versteckt");
   clearInterval(assiSuche); assiSuche = setInterval(assiSuchen, 2500); assiSuchen();
 }

@@ -711,7 +711,14 @@
   "Prüfe …": "Vérification …",
   "Richte ein …": "Configuration …",
   "Alles wie für den Rahmenbetrieb eingestellt.": "Tout est réglé pour l’usage en cadre.",
-  "Das Tablet war schon richtig eingestellt.": "La tablette était déjà correctement réglée."
+  "Das Tablet war schon richtig eingestellt.": "La tablette était déjà correctement réglée.",
+  "Voraussetzung: Server und Tablet müssen sich im selben Netz erreichen können (und in Fully ist „Remote Administration“ eingeschaltet). Sonst bleibt „Verbindung testen“ ohne Antwort – dann hilft die Einstellungsdatei weiter unten.": "Condition : le serveur et la tablette doivent pouvoir se joindre sur le même réseau (et « Administration à distance » est activée dans Fully). Sinon « Tester la connexion » reste sans réponse – le fichier de réglages plus bas aide alors.",
+  "Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)": "Tablette Android ou Fire : installer l’app Frameside (recommandé)",
+  "Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.": "L’app ne demande ni réglages ni navigateur : elle trouve le serveur toute seule, reste en plein écran, garde l’écran allumé et démarre toute seule à l’allumage.",
+  "Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.": "Sur la tablette, scannez ce code QR avec l’appareil photo (ou ouvrez le lien dans le navigateur) et téléchargez le fichier.",
+  "Die geladene Datei öffnen und „Installieren“ bestätigen. Beim ersten Mal erlaubt man dem Browser einmalig „Apps aus dieser Quelle installieren“.": "Ouvrez le fichier téléchargé et confirmez « Installer ». La première fois, autorisez une fois le navigateur à « installer des applications de cette source ».",
+  "Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf Verbinden.": "Ouvrez Frameside : l’app cherche le serveur (ou vous saisissez son adresse) et affiche « Tablette Android trouvée » – l’appareil apparaît ici en haut, touchez Connecter.",
+  "Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.": "Les tablettes Fire n’ont pas de Google Play : téléchargez-y le fichier avec le navigateur Silk. Si le serveur est sur un autre réseau que la tablette, saisissez son adresse dans l’app sous « Saisir l’adresse »."
  },
  "muster": [
   [

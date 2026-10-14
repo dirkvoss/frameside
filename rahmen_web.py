@@ -3473,8 +3473,7 @@ def fully_test(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     try:
         info = json.loads(fully_get(f"http://{host if ':' in host else host + ':2323'}/?" + urllib.parse.urlencode({"cmd": "deviceInfo", "password": pw, "type": "json"})))
     except (OSError, ValueError) as e:
-        raise HTTPException(502, "Das Tablet ist von diesem Server aus nicht erreichbar (Adresse falsch, Tablet aus, „Remote Admin“ in Fully nicht eingeschaltet oder eine Firewall/ein anderes Netz dazwischen). "
-                                 f"Technisch: {e}")
+        raise HTTPException(502, f"{FULLY_UNERREICHBAR} (Technisch: {e})")
     if str(info.get("status", "")).lower() == "error":
         raise HTTPException(401 if "login" in str(info.get("statustext", "")).lower() else 502,
                             "Das Passwort stimmt nicht – es ist das „Remote Admin Password“ aus den Fully-Einstellungen." if "login" in str(info.get("statustext", "")).lower() else f"Fully meldet: {info.get('statustext')}")
@@ -3517,13 +3516,17 @@ def fully_gleich(soll, ist):
     return str(ist).strip() == str(soll)
 
 
+FULLY_UNERREICHBAR = ("Das Tablet ist von diesem Server aus nicht erreichbar. Meist stehen beide in verschiedenen Netzen (zum Beispiel der Server im Gast- oder DMZ-Netz, das Tablet im Heimnetz) "
+                      "und die Firewall lässt die Verbindung nicht durch. Prüfe sonst die Adresse, ob das Tablet an ist und ob in Fully „Remote Administration“ eingeschaltet ist. "
+                      "Ausweg ohne Verbindung: unten „Einstellungsdatei laden“ und in Fully unter Einstellungen → Andere Einstellungen → „Einstellungen importieren“ wählen.")
+
+
 def fully_pruefen(host, pw, profil):
     """Liest die Einstellungen des Tablets und vergleicht sie mit dem Profil: Liste der Abweichungen."""
     try:
         ist = json.loads(fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": "listSettings", "type": "json", "password": pw}), 12))
     except (OSError, ValueError) as e:
-        raise HTTPException(502, "Das Tablet ist von diesem Server aus nicht erreichbar (Adresse falsch, Tablet aus, „Remote Administration“ in Fully nicht eingeschaltet oder eine Firewall/ein anderes Netz dazwischen). "
-                                 f"Technisch: {e}")
+        raise HTTPException(502, f"{FULLY_UNERREICHBAR} (Technisch: {e})")
     if not isinstance(ist, dict) or str(ist.get("status", "")).lower() == "error":
         raise HTTPException(401, "Das Passwort stimmt nicht – es ist das „Remote Admin Password“ aus den Fully-Einstellungen.")
     return [{"key": k, "soll": v, "ist": ist.get(k)} for k, (_, v) in profil.items() if not fully_gleich(v, ist.get(k))]
@@ -3853,7 +3856,7 @@ def ua_beschreibung(ua):
     for _k, name, muster in tv:
         if re.search(muster, u, re.I):
             return name, "tv"
-    for muster, name in ((r"iPad", "iPad"), (r"iPhone", "iPhone"), (r"Android", "Android-Tablet"), (r"CrOS", "Chromebook"), (r"Macintosh", "Mac"), (r"Windows", "Windows-PC"),
+    for muster, name in ((r"iPad", "iPad"), (r"iPhone", "iPhone"), (r"\bKF[A-Z]{2,6}\b", "Fire-Tablet"), (r"Android", "Android-Tablet"), (r"CrOS", "Chromebook"), (r"Macintosh", "Mac"), (r"Windows", "Windows-PC"),
                          (r"Raspbian|Raspberry|aarch64|armv", "Raspberry Pi"), (r"Linux|X11", "Linux-Rechner")):
         if re.search(muster, u):
             return name, "rahmen"

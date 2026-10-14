@@ -711,7 +711,14 @@
   "Prüfe …": "Comprobando …",
   "Richte ein …": "Configurando …",
   "Alles wie für den Rahmenbetrieb eingestellt.": "Todo está configurado para el uso como marco.",
-  "Das Tablet war schon richtig eingestellt.": "La tableta ya estaba bien configurada."
+  "Das Tablet war schon richtig eingestellt.": "La tableta ya estaba bien configurada.",
+  "Voraussetzung: Server und Tablet müssen sich im selben Netz erreichen können (und in Fully ist „Remote Administration“ eingeschaltet). Sonst bleibt „Verbindung testen“ ohne Antwort – dann hilft die Einstellungsdatei weiter unten.": "Requisito: el servidor y la tableta deben poder alcanzarse en la misma red (y en Fully está activada la «Administración remota»). Si no, «Probar conexión» no recibe respuesta; entonces ayuda el archivo de ajustes más abajo.",
+  "Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)": "Tableta Android o Fire: instalar la app Frameside (recomendado)",
+  "Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.": "La app no necesita ajustes ni navegador: encuentra el servidor sola, permanece a pantalla completa, mantiene la pantalla encendida y arranca sola al encender.",
+  "Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.": "En la tableta, escanea este código QR con la cámara (o abre el enlace en el navegador) y descarga el archivo.",
+  "Die geladene Datei öffnen und „Installieren“ bestätigen. Beim ersten Mal erlaubt man dem Browser einmalig „Apps aus dieser Quelle installieren“.": "Abre el archivo descargado y confirma «Instalar». La primera vez se permite una vez al navegador «instalar apps de esta fuente».",
+  "Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf Verbinden.": "Abre Frameside: busca el servidor (o escribes su dirección) y muestra «Tableta Android encontrada»: el dispositivo aparece aquí arriba y tocas Conectar.",
+  "Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.": "Las tabletas Fire no tienen Google Play: descarga allí el archivo con el navegador Silk. Si el servidor está en otra red que la tableta, introduce su dirección en la app en «Escribir dirección»."
  },
  "muster": [
   [

@@ -711,7 +711,14 @@
   "Prüfe …": "Checking …",
   "Richte ein …": "Setting up …",
   "Alles wie für den Rahmenbetrieb eingestellt.": "Everything is set for frame use.",
-  "Das Tablet war schon richtig eingestellt.": "The tablet was already set correctly."
+  "Das Tablet war schon richtig eingestellt.": "The tablet was already set correctly.",
+  "Voraussetzung: Server und Tablet müssen sich im selben Netz erreichen können (und in Fully ist „Remote Administration“ eingeschaltet). Sonst bleibt „Verbindung testen“ ohne Antwort – dann hilft die Einstellungsdatei weiter unten.": "Requirement: the server and the tablet must be able to reach each other on the same network (and “Remote Administration” is switched on in Fully). Otherwise “Test connection” gets no answer – then the settings file further down helps.",
+  "Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)": "Android or Fire tablet: install the Frameside app (recommended)",
+  "Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.": "The app needs no settings and no browser: it finds the server by itself, stays full screen, keeps the screen on and starts by itself after power-on.",
+  "Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.": "On the tablet, scan this QR code with the camera (or open the link in the browser) and download the file.",
+  "Die geladene Datei öffnen und „Installieren“ bestätigen. Beim ersten Mal erlaubt man dem Browser einmalig „Apps aus dieser Quelle installieren“.": "Open the downloaded file and confirm “Install”. The first time you allow the browser once to “install apps from this source”.",
+  "Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf Verbinden.": "Open Frameside: it searches for the server (or you type its address) and shows “Android tablet found” – the device appears here above, you tap Connect.",
+  "Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.": "Fire tablets have no Google Play store: download the file there with the Silk browser. If the server is on a different network than the tablet, enter its address in the app under “Type address”."
  },
  "muster": [
   [

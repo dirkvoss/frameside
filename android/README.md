@@ -1,4 +1,4 @@
-# Frameside TV (Android TV / Google TV / Fire TV)
+# Frameside for Android (tablets, Android TV / Google TV / Fire TV / Fire tablets)
 
 A thin native shell around the Frameside TV page: full screen, finds your server on the home network by itself, and works as a **screensaver** (daydream). The photos, settings and pairing are the same as in the browser; the device shows up in the Frameside app under *Devices → ＋ Add device*.
 
@@ -10,6 +10,18 @@ A thin native shell around the Frameside TV page: full screen, finds your server
 5. Screensaver (optional): *Settings → Device preferences → Screen saver → Frameside*.
 
 Remote: **Menu** (or a long press on **Back**) opens a small menu: reload, change server, type an address, quit.
+
+## Tablet as a picture frame (Android and Fire tablets)
+The same app is the simplest way to turn a tablet into a frame – no browser, no Fully Kiosk, no settings.
+1. On the tablet open **https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk** (or scan the QR code in the Frameside app under *Devices → ＋ Add device → Android or Fire tablet*). On a **Fire tablet** use the Silk browser.
+2. Open the downloaded file and confirm *Install*. The first time Android asks to allow the browser to *install apps from this source* – allow it once.
+3. Open **Frameside**. It searches your home network for the server; if the server is in another network, tap *Adresse eintippen* and type e.g. `192.168.1.20:8090`.
+4. In the Frameside app tap *Devices → ＋ Add device*: the tablet appears as *Android tablet found* – tap **Connect**.
+5. Optional but recommended: allow *Display over other apps* for Frameside when asked (one time). Then the frame starts by itself after a power cut or restart.
+
+What the app does for you: full screen, screen always on, reconnects after a network outage, rebuilds the display if it crashes, reports battery and charging state, dims the screen at night (brightness, as set in the Frameside app), and executes *Reload page / Restart display* from the Frameside app. Long-press the picture (tablet) or press Menu (remote) for the small menu.
+
+*Technical note:* the app exposes the five functions of Fully Kiosk's JavaScript interface (`window.fully`: battery level, plugged, brightness get/set, turn screen on, restart app), so the frame page behaves exactly as with Fully.
 
 ## Build
 Needs JDK 17 and the Android SDK (platform 34, build-tools 34.0.0).

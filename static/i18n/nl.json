@@ -711,7 +711,14 @@
   "Prüfe …": "Controleren …",
   "Richte ein …": "Instellen …",
   "Alles wie für den Rahmenbetrieb eingestellt.": "Alles is ingesteld voor gebruik als fotolijst.",
-  "Das Tablet war schon richtig eingestellt.": "Het tablet stond al goed ingesteld."
+  "Das Tablet war schon richtig eingestellt.": "Het tablet stond al goed ingesteld.",
+  "Voraussetzung: Server und Tablet müssen sich im selben Netz erreichen können (und in Fully ist „Remote Administration“ eingeschaltet). Sonst bleibt „Verbindung testen“ ohne Antwort – dann hilft die Einstellungsdatei weiter unten.": "Voorwaarde: server en tablet moeten elkaar op hetzelfde netwerk kunnen bereiken (en in Fully staat „Beheer op afstand” aan). Anders blijft „Verbinding testen” zonder antwoord – dan helpt het instellingenbestand verderop.",
+  "Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)": "Android- of Fire-tablet: Frameside-app installeren (aanbevolen)",
+  "Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.": "De app heeft geen instellingen of browser nodig: ze vindt de server zelf, blijft beeldvullend, houdt het scherm aan en start na het inschakelen vanzelf.",
+  "Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.": "Scan op het tablet deze QR-code met de camera (of open de link in de browser) en download het bestand.",
+  "Die geladene Datei öffnen und „Installieren“ bestätigen. Beim ersten Mal erlaubt man dem Browser einmalig „Apps aus dieser Quelle installieren“.": "Open het gedownloade bestand en bevestig „Installeren”. De eerste keer sta je de browser eenmalig toe „apps uit deze bron te installeren”.",
+  "Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf Verbinden.": "Open Frameside: de app zoekt de server (of je typt het adres) en toont „Android-tablet gevonden” – het apparaat verschijnt hierboven, tik op Verbinden.",
+  "Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.": "Fire-tablets hebben geen Google Play: download het bestand daar met de Silk-browser. Staat de server op een ander netwerk dan het tablet, voer dan het adres in de app in onder „Adres typen”."
  },
  "muster": [
   [

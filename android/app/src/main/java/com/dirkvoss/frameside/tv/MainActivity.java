@@ -48,6 +48,8 @@ public class MainActivity extends Activity {
         vollbild();
         uebernehmeIntent(getIntent());
         starten();
+        netzBeobachten();
+        autostartHinweis();
     }
 
     @Override
@@ -85,6 +87,7 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------ Seite
 
     private void zeigeSeite(String server) {
+        fehlerSichtbar = false;
         wurzel.removeAllViews();
         if (web == null) {
             web = new WebView(this);
@@ -98,11 +101,20 @@ public class MainActivity extends Activity {
             w.setUseWideViewPort(true);                 // die Seite ist fuer 1920 x 1080 gebaut (meldet sich ueber den Benutzer-Agent "FramesideTV")
             w.setLoadWithOverviewMode(true);
             w.setUserAgentString(w.getUserAgentString() + " FramesideTV/" + version());
+            web.addJavascriptInterface(new FullyBruecke(this), "fully");     // Akku, Helligkeit, Neustart fuer die Rahmen-Seite (wie die Fully-Schnittstelle)
             web.setWebChromeClient(new WebChromeClient());
             web.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                     if (r.isForMainFrame()) zeigeFehler();
+                }
+
+                @Override
+                public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {       // Absturz/Speichermangel der Anzeige: neu aufbauen statt schwarz stehenbleiben
+                    try { wurzel.removeAllViews(); v.destroy(); } catch (Exception e) { /* egal */ }
+                    web = null;
+                    ui.postDelayed(MainActivity.this::starten, 1500);
+                    return true;
                 }
             });
         }
@@ -116,9 +128,26 @@ public class MainActivity extends Activity {
         try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "1"; }
     }
 
+    /** Von der Rahmen-Seite angefordert (Fernbefehl "Anzeige neu starten"): Seite komplett neu aufbauen. */
+    void neuStarten() { ui.post(() -> { if (web != null) { web.destroy(); web = null; } starten(); }); }
+
+    private volatile boolean fehlerSichtbar = false;
+
+    /** Kommt das Netz zurueck, waehrend die Fehlerseite steht, sofort neu laden (statt bis zu 20 Sekunden zu warten). */
+    private void netzBeobachten() {
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            cm.registerNetworkCallback(new android.net.NetworkRequest.Builder().addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET).build(),
+                    new android.net.ConnectivityManager.NetworkCallback() {
+                        @Override public void onAvailable(android.net.Network n) { if (fehlerSichtbar) ui.post(MainActivity.this::starten); }
+                    });
+        } catch (Exception e) { /* ohne Netzmeldung bleibt der 20-Sekunden-Versuch */ }
+    }
+
     private void zeigeFehler() {
         final String s = Server.gemerkt(this);
         ui.post(() -> {
+            fehlerSichtbar = true;
             if (web != null) web.stopLoading();
             LinearLayout l = leer("Keine Verbindung zum Server", s.replace("http://", "") + " antwortet nicht.");
             Button nochmal = knopf("Erneut versuchen");
@@ -226,6 +255,21 @@ public class MainActivity extends Activity {
             else if (i == 3) finish();
             else if (i == 4) autostartErlauben();
         }).show();
+    }
+
+    /** Einmalig beim ersten Start auf einem Tablet: erklaeren, wie Frameside nach dem Einschalten von selbst startet (Android 10+ verlangt dafuer eine Freigabe). */
+    private void autostartHinweis() {
+        try {
+            boolean tv = ((android.app.UiModeManager) getSystemService(UI_MODE_SERVICE)).getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION;
+            android.content.SharedPreferences p = getSharedPreferences(Server.PREFS, MODE_PRIVATE);
+            boolean erlaubt = android.os.Build.VERSION.SDK_INT < 29 || android.provider.Settings.canDrawOverlays(this);
+            if (tv || erlaubt || p.getBoolean("autostartGefragt", false)) return;
+            p.edit().putBoolean("autostartGefragt", true).apply();
+            ui.postDelayed(() -> new AlertDialog.Builder(this).setTitle("Nach dem Einschalten von selbst starten?")
+                    .setMessage("Damit der Bilderrahmen nach einem Stromausfall oder Neustart wieder von selbst anfängt, braucht Frameside die Freigabe „Über anderen Apps einblenden“. Auf der nächsten Seite Frameside antippen und den Schalter einschalten, dann mit Zurück hierher kommen.")
+                    .setPositiveButton("Jetzt freigeben", (d, w) -> autostartErlauben())
+                    .setNegativeButton("Später", null).show(), 4000);
+        } catch (Exception e) { /* Hinweis ist nur ein Komfort */ }
     }
 
     /** Android 10+ erlaubt den Start nach dem Einschalten nur mit "Ueber anderen Apps einblenden" - die Einstellung dafuer oeffnen. */

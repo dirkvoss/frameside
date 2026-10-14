@@ -108,3 +108,10 @@ def test_tablet_das_sich_selbst_steuert_behaelt_die_zugangsdaten_des_assistenten
     t.befehle.clear()
     r = c.post("/api/verwaltung/fully-einrichten", json={"id": "rahmen", "basis": "http://192.168.1.20:8090", "nur_pruefen": True}, headers=H)       # Pruefen ohne erneute Eingabe
     assert r.status_code == 200 and r.json()["ok"] is True
+
+
+def test_geraetename_fire_tablet_und_android_tablet(app_laden):
+    w, _, _ = app_laden(**LAN)
+    assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 11; KFONWI) AppleWebKit/537.36 Chrome/120 Safari/537.36 FramesideTV/1.2.0") == ("Fire-Tablet", "rahmen")
+    assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 13; SM-X200) AppleWebKit/537.36 Chrome/120 Safari/537.36") == ("Android-Tablet", "rahmen")
+    assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7233) AppleWebKit/537.36")[1] == "tv"

@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.28.0]
+### Neu
+- **Android-App „Frameside“ als vollständiger Rahmen für Tablets (Version 1.2.0):** Sie stellt der Rahmen-Seite die fünf Funktionen der Fully-Schnittstelle bereit (Akku, Laden, Helligkeit, Bildschirm an, Neustart) – Nachtruhe, Akku-Anzeige und Fernbefehle laufen damit ohne Fully und ohne Einstellungen. Dazu Selbstheilung (sofortiges Neuladen, wenn das Netz zurückkommt; Neuaufbau der Anzeige nach einem Absturz) und ein einmaliger Hinweis zum Start nach dem Einschalten. Im Dialog „Gerät hinzufügen“ stehen jetzt die drei Schritte mit QR-Code zum Laden der APK; Fire-Tablets werden als „Fire-Tablet“ erkannt. Anleitung in `android/README.md` und im README.
+### Geändert
+- **Tablet-Einrichtung: verständliche Meldung, wenn der Server das Tablet nicht erreicht:** „Verbindung testen“, „Einrichten“ und „Prüfen“ erklären jetzt, dass Server und Tablet meist in verschiedenen Netzen stehen (z. B. Server im Gast-/DMZ-Netz, Tablet im Heimnetz) und die Firewall die Verbindung blockiert, und weisen auf den Ausweg „Einstellungsdatei laden“ hin. Eine Voraussetzungs-Zeile steht vorab im Dialog.
+
 ## [2.27.1]
 ### Behoben
 - **Tablet-Einrichtung bei Tablets, die sich selbst melden:** Der Assistent „Tablet einrichten und steuern“ ist jetzt immer sichtbar (vorher hinter „Adresse und Passwort trotzdem einrichten“ versteckt). Adresse und Passwort merkt er sich getrennt von der Nachtsteuerung, „Speichern“ im Dialog löscht sie nicht mehr, und „Prüfen“ braucht keine erneute Eingabe. Die erkannte Adresse des Tablets wird vorgeschlagen.
