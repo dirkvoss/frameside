@@ -42,7 +42,7 @@ def test_einrichten_setzt_alles_und_laedt_die_seite(app_laden, monkeypatch):
     assert t.ist["keepScreenOn"] is True and t.ist["launchOnBoot"] is True and t.ist["forceScreenOrientation"] == "2"
     assert "loadStartURL" in t.befehle
     g = [x for x in c.get("/api/verwaltung").json()["geraete"] if x["id"] == "rahmen"][0]            # die Wahl bleibt gespeichert und ist spaeter aenderbar
-    assert g["fully_host"] == "192.168.1.55:2323" and g["fully_ausrichtung"] == "quer" and g["fully_pw_gesetzt"]
+    assert g["fully_ad_host"] == "192.168.1.55:2323" and g["fully_host"] == "192.168.1.55:2323" and g["fully_ausrichtung"] == "quer" and g["fully_pw_gesetzt"] and g["fully_ad_pw_gesetzt"]
     assert "fully_pw" not in g
 
 
@@ -94,3 +94,17 @@ def test_kopplungs_code_bleibt_beim_neuladen_gleich(app_laden):
         assert r.status_code == 200 and r.json()["code"] == code
     fremd = tablet.post("/api/koppeln/neu?alt=XXXXXX", headers=H)                             # unbekannter alter Code: ein neuer wird vergeben
     assert fremd.status_code == 200 and fremd.json()["code"] != "XXXXXX"
+
+
+def test_tablet_das_sich_selbst_steuert_behaelt_die_zugangsdaten_des_assistenten(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c, t = client(), FakeTablet()
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1")                                          # das Tablet meldet sich ueber die Fully-JavaScript-Schnittstelle
+    einrichten(c, t, monkeypatch, w)
+    g = [x for x in c.get("/api/verwaltung").json()["geraete"] if x["id"] == "rahmen"][0]
+    assert g["selbst"] and g["fully_ad_host"] == "192.168.1.55:2323" and g["fully_ad_pw_gesetzt"] and not g["fully_host"]     # Nachtsteuerung bleibt aus, der Assistent merkt sich Adresse und Passwort
+    c.put("/api/verwaltung/geraete/rahmen", json={"sek": 10}, headers=H)                      # Speichern im Dialog loescht sie nicht
+    monkeypatch.setattr(w, "fully_get", t)
+    t.befehle.clear()
+    r = c.post("/api/verwaltung/fully-einrichten", json={"id": "rahmen", "basis": "http://192.168.1.20:8090", "nur_pruefen": True}, headers=H)       # Pruefen ohne erneute Eingabe
+    assert r.status_code == 200 and r.json()["ok"] is True

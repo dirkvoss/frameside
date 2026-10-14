@@ -1,6 +1,11 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.27.1]
+### Behoben
+- **Tablet-Einrichtung bei Tablets, die sich selbst melden:** Der Assistent „Tablet einrichten und steuern“ ist jetzt immer sichtbar (vorher hinter „Adresse und Passwort trotzdem einrichten“ versteckt). Adresse und Passwort merkt er sich getrennt von der Nachtsteuerung, „Speichern“ im Dialog löscht sie nicht mehr, und „Prüfen“ braucht keine erneute Eingabe. Die erkannte Adresse des Tablets wird vorgeschlagen.
+- **Auswahlfenster auf dem Rechner:** Die Knöpfe „Diashow“, „Rückgängig“ und „Leeren“ ragten über den rechten Rand und waren abgeschnitten; sie brechen jetzt um.
+
 ## [2.27.0]
 ### Neu
 - **Tablet mit Fully Kiosk per Klick als Bilderrahmen einrichten:** Unter Geräte → ⚙ → „Tablet einrichten und steuern“ beantwortest du nur vier einfache Fragen (Ausrichtung, Bildschirm immer an, Start nach Neustart/Stromausfall, Neuladen bei Netzausfall; optional Helligkeit) und gibst die Adresse des Servers an. Frameside setzt dann über die Fernsteuerung von Fully rund 25 Einstellungen, **einschließlich der Start-Adresse** (`/tv/?ziel=<Rahmen>`) – kein Tippen im Kiosk-Browser mehr. **Einrichten** ist beliebig oft wiederholbar (ändert nur, was abweicht), **Prüfen** zeigt Abweichungen, wenn jemand am Tablet etwas verstellt hat, und die Wahl bleibt gespeichert und änderbar. Für Tablets, die der Server nicht erreicht (z. B. bei den Eltern): **Einstellungsdatei laden** zum Importieren in Fully.

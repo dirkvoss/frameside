@@ -3133,7 +3133,7 @@ def geraet_ansicht(z, e):
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
             "kalender_gesetzt": bool(e.get("kalender_url")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
-            "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
+            "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ad_host": e.get("fully_ad_host") or "", "fully_ad_pw_gesetzt": bool(e.get("fully_ad_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
             "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
 
 
@@ -3534,8 +3534,8 @@ def fully_zugang(daten):
     if z not in GERAETE:
         raise HTTPException(404, "Gerät nicht gefunden")
     g = GERAETE[z]
-    host = str(daten.get("fully_host") or g.get("fully_host") or "").strip()
-    pw = str(daten.get("fully_pw") or g.get("fully_pw") or os.environ.get("RAHMEN_WEB_FULLY_PASSWORT", ""))
+    host = str(daten.get("fully_host") or g.get("fully_host") or g.get("fully_ad_host") or "").strip()
+    pw = str(daten.get("fully_pw") or g.get("fully_pw") or g.get("fully_ad_pw") or os.environ.get("RAHMEN_WEB_FULLY_PASSWORT", ""))
     if not FULLY_RE.fullmatch(host):
         raise HTTPException(400, "Bitte die Adresse des Tablets eintragen")
     basis = str(daten.get("basis") or tv_url() or "").strip()
@@ -3569,10 +3569,14 @@ def fully_einrichten(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
         fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": "loadStartURL", "type": "json", "password": pw}))
     with GERAETE_LOCK:
         g = {k: dict(v) for k, v in GERAETE.items()}
-        g[z].update({"fully_host": host, "fully_ausrichtung": opt["ausrichtung"], "fully_immer_an": opt["immer_an"], "fully_selbststart": opt["selbststart"],
+        g[z].update({"fully_ad_host": host, "fully_ausrichtung": opt["ausrichtung"], "fully_immer_an": opt["immer_an"], "fully_selbststart": opt["selbststart"],
                      "fully_selbstheilung": opt["selbstheilung"], "fully_helligkeit": opt["helligkeit"]})
         if pw:
-            g[z]["fully_pw"] = pw[:200]
+            g[z]["fully_ad_pw"] = pw[:200]                          # nur fuer den Assistenten (Einrichten/Pruefen); getrennt von der Nachtsteuerung unten
+        if not meldet_selbst(z):                                      # steuert sich das Tablet nicht selbst, braucht auch die Nachtsteuerung Adresse und Passwort
+            g[z]["fully_host"] = host
+            if pw:
+                g[z]["fully_pw"] = pw[:200]
         geraete_aendern(g)
     H.log.info("Fully eingerichtet fuer %s: %d geaendert, %d offen", z, len(abw), len(rest))
     return {"ok": not rest, "geaendert": len(abw), "offen": rest, "gesamt": len(profil),

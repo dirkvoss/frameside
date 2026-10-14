@@ -465,8 +465,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
   .leiste .zeile2 input[type=text] { flex: 1 1 140px; }
   .leiste .zeile3 .btn { min-width: 0; white-space: normal; }
   .leiste .zeile1 { flex-wrap: wrap; gap: 8px; }
-  .leiste .werkzeuge { flex-basis: 100%; gap: 6px; }
-  .leiste .werkzeuge .btn { font-size: 13px; min-height: 34px; padding: 0 12px; border-color: var(--line); color: var(--text); }
+  .leiste .werkzeuge { flex-basis: 100%; gap: 6px; flex-wrap: wrap; }
+  .leiste .werkzeuge .btn { font-size: 13px; min-height: 34px; padding: 0 10px; white-space: nowrap; border-color: var(--line); color: var(--text); }
   .leiste .werkzeuge .btn .ic { width: 16px; height: 16px; margin-right: 6px; }
   .leiste .zeile3 { grid-auto-flow: row; }
   .toast { bottom: 28px; }
@@ -1897,7 +1897,7 @@ function geraeteOeffnen(code) {
 $("#geraeteBtn").addEventListener("click", () => geraeteOeffnen(""));
 
 // ---------------------------------------------------------------- Geraete verwalten (Rahmen/Fernseher anlegen und einstellen)
-let gfId = null, gfArt = "rahmen";                                           // null = neues Geraet
+let gfId = null, gfArt = "rahmen", gSelbst = false, gHatHost = false;                                           // null = neues Geraet
 const QUELLEN_ARTEN = [["alle", "Ganze Bibliothek"], ["neu", "Neueste Fotos (Tage)"], ["heute", "Heute vor Jahren"], ["person", "Person"], ["album", "Album (ID)"]];
 function quelleZeile(q) {
   q = q || { art: "alle", wert: "", gew: "" };
@@ -2000,8 +2000,8 @@ function tabletBereich(g) {                                // zwei Wege zur Tabl
   $("#gfTabletInfo").textContent = selbst ? RW_T("✓ Fully-Schnittstelle erkannt – das Tablet steuert sich selbst (Nachtruhe, Akku).") + (g.akku != null ? " " + RW_T("Akku") + " " + g.akku + " %." : "") : "";
   $("#gfTabletInfo").classList.toggle("versteckt", !selbst);
   $("#gfTabletWege").classList.toggle("versteckt", selbst);
-  $("#gfFullyFelder").classList.toggle("versteckt", selbst && !hat);
-  $("#gfFullyAnzeigen").classList.toggle("versteckt", !(selbst && !hat));
+  $("#gfFullyFelder").classList.remove("versteckt");                      // der Einrichtungs-Assistent ist immer sichtbar (auch wenn sich das Tablet selbst meldet)
+  $("#gfFullyAnzeigen").classList.add("versteckt");
   const ip = g.ip && !g.fully_host ? g.ip : "", b = $("#gfIpNehmen");
   $("#gfIpZeile").classList.toggle("versteckt", !ip); b.dataset.ip = ip; b.textContent = ip ? RW_T("Erkannte Adresse übernehmen") + ": " + ip : "";
   $("#gfTablet").open = selbst || hat;
@@ -2250,11 +2250,12 @@ async function geraetDialogOeffnen(id) {
   $("#gfPlan").innerHTML = ""; for (const f of planLesen(g.zeitplan)) $("#gfPlan").append(planKarte(f));
   $("#gfDirekt").classList.toggle("versteckt", !id); $("#gfAdb").value = g.adb_host || ""; $("#gfDirekt").open = !!g.adb_host; $("#gfOeffnenErg").classList.add("versteckt");
   $("#gfKennungZeile").classList.toggle("versteckt", !id); $("#gfVerbindenZeile").classList.toggle("versteckt", !id); $("#gfKennung").textContent = id || "";
-  $("#gfFullyHost").value = g.fully_host || ""; $("#gfFullyPw").value = "";
+  gSelbst = !!g.selbst; gHatHost = !!g.fully_host;
+  $("#gfFullyHost").value = g.fully_host || g.fully_ad_host || g.ip || ""; $("#gfFullyPw").value = "";
   $("#gfAusr").value = g.fully_ausrichtung || "auto"; $("#gfImmerAn").checked = g.fully_immer_an !== false; $("#gfSelbststart").checked = g.fully_selbststart !== false;
   $("#gfSelbstheilung").checked = g.fully_selbstheilung !== false; $("#gfHell").value = g.fully_helligkeit || ""; $("#gfBasis").value = tvBasis(); $("#gfEinrErg").classList.add("versteckt");
   tabletBereich(g);
-  $("#gfFullyPw").placeholder = g.fully_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
+  $("#gfFullyPw").placeholder = g.fully_pw_gesetzt || g.fully_ad_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
   $("#gfLoeschen").classList.toggle("versteckt", !id);
   $("#geraetDialog").classList.remove("versteckt"); $("#gfName").focus();
 }
@@ -2508,8 +2509,11 @@ $("#gfSpeichern").addEventListener("click", async () => {
     Object.assign(daten, { layout: gfLed ? gfLed.lesen() : undefined, wetter: gfWetter, bewegung: $("#gfBewegung").checked, paare: $("#gfPaare").checked, termin_quellen: [...$$("#gfHandys input:checked")].map(c => c.value), nacht: $("#gfNachtSonne").checked ? "sonne" : (von && bis ? von + "-" + bis : ""),
     });
     if (istRahmen) Object.assign(daten, { sek: $("#gfSek").value, erinnerungen: $("#gfErinnerungen").value, favoriten: $("#gfFavoriten").value, geburtstagsfotos: $("#gfGeburtstagsfotos").checked,
-      quellen: quellenSchreiben(), zeitplan: planSchreiben(), fully_host: $("#gfFullyHost").value.trim(), alarm_min: $("#gfAlarm").value });
-    if ($("#gfFullyPw").value) daten.fully_pw = $("#gfFullyPw").value;
+      quellen: quellenSchreiben(), zeitplan: planSchreiben(), alarm_min: $("#gfAlarm").value });
+    if (!gSelbst && (gHatHost || $("#gfFullyPw").value)) {                 // Adresse/Passwort der Nachtsteuerung nur speichern, wenn sie gebraucht werden (nicht beim reinen Vorschlag der erkannten Adresse)
+      daten.fully_host = $("#gfFullyHost").value.trim();
+      if ($("#gfFullyPw").value) daten.fully_pw = $("#gfFullyPw").value;
+    }
     if ($("#gfKal").value.trim()) daten.kalender_url = $("#gfKal").value.trim(); else if (gfKalLoeschen) daten.kalender_url = null;
   }
   const b = $("#gfSpeichern"); b.disabled = true;
