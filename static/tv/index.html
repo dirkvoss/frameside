@@ -134,9 +134,10 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
   el("kopplungText").textContent = T("Öffne am Handy Frameside, tippe auf „Geräte“ und „＋ Gerät hinzufügen“. Dieses Gerät erscheint dort von selbst. Falls nicht, gib diesen Code ein:");
   el("kopplungHinweis").textContent = T("Oder scanne den Code mit der Handykamera.");
   function neuerCode() {
-    http("POST", "/api/koppeln/neu", function (st, d) {
-      if (st !== 200 || !d) { el("kopplungCode").textContent = "?"; setTimeout(neuerCode, 8000); return; }
-      code = d.code; el("kopplungCode").textContent = code;
+    var alt = ""; try { alt = code || localStorage.getItem("showcaseCode") || ""; } catch (e) { alt = code; }
+    http("POST", "/api/koppeln/neu" + (alt ? "?alt=" + alt : ""), function (st, d) {
+      if (st !== 200 || !d) { el("kopplungCode").textContent = st === 429 ? "…" : "?"; setTimeout(neuerCode, 8000); return; }
+      code = d.code; try { localStorage.setItem("showcaseCode", code); } catch (e) {} el("kopplungCode").textContent = code;
       try { var qr = qrcode(0, "M"); qr.addData(location.origin + "/?koppeln=" + code); qr.make(); el("kopplungQr").innerHTML = qr.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e) { el("kopplungQr").style.display = "none"; }
       abfragen();
     });
@@ -633,10 +634,11 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     neuerKopplungsCode();
   }
   function neuerKopplungsCode() {
-    api("/api/koppeln/neu", function (st, d) {
+    var alt = ""; try { alt = kopplungCode || localStorage.getItem("showcaseCode") || ""; } catch (e) { alt = kopplungCode; }
+    api("/api/koppeln/neu" + (alt ? "?alt=" + alt : ""), function (st, d) {
       if (!kopplungAktiv) return;
-      if (st !== 200 || !d) { document.getElementById("kopplungCode").textContent = "?"; kopplungTimer = setTimeout(neuerKopplungsCode, 8000); return; }
-      kopplungCode = d.code; document.getElementById("kopplungCode").textContent = kopplungCode;
+      if (st !== 200 || !d) { document.getElementById("kopplungCode").textContent = st === 429 ? "…" : "?"; kopplungTimer = setTimeout(neuerKopplungsCode, 8000); return; }
+      kopplungCode = d.code; try { localStorage.setItem("showcaseCode", kopplungCode); } catch (e) {} document.getElementById("kopplungCode").textContent = kopplungCode;
       try { var qr = qrcode(0, "M"); qr.addData(location.origin + "/?koppeln=" + kopplungCode); qr.make(); document.getElementById("kopplungQr").innerHTML = qr.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e) { document.getElementById("kopplungQr").style.display = "none"; }
       kopplungPruefen();
     }, "POST", {});

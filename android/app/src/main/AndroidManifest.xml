@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Laeuft auf Android TV (Leanback) und auf Fire TV; Touchscreen ist nicht noetig -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
@@ -30,6 +32,13 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Start nach dem Einschalten (Tablets als Bilderrahmen) -->
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Bildschirmschoner (Android TV: Einstellungen -> Geraeteeinstellungen -> Bildschirmschoner) -->
         <service

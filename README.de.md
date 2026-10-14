@@ -90,7 +90,7 @@ Jedes Gerät mit einem **Webbrowser**, das eine Adresse öffnen kann. **Ein Kios
 | Gerät | So geht es |
 |---|---|
 | **Raspberry Pi + beliebiger Monitor/Fernseher** (günstigste Dauerlösung) | `./examples/raspberry-pi/setup-kiosk.sh http://<server>:8090/tv/` – installiert Chromium im Kiosk-Modus und startet es beim Einschalten (siehe unten) |
-| **Android-Tablet oder altes Handy** | Kostenlos und ausreichend: Chrome → Adresse öffnen → „Zum Startbildschirm hinzufügen“ → von dort öffnen (Vollbild) und die Bildschirm-Auszeit auf „nie“ stellen. *Optional:* [Fully Kiosk](https://www.fully-kiosk.com) (einmalig ca. 8 €) schaltet den Bildschirm nachts wirklich aus und meldet den Akkustand |
+| **Android-Tablet oder altes Handy** | Kostenlos und ausreichend: Chrome → Adresse öffnen → „Zum Startbildschirm hinzufügen“ → von dort öffnen (Vollbild) und die Bildschirm-Auszeit auf „nie“ stellen. *Optional:* [Fully Kiosk](https://www.fully-kiosk.com) (einmalig ca. 8 €) schaltet den Bildschirm nachts wirklich aus und meldet den Akkustand – und Frameside **richtet es für dich ein**: App → Geräte → ⚙ → „Tablet einrichten und steuern“ (in Fully einmal *Remote Administration* einschalten und ein Passwort setzen; Adresse, Bildschirm-an, Neustart-Verhalten u. a. setzt Frameside selbst, „Prüfen“ kontrolliert es später) |
 | **iPad / altes iPhone** | Safari → Adresse öffnen → Teilen → „Zum Home-Bildschirm“; als Kiosk-Modus den **Geführten Zugriff** nutzen (Einstellungen → Bedienungshilfen) und die Auto-Sperre auf „Nie“ stellen |
 | **Fernseher, Fire TV, Android TV, Chromecast mit Google TV, Shield** | Browser öffnen, Adresse eingeben, als Lesezeichen speichern |
 | **Alter Laptop / Mini-PC** | Chrome mit `--kiosk <Adresse>` im Autostart |

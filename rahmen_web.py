@@ -3133,7 +3133,8 @@ def geraet_ansicht(z, e):
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
             "kalender_gesetzt": bool(e.get("kalender_url")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
-            "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
+            "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
+            "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
 
 
 def geraet_kennung(name):
@@ -3480,6 +3481,122 @@ def fully_test(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     return {"ok": True, "akku": info.get("batteryLevel"), "laedt": bool(info.get("isPlugged")), "nachricht": f"Verbunden – Akku {info.get('batteryLevel')} %"}
 
 
+# --------------------------------------------------------------------------- Fully Kiosk: Tablet fuer den Rahmenbetrieb einrichten
+# Die Einstellungen, die ein Tablet als Bilderrahmen braucht (Fully hat ueber 400, viele Standardwerte sind fuer einen Rahmen falsch: Bildschirmschoner nach
+# Sekunden, Neuladen beim Einschalten ...). "b" = Ja/Nein, "s" = Text/Zahl (so schreibt Fully sie).
+FULLY_AUSRICHTUNG = {"auto": "0", "hoch": "1", "quer": "2"}
+
+
+def fully_profil(z, basis, opt=None):
+    """Die Fully-Einstellungen fuer den Rahmen z. opt: ausrichtung (auto|quer|hoch), immer_an, selbststart, selbstheilung, helligkeit (1-255 oder leer)."""
+    opt = opt or {}
+    url = f"{basis.rstrip('/')}/tv/?ziel={z}"
+    p = {"startURL": ("s", url),
+         "kioskHomeStartURL": ("b", True),
+         "showNavigationBar": ("b", False), "showStatusBar": ("b", False), "showActionBar": ("b", False), "showAddressBar": ("b", False),
+         "disableStatusBar": ("b", True), "disableOtherApps": ("b", True), "enableZoom": ("b", False),
+         "forceScreenOrientation": ("s", FULLY_AUSRICHTUNG.get(opt.get("ausrichtung") or "auto", "0")),
+         "reloadEachSeconds": ("s", "0"), "reloadOnScreenOn": ("b", False), "reloadOnScreensaverStop": ("b", False),
+         "restartAfterUpdate": ("b", True), "setWifiWakelock": ("b", True)}
+    if opt.get("immer_an", True):
+        p.update({"keepScreenOn": ("b", True), "keepOnWhileFullscreen": ("b", True), "disableScreenOff": ("b", True),
+                  "screenOffTimer": ("s", "0"), "timeToScreenOffV2": ("s", "0"), "timeToScreensaverV2": ("s", "0")})
+    if opt.get("selbststart", True):
+        p.update({"launchOnBoot": ("b", True), "runInForeground": ("b", True)})
+    if opt.get("selbstheilung", True):
+        p.update({"reloadOnInternet": ("b", True), "reloadOnWifiOn": ("b", True), "waitInternetOnReload": ("b", True), "reloadPageFailure": ("s", "60")})
+    hell = str(opt.get("helligkeit") or "").strip()
+    if re.fullmatch(r"\d{1,3}", hell) and 1 <= int(hell) <= 255:
+        p["screenBrightness"] = ("s", hell)
+    return p
+
+
+def fully_gleich(soll, ist):
+    if isinstance(soll, bool):
+        return str(ist).strip().lower() == ("true" if soll else "false")
+    return str(ist).strip() == str(soll)
+
+
+def fully_pruefen(host, pw, profil):
+    """Liest die Einstellungen des Tablets und vergleicht sie mit dem Profil: Liste der Abweichungen."""
+    try:
+        ist = json.loads(fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": "listSettings", "type": "json", "password": pw}), 12))
+    except (OSError, ValueError) as e:
+        raise HTTPException(502, "Das Tablet ist von diesem Server aus nicht erreichbar (Adresse falsch, Tablet aus, „Remote Administration“ in Fully nicht eingeschaltet oder eine Firewall/ein anderes Netz dazwischen). "
+                                 f"Technisch: {e}")
+    if not isinstance(ist, dict) or str(ist.get("status", "")).lower() == "error":
+        raise HTTPException(401, "Das Passwort stimmt nicht – es ist das „Remote Admin Password“ aus den Fully-Einstellungen.")
+    return [{"key": k, "soll": v, "ist": ist.get(k)} for k, (_, v) in profil.items() if not fully_gleich(v, ist.get(k))]
+
+
+def fully_zugang(daten):
+    z = str(daten.get("id", ""))
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    g = GERAETE[z]
+    host = str(daten.get("fully_host") or g.get("fully_host") or "").strip()
+    pw = str(daten.get("fully_pw") or g.get("fully_pw") or os.environ.get("RAHMEN_WEB_FULLY_PASSWORT", ""))
+    if not FULLY_RE.fullmatch(host):
+        raise HTTPException(400, "Bitte die Adresse des Tablets eintragen")
+    basis = str(daten.get("basis") or tv_url() or "").strip()
+    if basis and not re.match(r"^https?://", basis):
+        basis = ("http://" if re.match(r"^[\d.]+(:\d+)?(/|$)", basis) else "https://") + basis
+    if not basis or not ADB_URL_RE.fullmatch(basis + "/tv/?ziel=" + z):
+        raise HTTPException(400, "Bitte die Adresse angeben, unter der das Tablet diesen Server erreicht (z. B. http://192.168.1.20:8090)")
+    opt = {"ausrichtung": str(daten.get("ausrichtung") or g.get("fully_ausrichtung") or "auto"), "immer_an": bool(daten.get("immer_an", g.get("fully_immer_an", True))),
+           "selbststart": bool(daten.get("selbststart", g.get("fully_selbststart", True))), "selbstheilung": bool(daten.get("selbstheilung", g.get("fully_selbstheilung", True))),
+           "helligkeit": str(daten.get("helligkeit", g.get("fully_helligkeit", "")) or "")}
+    if opt["ausrichtung"] not in FULLY_AUSRICHTUNG:
+        raise HTTPException(400, "Ausrichtung: automatisch, quer oder hoch")
+    return z, (host if ":" in host else host + ":2323"), pw, basis, opt
+
+
+@app.post("/api/verwaltung/fully-einrichten")
+def fully_einrichten(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Setzt alle Rahmen-Einstellungen in Fully Kiosk auf dem Tablet (inklusive Adresse) und merkt sich die Wahl. 'nur_pruefen': nichts aendern, nur Abweichungen melden."""
+    z, host, pw, basis, opt = fully_zugang(daten)
+    profil = fully_profil(z, basis, opt)
+    abw = fully_pruefen(host, pw, profil)
+    if daten.get("nur_pruefen"):
+        return {"ok": not abw, "abweichungen": abw, "gesamt": len(profil),
+                "nachricht": "Alles wie für den Rahmenbetrieb eingestellt." if not abw else f"{len(abw)} von {len(profil)} Einstellungen weichen ab – „Einrichten“ stellt sie wieder her."}
+    for k in [a["key"] for a in abw]:
+        typ, wert = profil[k]
+        fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": "setBooleanSetting" if typ == "b" else "setStringSetting", "key": k, "value": str(wert).lower() if typ == "b" else wert,
+                                                                  "type": "json", "password": pw}))
+    rest = fully_pruefen(host, pw, profil) if abw else []
+    if abw and any(a["key"] == "startURL" for a in abw) and not rest:
+        fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": "loadStartURL", "type": "json", "password": pw}))
+    with GERAETE_LOCK:
+        g = {k: dict(v) for k, v in GERAETE.items()}
+        g[z].update({"fully_host": host, "fully_ausrichtung": opt["ausrichtung"], "fully_immer_an": opt["immer_an"], "fully_selbststart": opt["selbststart"],
+                     "fully_selbstheilung": opt["selbstheilung"], "fully_helligkeit": opt["helligkeit"]})
+        if pw:
+            g[z]["fully_pw"] = pw[:200]
+        geraete_aendern(g)
+    H.log.info("Fully eingerichtet fuer %s: %d geaendert, %d offen", z, len(abw), len(rest))
+    return {"ok": not rest, "geaendert": len(abw), "offen": rest, "gesamt": len(profil),
+            "nachricht": (f"Fertig – {len(abw)} Einstellungen gesetzt, das Tablet lädt den Rahmen." if abw else "Das Tablet war schon richtig eingestellt.") if not rest
+            else f"{len(rest)} Einstellungen ließen sich nicht setzen: " + ", ".join(a["key"] for a in rest)}
+
+
+@app.post("/api/verwaltung/fully-datei")
+def fully_datei(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Die Einstellungen als Datei fuer 'Einstellungen importieren' in Fully (fuer Tablets, die der Server nicht erreicht, z. B. bei den Eltern)."""
+    z = str(daten.get("id", ""))
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    basis = str(daten.get("basis") or tv_url() or "").strip()
+    if basis and not re.match(r"^https?://", basis):
+        basis = ("http://" if re.match(r"^[\d.]+(:\d+)?(/|$)", basis) else "https://") + basis
+    if not basis or not ADB_URL_RE.fullmatch(basis + "/tv/?ziel=" + z):
+        raise HTTPException(400, "Bitte die Adresse angeben, unter der das Tablet diesen Server erreicht")
+    opt = {"ausrichtung": str(daten.get("ausrichtung") or "auto"), "immer_an": bool(daten.get("immer_an", True)), "selbststart": bool(daten.get("selbststart", True)),
+           "selbstheilung": bool(daten.get("selbstheilung", True)), "helligkeit": str(daten.get("helligkeit") or "")}
+    return Response(json.dumps({k: v for k, (_, v) in fully_profil(z, basis, opt).items()}, indent=1, ensure_ascii=False), media_type="application/json",
+                    headers={"Content-Disposition": f'attachment; filename="frameside-{z}-fully.json"'})
+
+
 # --------------------------------------------------------------------------- Einstellungen in der App
 _lade_personen_orig = H.lade_personen
 
@@ -3740,11 +3857,17 @@ def ua_beschreibung(ua):
 
 
 @app.post("/api/koppeln/neu")
-def koppeln_neu(request: Request, _=Depends(csrf)):
-    """Ein noch nicht gekoppeltes Geraet (Fernseher/Tablet) holt sich einen Code, der am Handy eingegeben wird. Ohne Anmeldung, aber begrenzt."""
+def koppeln_neu(request: Request, alt: str = "", _=Depends(csrf)):
+    """Ein noch nicht gekoppeltes Geraet (Fernseher/Tablet) holt sich einen Code, der am Handy eingegeben wird. Ohne Anmeldung, aber begrenzt.
+    Mit 'alt' (dem zuletzt gezeigten Code) behaelt das Geraet seinen Code, solange er von derselben Adresse stammt und noch nicht vergeben ist -
+    sonst wuerde jedes Neuladen der Seite (z. B. durch Fully) einen weiteren Code belegen und das Geraet sperrt sich nach fuenf selbst aus."""
     ip, jetzt = client_ip(request), time.time()
     with KOPPEL_LOCK:
         koppel_aufraeumen(jetzt)
+        e = KOPPEL.get(alt.strip().upper()) if alt else None
+        if e and e["ip"] == ip and not e["ziel"]:
+            e["t"] = jetzt
+            return {"code": alt.strip().upper(), "gueltig_s": KOPPEL_LEBEN}
         if len(KOPPEL) >= 30 or sum(1 for v in KOPPEL.values() if v["ip"] == ip) >= 5:
             raise HTTPException(429, "Zu viele offene Codes - bitte kurz warten")
         code = "".join(secrets.choice(KOPPEL_ZEICHEN) for _ in range(6))

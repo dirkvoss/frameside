@@ -833,7 +833,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <p class="tipp versteckt" id="gfWartungErg" role="status"></p>
           </details>
           <details id="gfTablet" class="gfdetails nur-gf-dauer">
-            <summary>Tablet-Steuerung (optional)</summary>
+            <summary>Tablet einrichten und steuern (Fully Kiosk)</summary>
             <p class="tipp"><b>Du brauchst nichts zu installieren:</b> Der Rahmen läuft in jedem normalen Browser. Fully Kiosk ist nur ein optionales Extra (ca. 8 €), damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird.</p>
             <p class="tipp">Ohne diese Steuerung läuft der Rahmen einfach rund um die Uhr; die Fotos kommen auch so an.</p>
             <p class="tipp" id="gfTabletInfo"></p>
@@ -849,6 +849,22 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
               <label class="tvfeld"><span>Passwort</span> <input id="gfFullyPw" type="password" autocomplete="new-password" aria-label="Passwort"></label>
               <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfFullyTest" type="button">Verbindung testen</button></div>
               <p class="tipp versteckt" id="gfFullyErg" role="status"></p>
+              <h4 style="margin:14px 0 4px">Tablet als Bilderrahmen einrichten</h4>
+              <p class="tipp">Frameside stellt Fully Kiosk für den Rahmenbetrieb ein (Adresse, Bildschirm immer an, kein Neuladen jede Minute, Start nach Neustart ...). Du beantwortest nur diese Fragen; später kannst du sie ändern und mit „Prüfen“ kontrollieren, ob am Tablet noch alles stimmt.</p>
+              <label class="tvfeld"><span>Ausrichtung</span> <select id="gfAusr" aria-label="Ausrichtung"><option value="auto">Automatisch</option><option value="quer">Querformat</option><option value="hoch">Hochformat</option></select></label>
+              <label class="tvfeld"><span>Bildschirm immer an lassen</span> <input type="checkbox" id="gfImmerAn" style="flex:none" checked></label>
+              <label class="tvfeld"><span>Nach Neustart oder Stromausfall von selbst starten</span> <input type="checkbox" id="gfSelbststart" style="flex:none" checked></label>
+              <label class="tvfeld"><span>Bei Netzausfall von selbst neu laden</span> <input type="checkbox" id="gfSelbstheilung" style="flex:none" checked></label>
+              <label class="tvfeld"><span>Helligkeit (1–255, leer = nicht ändern)</span> <input id="gfHell" type="number" min="1" max="255" inputmode="numeric" aria-label="Helligkeit"></label>
+              <label class="tvfeld stapel"><span>Adresse, unter der das Tablet diesen Server erreicht</span> <input id="gfBasis" type="text" autocomplete="off" aria-label="Adresse des Servers für das Tablet" placeholder="http://192.168.1.20:8090"></label>
+              <p class="tipp">Bei Fire-Tablets besser die IP-Adresse des Servers statt eines Namens nehmen: Sie fragen oft einen eigenen DNS-Server (8.8.8.8) und finden Namen aus dem Heimnetz dann nicht.</p>
+              <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+                <button class="btn klein" id="gfEinr" type="button">Einrichten</button>
+                <button class="btn klein" id="gfPruef" type="button">Prüfen</button>
+                <button class="btn klein" id="gfDatei" type="button">Einstellungsdatei laden</button>
+              </div>
+              <p class="tipp versteckt" id="gfEinrErg" role="status"></p>
+              <p class="tipp">Erreicht der Server das Tablet nicht (anderes Netz, z. B. bei den Eltern)? Dann die Einstellungsdatei laden, aufs Tablet bringen und in Fully unter Einstellungen → Andere Einstellungen → „Einstellungen importieren“ wählen.</p>
             </div>
           </details>
         </div>
@@ -2235,6 +2251,8 @@ async function geraetDialogOeffnen(id) {
   $("#gfDirekt").classList.toggle("versteckt", !id); $("#gfAdb").value = g.adb_host || ""; $("#gfDirekt").open = !!g.adb_host; $("#gfOeffnenErg").classList.add("versteckt");
   $("#gfKennungZeile").classList.toggle("versteckt", !id); $("#gfVerbindenZeile").classList.toggle("versteckt", !id); $("#gfKennung").textContent = id || "";
   $("#gfFullyHost").value = g.fully_host || ""; $("#gfFullyPw").value = "";
+  $("#gfAusr").value = g.fully_ausrichtung || "auto"; $("#gfImmerAn").checked = g.fully_immer_an !== false; $("#gfSelbststart").checked = g.fully_selbststart !== false;
+  $("#gfSelbstheilung").checked = g.fully_selbstheilung !== false; $("#gfHell").value = g.fully_helligkeit || ""; $("#gfBasis").value = tvBasis(); $("#gfEinrErg").classList.add("versteckt");
   tabletBereich(g);
   $("#gfFullyPw").placeholder = g.fully_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
   $("#gfLoeschen").classList.toggle("versteckt", !id);
@@ -2519,6 +2537,28 @@ $("#gfFullyTest").addEventListener("click", async () => {
   const erg = $("#gfFullyErg"); erg.classList.remove("versteckt"); erg.style.color = ""; erg.textContent = RW_T("Teste …");
   try { const r = await api("verwaltung/fully-test", { method: "POST", body: JSON.stringify({ id: gfId, fully_host: $("#gfFullyHost").value.trim(), fully_pw: $("#gfFullyPw").value }) }); erg.textContent = "✓ " + r.nachricht; erg.style.color = "var(--ok, #3ecf8e)"; }
   catch (e) { erg.textContent = "✗ " + e.message; erg.style.color = "var(--danger, #f87171)"; }
+});
+function fullyOptionen() {
+  return { id: gfId, fully_host: $("#gfFullyHost").value.trim(), fully_pw: $("#gfFullyPw").value, basis: $("#gfBasis").value.trim(), ausrichtung: $("#gfAusr").value, immer_an: $("#gfImmerAn").checked,
+           selbststart: $("#gfSelbststart").checked, selbstheilung: $("#gfSelbstheilung").checked, helligkeit: $("#gfHell").value.trim() };
+}
+async function fullyEinrichten(nurPruefen, knopf) {
+  const erg = $("#gfEinrErg"); erg.classList.remove("versteckt"); erg.style.color = ""; erg.textContent = RW_T(nurPruefen ? "Prüfe …" : "Richte ein …"); knopf.disabled = true;
+  try {
+    const r = await api("verwaltung/fully-einrichten", { method: "POST", body: JSON.stringify({ ...fullyOptionen(), nur_pruefen: nurPruefen }) });
+    const liste = (r.abweichungen || r.offen || []).map(a => a.key + ": " + a.ist + " → " + a.soll).join("\n");
+    erg.textContent = (r.ok ? "✓ " : "⚠ ") + RW_T(r.nachricht) + (liste && nurPruefen ? "\n" + liste : ""); erg.style.whiteSpace = "pre-line"; erg.style.color = r.ok ? "var(--ok, #3ecf8e)" : "";
+  } catch (e) { erg.textContent = "✗ " + e.message; erg.style.color = "var(--danger, #f87171)"; }
+  knopf.disabled = false;
+}
+$("#gfEinr").addEventListener("click", e => fullyEinrichten(false, e.currentTarget));
+$("#gfPruef").addEventListener("click", e => fullyEinrichten(true, e.currentTarget));
+$("#gfDatei").addEventListener("click", async () => {
+  try {
+    const r = await fetch("/api/verwaltung/fully-datei", { method: "POST", headers: { "Content-Type": "application/json", "X-Rahmen": "1" }, body: JSON.stringify(fullyOptionen()), credentials: "same-origin" });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).nachricht || "Fehler " + r.status);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "frameside-" + gfId + "-fully.json"; a.click();
+  } catch (e) { fehler(e); }
 });
 $("#geraeteZu").addEventListener("click", () => { $("#geraeteDialog").classList.add("versteckt"); clearInterval(geraeteTimer); });
 

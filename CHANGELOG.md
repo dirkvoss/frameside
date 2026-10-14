@@ -1,6 +1,13 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.27.0]
+### Neu
+- **Tablet mit Fully Kiosk per Klick als Bilderrahmen einrichten:** Unter Geräte → ⚙ → „Tablet einrichten und steuern“ beantwortest du nur vier einfache Fragen (Ausrichtung, Bildschirm immer an, Start nach Neustart/Stromausfall, Neuladen bei Netzausfall; optional Helligkeit) und gibst die Adresse des Servers an. Frameside setzt dann über die Fernsteuerung von Fully rund 25 Einstellungen, **einschließlich der Start-Adresse** (`/tv/?ziel=<Rahmen>`) – kein Tippen im Kiosk-Browser mehr. **Einrichten** ist beliebig oft wiederholbar (ändert nur, was abweicht), **Prüfen** zeigt Abweichungen, wenn jemand am Tablet etwas verstellt hat, und die Wahl bleibt gespeichert und änderbar. Für Tablets, die der Server nicht erreicht (z. B. bei den Eltern): **Einstellungsdatei laden** zum Importieren in Fully.
+- **Android-App „Frameside“ auch für Tablets:** Start nach dem Einschalten (Menü → „Start nach dem Einschalten erlauben“, einmalig „Über anderen Apps einblenden“ freigeben); auf dem Tablet öffnet langes Drücken auf das Bild das Menü. Version 1.1.0.
+### Behoben
+- **Tablet sperrte sich beim Koppeln selbst aus („?“ statt Code):** Lädt ein Gerät seine Seite immer wieder neu (z. B. Fully mit „Alle 60 Sekunden neu laden“), holte es jedes Mal einen neuen Kopplungs-Code und war nach fünf offenen Codes gesperrt. Jetzt behält es seinen Code, solange er noch nicht vergeben ist; bei einer Sperre zeigt die Seite „…“ statt „?“ und versucht es weiter.
+
 ## [2.26.2]
 ### Behoben
 - **Rahmen mit Fully Kiosk wachte morgens nicht mehr auf:** Die Nachtruhe schaltete den Bildschirm ganz aus, dabei friert Fully die Seite ein, und sie konnte sich um das Ende der Nachtruhe nicht mehr selbst einschalten (auch Antippen half nicht). Jetzt stellt die Seite nachts die **Helligkeit auf 0** und zeigt schwarz, läuft aber weiter und stellt die Helligkeit am Ende der Nachtruhe von selbst wieder her. Wer den Bildschirm wirklich ausschalten möchte, nutzt dafür eine eigene Automatik (siehe README).
@@ -321,7 +328,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach
 - **Umgebungsvariablen:** Präfix `SHOWCASE_` statt `GUCKLOCH_` (`SHOWCASE_VERSION`, `SHOWCASE_PIN`, …). `deploy/deploy.sh` liest `GUCKLOCH_*` aus `deploy.conf` und `.env` weiterhin; die Compose-Datei muss angepasst werden (siehe README/Skript).
 - CI schneller: Image-Bau parallel zum Integrationstest, Versions-Tags wiederholen den Integrationstest nicht.
 
-## [Unveröffentlicht]
+## [2.27.0]
 ### Neu
 - **Geräte per Code koppeln:** `/tv/` ohne Kennung zeigt einen 6-stelligen Code und einen QR-Code; in der App unter „📡 Geräte“ eingeben (oder scannen) und zuweisen – das Gerät merkt sich seine Rolle. Hinweis: `/tv/` ohne `?ziel=` zeigt jetzt die Kopplung statt automatisch den Fernseher „lg“.
 - **Geräte-Ansicht** in der App: online/offline, was läuft, Alter des Bildes, zuletzt gesehen.

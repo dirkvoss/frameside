@@ -89,6 +89,7 @@ public class MainActivity extends Activity {
         if (web == null) {
             web = new WebView(this);
             web.setBackgroundColor(Color.BLACK);
+            web.setOnLongClickListener(v -> { menue(); return true; });       // Tablet: langes Druecken auf das Bild oeffnet das Menue
             WebSettings w = web.getSettings();
             w.setJavaScriptEnabled(true);
             w.setDomStorageEnabled(true);
@@ -217,13 +218,23 @@ public class MainActivity extends Activity {
     }
 
     private void menue() {
-        final String[] punkte = {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden"};
+        final String[] punkte = {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben"};
         new AlertDialog.Builder(this).setTitle("Frameside").setItems(punkte, (d, i) -> {
             if (i == 0 && !Server.gemerkt(this).isEmpty()) zeigeSeite(Server.gemerkt(this));
             else if (i == 1) { Server.merken(this, ""); zeigeSuche(); }
             else if (i == 2) adresseAbfragen();
             else if (i == 3) finish();
+            else if (i == 4) autostartErlauben();
         }).show();
+    }
+
+    /** Android 10+ erlaubt den Start nach dem Einschalten nur mit "Ueber anderen Apps einblenden" - die Einstellung dafuer oeffnen. */
+    private void autostartErlauben() {
+        if (android.os.Build.VERSION.SDK_INT >= 23 && !android.provider.Settings.canDrawOverlays(this)) {
+            try {
+                startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + getPackageName())));
+            } catch (Exception e) { android.widget.Toast.makeText(this, "Bitte in den Android-Einstellungen für Frameside „Über anderen Apps einblenden“ erlauben.", android.widget.Toast.LENGTH_LONG).show(); }
+        } else android.widget.Toast.makeText(this, "Frameside startet jetzt nach dem Einschalten von selbst.", android.widget.Toast.LENGTH_LONG).show();
     }
 
     // ------------------------------------------------------------------ kleine Hilfen fuer die Oberflaeche
