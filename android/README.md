@@ -4,10 +4,10 @@ A thin native shell around the Frameside TV page: full screen, finds your server
 
 ## Install
 1. Download the APK: **https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk** (always the newest app; the releases page also lists the versioned file).
-2. Put it on the TV: with the free *Downloader* app (type the link above; allow *Install unknown apps* once), a USB stick, or `adb install Frameside-TV.apk`.
+2. Put it on the TV: with the free *Downloader* app (allow *Install unknown apps* once), a USB stick, or `adb install Frameside-TV.apk`. In Downloader you don't have to type the long link: your Frameside server redirects its short address **`<server-address>/app`** (for example `192.168.1.20:8090/app`) to the newest APK; the same address is shown in the app under *Devices → ＋ Add device → Android TV, Google TV, Fire TV or Shield*.
 3. Open **Frameside** from the app list. It searches the home network (ports 8090 and 80). Pick your server with OK, or choose *Adresse eintippen* (type the address).
 4. Pair it: in the Frameside app tap *Devices → ＋ Add device*; the TV appears by itself.
-5. Screensaver (optional): *Settings → Device preferences → Screen saver → Frameside*.
+5. Screensaver (optional): *Settings → Device preferences → Screen saver → Frameside*. It heals itself like the app: if the server or the network is gone it stays black (no browser error page) and retries every 20 seconds, or right away when the network is back; if the display crashes it is rebuilt. *Fire TV does not let you pick a custom screensaver (as far as we know) – there Frameside runs as a normal app.*
 
 Remote: **Menu** (or a long press on **Back**) opens a small menu: reload, change server, type an address, quit.
 

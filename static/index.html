@@ -713,6 +713,16 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
         <div class="assi-adr"><code id="assiAppLink">github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk</code></div>
         <p class="tipp">Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.</p>
       </details>
+      <details class="gfdetails" id="assiTvApp"><summary>Android TV, Google TV, Fire TV oder Shield: Frameside-App installieren</summary>
+        <p class="tipp">Die App findet den Server selbst, startet im Vollbild und lässt sich als Bildschirmschoner einrichten.</p>
+        <ol class="tipp" style="padding-left:20px;margin:6px 0">
+          <li>Am Fernseher die kostenlose App „Downloader“ installieren (Google Play Store bzw. Amazon Appstore) und öffnen.</li>
+          <li>In Downloader diese kurze Adresse eingeben – sie lädt die App-Datei. „Installieren“ bestätigen; beim ersten Mal erlaubt man Downloader einmalig „Apps aus dieser Quelle installieren“.</li>
+          <li>Frameside öffnen und den Server mit OK wählen (oder seine Adresse eintippen). Hier oben erscheint das Gerät, tippe auf „Verbinden“.</li>
+        </ol>
+        <div class="assi-adr"><code id="assiTvAppAdr"></code></div>
+        <p class="tipp">Bildschirmschoner: Einstellungen → Geräteeinstellungen → Bildschirmschoner → Frameside. Fire TV erlaubt meines Wissens keine eigenen Bildschirmschoner – dort läuft Frameside als normale App.</p>
+      </details>
     </div>
     <details class="gfdetails" id="assiHandarbeit"><summary>Gerät von Hand hinzufügen</summary>
     <div id="assiSchritt1" class="gf">
@@ -2441,6 +2451,7 @@ function assiOeffnen(zielCode) {
   assiZielCode = typeof zielCode === "string" ? zielCode : ""; assiZielErledigt = false;
   $("#assiTitel").textContent = RW_T("Gerät hinzufügen"); $("#assiFinden").classList.remove("versteckt"); $("#assiHandarbeit").classList.remove("versteckt"); $("#assiHandarbeit").open = false; $("#assiSchritt2").classList.add("versteckt");
   $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, "");
+  $("#assiTvAppAdr").textContent = tvBasis().replace(/^https?:\/\//, "") + "/app";       // kurze Adresse, die zur App-Datei weiterleitet (am Fernseher in Downloader tippen)
   if (!$("#assiAppQr").innerHTML) { try { const qr = qrcode(0, "M"); qr.addData("https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk"); qr.make(); $("#assiAppQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { /* ohne QR bleibt der Link */ } }
   $("#assiName").value = ""; $("#assiArt").value = "rahmen"; $("#assiWartend").textContent = ""; $("#assiDialog").classList.remove("versteckt");
   clearInterval(assiSuche); assiSuche = setInterval(assiSuchen, 2500); assiSuchen();

@@ -4688,6 +4688,11 @@ if os.path.isdir(STATIC_DIR):
     def gaeste_seite(kennung: str):
         return FileResponse(os.path.join(STATIC_DIR, "gast", "index.html"))
 
+    @app.get("/app", include_in_schema=False)
+    def tv_app_laden():
+        """Kurze Adresse fuer die Android-/Fire-TV-App: am Fernseher in Downloader nur 'server:8090/app' tippen, statt der langen GitHub-Adresse."""
+        return RedirectResponse("https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk", status_code=302)
+
     TV_BROWSER_RE = re.compile(r"NetCast|Web0S|webOS|SMART-TV|SmartTV|Tizen|CrKey|BRAVIA|HbbTV|VIDAA|Android TV|\bAFT[A-Z0-9]{1,4}\b|Roku", re.I)
 
     @app.get("/", include_in_schema=False)

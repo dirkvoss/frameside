@@ -10,8 +10,8 @@ android {
         applicationId "com.dirkvoss.frameside.tv"
         minSdk 21            // Android TV ab 5.0 (aeltere Fernseher, Fire TV Gen 2)
         targetSdk 34
-        versionCode 3
-        versionName "1.2.0"
+        versionCode 4
+        versionName "1.2.1"
     }
 
     signingConfigs {

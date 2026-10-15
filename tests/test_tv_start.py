@@ -35,3 +35,11 @@ def test_ui_parameter_haelt_die_app_am_fernseher(app_laden):
     w, client, _ = app_laden()
     r = client().get("/?ui=1", headers={"User-Agent": TVS[0]}, follow_redirects=False)
     assert r.status_code == 200 and "Frameside" in r.text
+
+
+def test_kurze_app_adresse_leitet_zur_apk(app_laden):
+    """Am Fernseher genuegt in Downloader 'server:8090/app' – die lange GitHub-Adresse muss niemand tippen."""
+    w, client, _ = app_laden()
+    r = client().get("/app", follow_redirects=False)
+    assert r.status_code == 302
+    assert r.headers["location"] == "https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk"

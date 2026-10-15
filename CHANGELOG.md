@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.29.0]
+### Neu
+- **Android-TV-App einfach auf den Fernseher bekommen:** Der Server leitet seine kurze Adresse `<Server>/app` (z. B. `192.168.1.20:8090/app`) auf die neueste App-Datei weiter – in der kostenlosen App „Downloader“ am Fernseher muss man nicht mehr den langen GitHub-Link tippen. Im Dialog „Gerät hinzufügen“ gibt es dazu den neuen Block „Android TV, Google TV, Fire TV oder Shield: Frameside-App installieren“ (drei Schritte, die Adresse wird gleich angezeigt, Hinweis zum Bildschirmschoner). Übersetzt in Englisch, Französisch, Niederländisch und Spanisch.
+### Behoben
+- **Bildschirmschoner der Android-App (Version 1.2.1) heilt sich selbst:** Fällt der Server oder das Netz aus, bleibt der Bildschirm schwarz (statt einer Browser-Fehlerseite) und lädt alle 20 Sekunden bzw. sofort bei Rückkehr des Netzes neu; stürzt die Anzeige ab, wird sie neu aufgebaut. Vorher blieb der Schoner nach einem Ausfall hängen.
+
 ## [2.28.0]
 ### Neu
 - **Android-App „Frameside“ als vollständiger Rahmen für Tablets (Version 1.2.0):** Sie stellt der Rahmen-Seite die fünf Funktionen der Fully-Schnittstelle bereit (Akku, Laden, Helligkeit, Bildschirm an, Neustart) – Nachtruhe, Akku-Anzeige und Fernbefehle laufen damit ohne Fully und ohne Einstellungen. Dazu Selbstheilung (sofortiges Neuladen, wenn das Netz zurückkommt; Neuaufbau der Anzeige nach einem Absturz) und ein einmaliger Hinweis zum Start nach dem Einschalten. Im Dialog „Gerät hinzufügen“ stehen jetzt die drei Schritte mit QR-Code zum Laden der APK; Fire-Tablets werden als „Fire-Tablet“ erkannt. Anleitung in `android/README.md` und im README.
