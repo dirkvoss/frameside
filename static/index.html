@@ -869,8 +869,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <label class="tvfeld"><span>E-Mail ihres Immich-Kontos</span> <input id="gfEinfachMail" type="text" autocomplete="off" aria-label="E-Mail ihres Immich-Kontos"></label>
             <label class="tvfeld"><span>Passwort ihres Immich-Kontos</span> <input id="gfEinfachPw" type="password" autocomplete="new-password" aria-label="Passwort ihres Immich-Kontos"></label>
             <p class="tipp">E-Mail und Passwort gehen nur an Immich. Gespeichert wird ein eigener, in Immich widerrufbarer Schlüssel ohne Löschrechte, nicht das Passwort.</p>
-            <label class="tvfeld stapel"><span>Adresse, unter der die Person den Server erreicht</span> <input id="gfEinfachBasis" type="text" autocomplete="off" aria-label="Adresse für den Link" placeholder="https://rahmen.example.com"></label>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfEinfachAnlegen" type="button">Zugang anlegen</button></div>
+            <label class="tvfeld stapel"><span>Adresse, unter der die Person den Server erreicht</span> <input id="gfEinfachBasis" name="frameside-link-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Adresse für den Link" placeholder="https://rahmen.example.com"></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn primaer" id="gfEinfachAnlegen" type="button" style="margin-top:6px">Zugang anlegen</button></div>
             <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
           </details>
           <details id="gfTablet" class="gfdetails nur-gf-dauer">
@@ -2633,6 +2633,7 @@ function einfachLink(token) {
 async function einfachLaden() {
   const box = $("#gfEinfachListe"); box.textContent = "";
   try { $("#gfEinfachBasis").value = $("#gfEinfachBasis").value || localStorage.getItem("rw_einfach_basis") || ""; } catch (e) {}
+  try { if (!$("#gfEinfachBasis").value) $("#gfEinfachBasis").value = ((await api("verwaltung")).geraete.find(x => x.id === gfId) || {}).ursprung || ""; } catch (e) {}
   let liste = [];
   try { liste = (await api("verwaltung/einfach")).zugaenge.filter(z => (z.ziele || []).includes(gfId)); } catch (e) { return; }
   for (const z of liste) {

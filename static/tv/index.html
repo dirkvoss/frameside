@@ -602,10 +602,13 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     try { var lg = f.getLadegrenze ? String(f.getLadegrenze() || "") : ""; if (/^(an|aus|fehler|suche):\d{1,3}:\d{1,3}$/.test(lg)) r += "&lg=" + lg; } catch (e) { /* nur die Android-App kennt die Ladegrenze */ }
     return r;
   }
+  function ursprungInfo() {                                               // unter welcher Adresse laeuft diese Seite? (der Server schlaegt sie fuer Links vor)
+    try { return /^https?:\/\/[A-Za-z0-9.-]{1,120}(:\d{1,5})?$/.test(location.origin) ? "&o=" + encodeURIComponent(location.origin) : ""; } catch (e) { return ""; }
+  }
   function abfrage() {
     if (pinModus) return;
     var meldung = "&ra=" + (laeuft ? Math.round((new Date().getTime() - letzterWechsel) / 1000) : -1) + "&a=" + (ambient ? 1 : 0) + "&s=" + (laeuft && !ambient ? 1 : 0) + "&n=" + encodeURIComponent(laeuft && !ambient ? name : "") + "&m=" + (audio && !audio.paused ? musikKey : "");
-    api("/api/tv/abfrage?ziel=" + ziel + "&seq=" + seq + meldung + fullyInfo(), function (st, d) {
+    api("/api/tv/abfrage?ziel=" + ziel + "&seq=" + seq + meldung + fullyInfo() + ursprungInfo(), function (st, d) {
       letzterStatus = st;
       if (st === 401) { zugangKopplung(); return; }
       if (st === 400 && d && d.nachricht === "Unbekanntes Ziel") { try { localStorage.removeItem("showcaseZiel"); } catch (e) {} location.replace("/tv/"); return; }      // das Geraet wurde geloescht: vergessen und neu koppeln

@@ -156,3 +156,22 @@ def test_seite_wird_ausgeliefert(app_laden, monkeypatch, tmp_path):
     w, client, *_ = aufbau(app_laden, monkeypatch, tmp_path)
     r = client("203.0.113.9").get("/einfach/")
     assert r.status_code == 200 and "Fotos hinzufügen" in r.text and "Eine neue Show machen" in r.text
+
+
+def test_adresse_von_aussen_wird_als_vorschlag_gemerkt(app_laden, monkeypatch):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24", RAHMEN_WEB_PROXIES="192.168.1.200", RAHMEN_WEB_RAHMEN_ZIELE="rahmen=Bilderrahmen")
+    c = client()
+    def ursprung():
+        return {g["id"]: g for g in c.get("/api/verwaltung", headers={"X-Rahmen": "1"}).json()["geraete"]}["rahmen"]["ursprung"]
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&o=https%3A%2F%2Frahmen.example.org")
+    assert ursprung() == ""                                                   # aus dem Heimnetz: kein Vorschlag (die Adresse waere intern)
+
+    aussen = client("203.0.113.5")                                            # Tablet bei den Eltern: fremde Adresse, Geraete-Zugang per Cookie
+    aussen.cookies.set(w.GERAET_COOKIE, w.zugang_ausstellen("rahmen"))
+
+    def von_aussen(o):
+        assert aussen.get("/api/tv/abfrage?ziel=rahmen&seq=-1&o=" + o).status_code == 200
+    von_aussen("https%3A%2F%2Frahmen.example.org")
+    assert ursprung() == "https://rahmen.example.org"
+    von_aussen("javascript%3Aalert(1)")                                       # ungueltige Werte werden ignoriert
+    assert ursprung() == ""

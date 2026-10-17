@@ -3229,7 +3229,7 @@ RAHMEN_NUR_FELDER = ("sek", "anzeige", "quellen", "zeitplan", "erinnerungen", "f
 def geraet_ansicht(z, e):
     t = TV.get(z) or {}
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
-            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_name": KAL_NAMEN.get(z, ""), "termine_vorschau": termine_vorschau(z), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
+            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_name": KAL_NAMEN.get(z, ""), "termine_vorschau": termine_vorschau(z), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "ursprung": t.get("ursprung") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
             "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ad_host": e.get("fully_ad_host") or "", "fully_ad_pw_gesetzt": bool(e.get("fully_ad_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
             "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
@@ -4462,10 +4462,11 @@ def steuer_senden(daten):
 
 
 LG_RE = re.compile(r"(an|aus|fehler|suche):\d{1,3}:\d{1,3}")
+URSPRUNG_RE = re.compile(r"https?://[A-Za-z0-9.-]{1,120}(:\d{1,5})?")
 
 
 @app.get("/api/tv/abfrage")
-def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, lg: str = "", g=Depends(geraet)):
+def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, lg: str = "", o: str = "", g=Depends(geraet)):
     """Vom Fernseher alle 2 s aufgerufen (zaehlt zugleich als 'online'). s/n/m = was der Fernseher gerade wirklich tut."""
     if g.get("typ") == "geraet":
         if g.get("geraet") != ziel:
@@ -4485,6 +4486,7 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
         t["extern"] = not ist_lan(ip)                                         # kommt das Geraet aus dem vertrauten Netz oder von aussen (Tablet bei den Eltern)?
     except ValueError:
         t["ip"], t["extern"] = "", None
+    t["ursprung"] = o if URSPRUNG_RE.fullmatch(o or "") and t.get("extern") else ""      # Adresse, unter der der Rahmen von aussen laeuft (Vorschlag fuer Links)
     t["lg"] = lg if LG_RE.fullmatch(lg or "") else ""                         # Ladegrenze der Android-App: "an:20:80" (Steckdose an, Untergrenze, Obergrenze)
     if fj and 0 <= ak <= 100:
         akku_melden(ziel, ak, pl == 1)
