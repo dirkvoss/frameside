@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 LABEL org.opencontainers.image.source="https://github.com/dirkvoss/frameside" org.opencontainers.image.licenses="AGPL-3.0-or-later" org.opencontainers.image.title="Frameside"
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 RAHMEN_HELFER_DIR=/app \
     RAHMEN_WEB_PIN_FILE=/data/pin RAHMEN_WEB_SECRET_FILE=/data/secret RAHMEN_WEB_AUTH_STATE=/data/auth.json \
