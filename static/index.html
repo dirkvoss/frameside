@@ -829,6 +829,9 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <p class="tipp"><b>Termine von diesen Handys zeigt der Rahmen:</b></p>
           <div id="gfHandys"></div>
           <label class="tvfeld stapel"><span>Kalender-Link (iCal) nur für diesen Rahmen</span> <input id="gfKal" type="text" autocomplete="off" aria-label="Kalender-Link" placeholder="https://…"></label>
+          <label class="tvfeld"><span>Benutzer für den Kalender (nur wenn er geschützt ist)</span> <input id="gfKalUser" type="text" autocomplete="off" aria-label="Benutzer für den Kalender"></label>
+          <label class="tvfeld"><span>Passwort für den Kalender</span> <input id="gfKalPw" type="password" autocomplete="new-password" aria-label="Passwort für den Kalender"></label>
+          <p class="tipp">Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.</p>
           <div class="tvknoepfe versteckt" id="gfKalWegZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein gefahr" id="gfKalWeg" type="button">Kalender-Link dieses Rahmens entfernen</button></div>
           <label class="tvfeld"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
           <div class="tvfeld" id="gfNachtZeiten"><span>Nachtruhe (Bildschirm aus)</span><span class="reihe"><input id="gfNachtVon" type="time" aria-label="von"> – <input id="gfNachtBis" type="time" aria-label="bis"></span></div>
@@ -2261,6 +2264,7 @@ async function geraetDialogOeffnen(id) {
   $("#gfNotizBlock").classList.toggle("versteckt", !id); $("#gfNotiz").value = ""; $("#gfNotizErg").classList.add("versteckt");
   if (id) { try { const n = await api("notizen/" + encodeURIComponent(id)); $("#gfNotiz").value = n.text || ""; } catch (e) {} }
   gfWetter = g.wetter || null; gfOrtZeigen(); $("#gfOrtSuche").value = ""; $("#gfOrtTreffer").innerHTML = "";
+  $("#gfKalUser").value = g.kalender_user || ""; $("#gfKalPw").value = ""; $("#gfKalPw").placeholder = g.kalender_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
   $("#gfKal").value = ""; gfKalLoeschen = false; $("#gfKal").placeholder = g.kalender_gesetzt ? RW_T("gesetzt – zum Ändern neuen Link einfügen") : "https://…"; $("#gfKalWegZeile").classList.toggle("versteckt", !g.kalender_gesetzt);
   const sel = $("#gfUebernehmen"); sel.innerHTML = ""; const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "–"; sel.append(o0);
   for (const x of gfAlle) { const o = document.createElement("option"); o.value = x.id; o.textContent = x.name; sel.append(o); }
@@ -2544,6 +2548,7 @@ $("#gfSpeichern").addEventListener("click", async () => {
       if ($("#gfFullyPw").value) daten.fully_pw = $("#gfFullyPw").value;
     }
     if ($("#gfKal").value.trim()) daten.kalender_url = $("#gfKal").value.trim(); else if (gfKalLoeschen) daten.kalender_url = null;
+    if (!gfKalLoeschen) { daten.kalender_user = $("#gfKalUser").value.trim(); if ($("#gfKalPw").value) daten.kalender_pw = $("#gfKalPw").value; }
   }
   const b = $("#gfSpeichern"); b.disabled = true;
   try {

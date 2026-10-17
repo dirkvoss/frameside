@@ -2609,10 +2609,14 @@ def zusatz_liste(z=None):
 ZUSATZ_CACHE = {}
 
 
-def http_text(url, timeout=10):
-    req = urllib.request.Request(url, headers={"User-Agent": "immich-showcase"})
+def http_text(url, timeout=10, auth=None):
+    """Text von einer Adresse holen; auth=(Benutzer, Passwort) fuer geschuetzte Kalender (HTTP Basic, z. B. Radicale/Nextcloud)."""
+    kopf = {"User-Agent": "immich-showcase"}
+    if auth:
+        kopf["Authorization"] = "Basic " + base64.b64encode(f"{auth[0]}:{auth[1]}".encode("utf-8")).decode("ascii")
+    req = urllib.request.Request(url, headers=kopf)
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read(2_000_000).decode("utf-8", "replace")
+        return r.read(8_000_000).decode("utf-8", "replace")
 
 
 WETTER_SYMBOLE = [((0,), "☀️"), ((1, 2), "🌤️"), ((3,), "☁️"), ((45, 48), "🌫️"), ((51, 53, 55, 56, 57), "🌦️"), ((61, 63, 65, 66, 67), "🌧️"),
@@ -2667,8 +2671,55 @@ def _ics_zeit(wert, params):
     return dt.date(), dt.time()
 
 
+def _ort(dt):
+    """aware-Zeit -> Ortszeit ohne Zeitzone."""
+    return dt.astimezone().replace(tzinfo=None) if isinstance(dt, datetime.datetime) and dt.tzinfo else dt
+
+
 def ics_termine(text, heute, tage=2, maximum=4):
-    """Termine von heute (und morgen ...) aus einer iCalendar-Datei. Einfache Wiederholungen (taeglich, woechentlich, jaehrlich) werden verstanden."""
+    """Termine von heute (und morgen ...) aus einer iCalendar-Datei, mit allen Wiederholungen (auch monatlich, Ausnahmen, verschobene Einzeltermine) und mehrtaegigen Terminen.
+    Fehlen die Bibliotheken oder ist die Datei fuer sie unlesbar, liest ein einfacher Leser (taeglich, woechentlich, jaehrlich)."""
+    try:
+        return _ics_termine_voll(text, heute, tage, maximum)
+    except Exception as e:  # noqa: BLE001 - Rueckfall statt leerer Anzeige
+        H.log.warning("Kalender: voller Leser nicht benutzbar (%s), einfacher Leser", e)
+        return _ics_termine_einfach(text, heute, tage, maximum)
+
+
+def _ics_termine_voll(text, heute, tage, maximum):
+    import icalendar
+    import recurring_ical_events
+    cal = icalendar.Calendar.from_ical(text)
+    von = datetime.datetime.combine(heute, datetime.time.min)
+    bis = von + datetime.timedelta(days=tage)
+    ergebnis = []
+    for ev in recurring_ical_events.of(cal).between(von, bis):
+        if str(ev.get("STATUS", "")).upper() == "CANCELLED":
+            continue
+        start = ev.get("DTSTART")
+        if start is None:
+            continue
+        beginn = _ort(start.dt)
+        titel = str(ev.get("SUMMARY", "")).replace("\n", " ").strip()
+        if not titel:
+            continue
+        if isinstance(beginn, datetime.datetime):                          # mit Uhrzeit: am Tag des Beginns
+            tage_liste, uhr = [beginn.date()], beginn.time()
+        else:                                                              # ganztaegig: von Beginn bis (ausschliesslich) Ende, mehrtaegig an jedem Tag
+            ende = ev["DTEND"].dt if ev.get("DTEND") is not None else beginn + datetime.timedelta(days=1)
+            ende = _ort(ende)
+            ende = ende.date() if isinstance(ende, datetime.datetime) else ende
+            tage_liste, uhr = [beginn + datetime.timedelta(days=i) for i in range(max(1, (ende - beginn).days))], None
+        for tag in tage_liste:
+            if heute <= tag < heute + datetime.timedelta(days=tage):
+                ergebnis.append({"tag": "heute" if tag == heute else "morgen" if tag == heute + datetime.timedelta(days=1) else tag.isoformat(),
+                                 "zeit": uhr.strftime("%H:%M") if uhr else "", "titel": titel[:60], "_k": (tag, uhr or datetime.time.min)})
+    ergebnis.sort(key=lambda e: e["_k"])
+    return [{k: v for k, v in e.items() if k != "_k"} for e in ergebnis][:maximum]
+
+
+def _ics_termine_einfach(text, heute, tage=2, maximum=4):
+    """Einfacher Leser: Wiederholungen taeglich, woechentlich, jaehrlich."""
     fenster = [heute + datetime.timedelta(days=i) for i in range(tage)]
     ergebnis = []
     ereignis = None
@@ -2714,9 +2765,21 @@ def ics_termine(text, heute, tage=2, maximum=4):
     return [{k: v for k, v in e.items() if k != "_k"} for e in ergebnis if e["titel"]][:maximum]
 
 
+def kalender_zugang(z=None):
+    """(Kalender-Link, Anmeldung) fuer einen Rahmen. Benutzer und Passwort gelten nur fuer den eigenen Link des Rahmens (nie fuer den allgemeinen)."""
+    url = kalender_url(z)
+    e = GERAETE.get(z) or {}
+    eigen = isinstance(e.get("kalender_url"), str) and re.match(r"^https?://", e["kalender_url"])
+    u, pw = (e.get("kalender_user"), e.get("kalender_pw")) if eigen else (None, None)
+    return url, ((str(u), str(pw)) if u and pw else None)
+
+
 def kalender_holen(z=None):
     """Termine von heute und morgen aus dem Kalender-Link (falls eingerichtet)."""
-    return ics_termine(http_text(kalender_url(z)), datetime.date.today(), maximum=40) if kalender_url(z) else []
+    url, auth = kalender_zugang(z)
+    if not url:
+        return []
+    return ics_termine(http_text(url, auth=auth) if auth else http_text(url), datetime.date.today(), maximum=40)
 
 
 def kalender_roh(z=None):
@@ -3131,7 +3194,7 @@ RAHMEN_NUR_FELDER = ("sek", "anzeige", "quellen", "zeitplan", "erinnerungen", "f
 def geraet_ansicht(z, e):
     t = TV.get(z) or {}
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
-            "kalender_gesetzt": bool(e.get("kalender_url")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
+            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
             "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ad_host": e.get("fully_ad_host") or "", "fully_ad_pw_gesetzt": bool(e.get("fully_ad_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
             "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
@@ -3215,10 +3278,23 @@ def geraet_felder(daten, art):
             u = str(daten["kalender_url"] or "").strip()
             if not u:
                 weg.append("kalender_url")
-            elif not re.match(r"^https?://\S{4,1000}$", u):
+            elif not re.match(r"^(https?|webcal)://\S{4,1000}$", u):
                 raise HTTPException(400, "Kalender-Link bitte als https://… eintragen")
             else:
-                setzen["kalender_url"] = u
+                setzen["kalender_url"] = u.replace("webcal://", "https://", 1) if u.startswith("webcal://") else u
+        if "kalender_url" in weg:
+            weg += ["kalender_user", "kalender_pw"]                             # ohne eigenen Link gibt es keine eigene Anmeldung
+        else:
+            if "kalender_user" in daten:
+                ku = str(daten["kalender_user"] or "").strip()
+                if len(ku) > 100:
+                    raise HTTPException(400, "Der Benutzername ist zu lang")
+                if ku:
+                    setzen["kalender_user"] = ku
+                else:
+                    weg += ["kalender_user", "kalender_pw"]
+            if daten.get("kalender_pw"):
+                setzen["kalender_pw"] = str(daten["kalender_pw"])[:200]
         if "layout" in daten:
             if daten["layout"] in (None, {}):
                 weg.append("layout")

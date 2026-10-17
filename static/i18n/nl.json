@@ -759,7 +759,11 @@
   "aus dem Heimnetz": "vanuit het thuisnetwerk",
   "lädt": "laadt",
   "nicht am Strom": "niet aangesloten",
-  "von außen (über das Internet)": "van buitenaf (via internet)"
+  "von außen (über das Internet)": "van buitenaf (via internet)",
+  "Benutzer für den Kalender (nur wenn er geschützt ist)": "Gebruiker voor de agenda (alleen als die beveiligd is)",
+  "Benutzer für den Kalender": "Gebruiker voor de agenda",
+  "Passwort für den Kalender": "Wachtwoord voor de agenda",
+  "Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.": "Bijvoorbeeld voor Radicale of Nextcloud: het adres van de agenda, plus gebruiker en wachtwoord. Het wachtwoord wordt alleen op de server opgeslagen en nooit meer getoond."
  },
  "muster": [
   [

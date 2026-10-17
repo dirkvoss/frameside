@@ -759,7 +759,11 @@
   "aus dem Heimnetz": "depuis le réseau domestique",
   "lädt": "en charge",
   "nicht am Strom": "non branchée",
-  "von außen (über das Internet)": "de l’extérieur (via Internet)"
+  "von außen (über das Internet)": "de l’extérieur (via Internet)",
+  "Benutzer für den Kalender (nur wenn er geschützt ist)": "Utilisateur du calendrier (seulement s’il est protégé)",
+  "Benutzer für den Kalender": "Utilisateur du calendrier",
+  "Passwort für den Kalender": "Mot de passe du calendrier",
+  "Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.": "Par exemple pour Radicale ou Nextcloud : l’adresse du calendrier, plus l’utilisateur et le mot de passe. Le mot de passe n’est enregistré que sur le serveur et n’est plus jamais affiché."
  },
  "muster": [
   [

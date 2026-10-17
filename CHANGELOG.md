@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.31.0]
+### Neu
+- **Kalender-Link mit Anmeldung, je Rahmen:** Unter Geräte → ⚙ → Kalender gibt es zum Kalender-Link jetzt **Benutzer und Passwort** (für geschützte Kalender wie Radicale oder Nextcloud). Jeder Rahmen kann seinen eigenen Kalender mit eigener Anmeldung zeigen; die Anmeldung gilt nur für den eigenen Link dieses Rahmens, wird nur auf dem Server gespeichert und nie wieder angezeigt. `webcal://`-Links werden angenommen.
+### Geändert
+- **Kalender-Link: vollständiger Termin-Leser** (Bibliotheken `icalendar` und `recurring-ical-events`): versteht alle Wiederholungen (auch **monatlich**, jährlich mit Regeln, `COUNT`), **ausgenommene Tage** (`EXDATE`), **verschobene Einzeltermine** und **mehrtägige** ganztägige Termine; abgesagte Termine werden nicht mehr gezeigt. Bei einer Datei, die die Bibliothek nicht lesen kann, liest weiter der bisherige einfache Leser.
+
 ## [2.30.0]
 ### Neu
 - **Ladegrenze für Tablets (Android-App 1.3.0):** Menü → „Ladegrenze (Steckdose)“. Die App hält den Akku in einem Bereich (z. B. 20–80 %), indem sie eine Shelly-Steckdose im selben WLAN (Gen1 bis Gen4, automatisch gefunden) bei der Obergrenze aus- und bei der Untergrenze einschaltet; andere Steckdosen gehen über eine Ein- und eine Aus-Web-Adresse. Alles lokal, ohne Konto, Cloud, Skript oder Firewall-Regel. In der Steckdose wird eine **Sicherung** gesetzt („nach Stromausfall an“, „nach 8 Stunden aus von selbst wieder an“), damit das Tablet nie leerläuft. Ändert sich die Adresse der Steckdose, sucht die App sie von selbst wieder. Per ADB einrichtbar: `--es ladegrenze shelly,<adresse>,20,80`.
