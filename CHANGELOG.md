@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.32.0]
+### Neu
+- **„Kalender testen“ am Rahmen** (Geräte → ⚙ → Kalender): prüft Link, Benutzer und Passwort (auch vor dem Speichern) und nennt bei einem Fehler den Grund („Benutzer oder Passwort stimmen nicht“, „Unter diesem Link gibt es keinen Kalender“ …). Bei Erfolg steht dort der **lesbare Name des Kalenders** (z. B. „Family“ statt der langen Radicale-Adresse), die Zahl der Einträge und wie viele heute und morgen anstehen. Der Name erscheint auch beim Öffnen des Dialogs.
+### Behoben
+- **Ein einzelner kaputter Eintrag machte den ganzen Kalender unlesbar:** Ein alter Termin mit unlesbarem `SEQUENCE` ließ den vollen Termin-Leser abstürzen, danach las nur noch der einfache Leser (ohne monatliche Wiederholungen und Ausnahmen). Jetzt werden kaputte Nebenangaben ignoriert und nur Einträge mit unlesbarem Datum oder unlesbarer Wiederholung ausgelassen.
+
 ## [2.31.0]
 ### Neu
 - **Kalender-Link mit Anmeldung, je Rahmen:** Unter Geräte → ⚙ → Kalender gibt es zum Kalender-Link jetzt **Benutzer und Passwort** (für geschützte Kalender wie Radicale oder Nextcloud). Jeder Rahmen kann seinen eigenen Kalender mit eigener Anmeldung zeigen; die Anmeldung gilt nur für den eigenen Link dieses Rahmens, wird nur auf dem Server gespeichert und nie wieder angezeigt. `webcal://`-Links werden angenommen.

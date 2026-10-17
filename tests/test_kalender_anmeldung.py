@@ -142,3 +142,86 @@ def test_anmeldung_wird_nicht_an_den_allgemeinen_link_gehaengt(app_laden):
     w, client, _ = app_laden(RAHMEN_WEB_KALENDER_URL="https://example.org/allgemein.ics", **LAN)
     client().put("/api/verwaltung/geraete/flur", json={"kalender_user": "x", "kalender_pw": "y"}, headers=H)
     assert w.kalender_zugang("flur") == ("https://example.org/allgemein.ics", None)       # ohne eigenen Link zaehlt die Anmeldung nicht
+
+
+def test_ein_kaputter_eintrag_macht_nicht_den_ganzen_kalender_unlesbar(app_laden, monkeypatch):
+    """Echter Fall: ein alter Termin mit unlesbarem SEQUENCE liess die Bibliothek abstuerzen; dann las nur noch der einfache Leser (ohne monatlich)."""
+    w, _, _ = app_laden()
+    ics = ICS.replace("END:VCALENDAR", """BEGIN:VEVENT
+UID:alt@test
+DTSTART:20211104T093000
+SEQUENCE:kein-Zahlenwert
+SUMMARY:Alter Termin
+END:VEVENT
+BEGIN:VEVENT
+UID:kaputt@test
+DTSTART:kein-Datum
+SUMMARY:Ohne Datum
+END:VEVENT
+END:VCALENDAR""")
+    monkeypatch.setattr(w, "_ics_termine_einfach", lambda *a, **k: (_ for _ in ()).throw(AssertionError("Rueckfall darf nicht noetig sein")))
+    titel = [e["titel"] for e in w.ics_termine(ics, datetime.date(2026, 10, 5), maximum=20)]
+    assert "Elternabend" in titel                                 # monatlich: nur der volle Leser kann das
+    assert "Ohne Datum" not in titel
+
+
+def _fehler(w, code):
+    import urllib.error
+
+    def f(url, timeout=10, auth=None):
+        raise urllib.error.HTTPError(url, code, "x", {}, None)
+    return f
+
+
+ICS_NAME = ICS.replace("PRODID:-//test//DE", "PRODID:-//test//DE\nX-WR-CALNAME:Family")
+
+
+def test_kalender_testen_zeigt_name_und_zahlen(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    gesehen = {}
+    monkeypatch.setattr(w, "http_text", lambda url, timeout=10, auth=None: gesehen.update(url=url, auth=auth) or ICS_NAME)
+    r = app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json={"kalender_url": "webcal://example.org/c/", "kalender_user": "anna", "kalender_pw": "geheim"}, headers=H)
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["name"] == "Family" and d["eintraege"] == 5 and "Family" in d["nachricht"] and "geheim" not in r.text
+    assert gesehen == {"url": "https://example.org/c/", "auth": ("anna", "geheim")}        # es werden die eingegebenen (noch nicht gespeicherten) Werte benutzt
+    assert w.KAL_NAMEN["wohnzimmer"] == "Family"
+
+
+def test_kalender_testen_nutzt_gespeicherte_werte_wenn_nichts_eingegeben(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"kalender_url": "https://example.org/c/", "kalender_user": "anna", "kalender_pw": "geheim"}, headers=H)
+    gesehen = {}
+    monkeypatch.setattr(w, "http_text", lambda url, timeout=10, auth=None: gesehen.update(auth=auth) or ICS)
+    assert app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json={}, headers=H).status_code == 200
+    assert gesehen["auth"] == ("anna", "geheim")
+    # anderer Benutzer eingegeben, aber kein Passwort: das gespeicherte Passwort gehoert nicht dazu
+    app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json={"kalender_user": "bernd"}, headers=H)
+    assert gesehen["auth"] is None
+
+
+def test_kalender_testen_nennt_den_grund(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    url = {"kalender_url": "https://example.org/c/"}
+    monkeypatch.setattr(w, "http_text", _fehler(w, 401))
+    assert "Passwort" in app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json={**url, "kalender_user": "anna", "kalender_pw": "x"}, headers=H).json()["nachricht"]
+    assert "Anmeldung" in app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json=url, headers=H).json()["nachricht"]      # ohne Benutzer: der Kalender verlangt eine Anmeldung
+    monkeypatch.setattr(w, "http_text", _fehler(w, 404))
+    assert "keinen Kalender" in app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json=url, headers=H).json()["nachricht"]
+    monkeypatch.setattr(w, "http_text", lambda *a, **k: "<html>Login</html>")
+    assert "kein Kalender" in app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json=url, headers=H).json()["nachricht"]
+    assert app.post("/api/verwaltung/geraete/wohnzimmer/kalender-test", json={}, headers=H).status_code == 400        # ohne Link
+    assert app.post("/api/verwaltung/geraete/gibtsnicht/kalender-test", json=url, headers=H).status_code == 404
+
+
+def test_kalendername_erscheint_am_geraet_nach_dem_abruf(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"kalender_url": "https://example.org/c/"}, headers=H)
+    monkeypatch.setattr(w, "http_text", lambda url, timeout=10, auth=None: ICS_NAME)
+    w.kalender_holen("wohnzimmer")
+    g = [e for e in app.get("/api/verwaltung").json()["geraete"] if e["id"] == "wohnzimmer"][0]
+    assert g["kalender_name"] == "Family"

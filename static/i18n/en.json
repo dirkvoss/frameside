@@ -763,7 +763,8 @@
   "Benutzer für den Kalender (nur wenn er geschützt ist)": "User for the calendar (only if it is protected)",
   "Benutzer für den Kalender": "User for the calendar",
   "Passwort für den Kalender": "Password for the calendar",
-  "Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.": "For example for Radicale or Nextcloud: the calendar’s address plus user and password. The password is stored on the server only and never shown again."
+  "Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.": "For example for Radicale or Nextcloud: the calendar’s address plus user and password. The password is stored on the server only and never shown again.",
+  "Kalender": "Calendar"
  },
  "muster": [
   [

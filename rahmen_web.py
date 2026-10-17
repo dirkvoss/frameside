@@ -2690,6 +2690,15 @@ def _ics_termine_voll(text, heute, tage, maximum):
     import icalendar
     import recurring_ical_events
     cal = icalendar.Calendar.from_ical(text)
+    for ev in list(cal.walk("VEVENT")):                                    # ein einzelner kaputter Eintrag darf nicht den ganzen Kalender unlesbar machen
+        kaputt = [k for k, v in ev.items() if type(v).__name__ == "vBroken"]
+        if not kaputt:
+            continue
+        if any(k in ("DTSTART", "DTEND", "DURATION", "RRULE", "RDATE", "EXDATE", "RECURRENCE-ID", "UID") for k in kaputt):
+            cal.subcomponents.remove(ev)                                    # Datum oder Wiederholung unlesbar: nur diesen Eintrag auslassen
+        else:
+            for k in kaputt:
+                del ev[k]                                                   # Nebenangabe (z. B. SEQUENCE): einfach ignorieren
     von = datetime.datetime.combine(heute, datetime.time.min)
     bis = von + datetime.timedelta(days=tage)
     ergebnis = []
@@ -2774,12 +2783,23 @@ def kalender_zugang(z=None):
     return url, ((str(u), str(pw)) if u and pw else None)
 
 
+KAL_NAMEN = {}                                                        # lesbarer Name des Kalenders je Rahmen (steht in der Datei, z. B. "Family"), nur im Speicher
+
+
+def kalender_name(text):
+    m = re.search(r"^X-WR-CALNAME[^:\r\n]*:(.*)$", text[:4000], re.M)
+    return m.group(1).strip().replace("\\,", ",")[:60] if m else ""
+
+
 def kalender_holen(z=None):
     """Termine von heute und morgen aus dem Kalender-Link (falls eingerichtet)."""
     url, auth = kalender_zugang(z)
     if not url:
         return []
-    return ics_termine(http_text(url, auth=auth) if auth else http_text(url), datetime.date.today(), maximum=40)
+    text = http_text(url, auth=auth) if auth else http_text(url)
+    if z:
+        KAL_NAMEN[z] = kalender_name(text)
+    return ics_termine(text, datetime.date.today(), maximum=40)
 
 
 def kalender_roh(z=None):
@@ -3194,7 +3214,7 @@ RAHMEN_NUR_FELDER = ("sek", "anzeige", "quellen", "zeitplan", "erinnerungen", "f
 def geraet_ansicht(z, e):
     t = TV.get(z) or {}
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
-            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
+            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_name": KAL_NAMEN.get(z, ""), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
             "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ad_host": e.get("fully_ad_host") or "", "fully_ad_pw_gesetzt": bool(e.get("fully_ad_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
             "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
@@ -3929,6 +3949,38 @@ def einstellungen_testen(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"Test fehlgeschlagen: {e}")
     raise HTTPException(400, "Unbekannter Test")
+
+
+@app.post("/api/verwaltung/geraete/{z}/kalender-test")
+def kalender_testen(z: str, daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Kalender-Link eines Rahmens pruefen (mit den eingegebenen oder den gespeicherten Werten): sagt klar, was nicht stimmt, und zeigt den Namen des Kalenders."""
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    g = GERAETE[z]
+    url = str(daten.get("kalender_url") or "").strip() or str(g.get("kalender_url") or "")
+    if url.startswith("webcal://"):
+        url = "https://" + url[len("webcal://"):]
+    if not re.match(r"^https?://\S{4,1000}$", url):
+        raise HTTPException(400, "Bitte erst den Kalender-Link eintragen")
+    user = str(daten["kalender_user"]).strip() if "kalender_user" in daten else str(g.get("kalender_user") or "")
+    pw = str(daten.get("kalender_pw") or "") or (str(g.get("kalender_pw") or "") if user == str(g.get("kalender_user") or "") else "")
+    try:
+        text = http_text(url, timeout=20, auth=(user, pw) if user and pw else None)
+    except urllib.error.HTTPError as e:
+        grund = {401: "Benutzer oder Passwort stimmen nicht" if user else "Der Kalender verlangt eine Anmeldung – bitte Benutzer und Passwort eintragen",
+                 403: "Der Zugriff ist nicht erlaubt (fehlt das Recht auf diesen Kalender?)", 404: "Unter diesem Link gibt es keinen Kalender (Adresse prüfen)"}.get(e.code, f"Der Kalender-Server antwortet mit Fehler {e.code}")
+        raise HTTPException(502, grund)
+    except (urllib.error.URLError, OSError) as e:
+        raise HTTPException(502, f"Der Kalender-Server ist nicht erreichbar ({getattr(e, 'reason', e)})")
+    if "BEGIN:VCALENDAR" not in text:
+        raise HTTPException(502, "Unter diesem Link liegt kein Kalender (iCal) – bei Radicale muss es die Adresse des Kalenders sein")
+    name = kalender_name(text)
+    if name:
+        KAL_NAMEN[z] = name
+    n = text.count("BEGIN:VEVENT")
+    k = len(ics_termine(text, datetime.date.today(), maximum=40))
+    return {"ok": True, "name": name, "eintraege": n, "termine": k,
+            "nachricht": (f"Kalender „{name}“ gelesen" if name else "Kalender gelesen") + f": {n} Einträge, davon {k} heute und morgen."}
 
 
 @app.post("/api/geraete/bildschirm")

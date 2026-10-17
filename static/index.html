@@ -832,6 +832,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <label class="tvfeld"><span>Benutzer für den Kalender (nur wenn er geschützt ist)</span> <input id="gfKalUser" type="text" autocomplete="off" aria-label="Benutzer für den Kalender"></label>
           <label class="tvfeld"><span>Passwort für den Kalender</span> <input id="gfKalPw" type="password" autocomplete="new-password" aria-label="Passwort für den Kalender"></label>
           <p class="tipp">Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.</p>
+          <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfKalTest" type="button">Kalender testen</button></div>
+          <p class="tipp versteckt" id="gfKalErg" role="status"></p>
           <div class="tvknoepfe versteckt" id="gfKalWegZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein gefahr" id="gfKalWeg" type="button">Kalender-Link dieses Rahmens entfernen</button></div>
           <label class="tvfeld"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
           <div class="tvfeld" id="gfNachtZeiten"><span>Nachtruhe (Bildschirm aus)</span><span class="reihe"><input id="gfNachtVon" type="time" aria-label="von"> – <input id="gfNachtBis" type="time" aria-label="bis"></span></div>
@@ -2264,6 +2266,7 @@ async function geraetDialogOeffnen(id) {
   $("#gfNotizBlock").classList.toggle("versteckt", !id); $("#gfNotiz").value = ""; $("#gfNotizErg").classList.add("versteckt");
   if (id) { try { const n = await api("notizen/" + encodeURIComponent(id)); $("#gfNotiz").value = n.text || ""; } catch (e) {} }
   gfWetter = g.wetter || null; gfOrtZeigen(); $("#gfOrtSuche").value = ""; $("#gfOrtTreffer").innerHTML = "";
+  const ke = $("#gfKalErg"); ke.style.color = ""; ke.classList.toggle("versteckt", !g.kalender_name); ke.textContent = g.kalender_name ? RW_T("Kalender") + ": " + g.kalender_name : "";
   $("#gfKalUser").value = g.kalender_user || ""; $("#gfKalPw").value = ""; $("#gfKalPw").placeholder = g.kalender_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
   $("#gfKal").value = ""; gfKalLoeschen = false; $("#gfKal").placeholder = g.kalender_gesetzt ? RW_T("gesetzt – zum Ändern neuen Link einfügen") : "https://…"; $("#gfKalWegZeile").classList.toggle("versteckt", !g.kalender_gesetzt);
   const sel = $("#gfUebernehmen"); sel.innerHTML = ""; const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "–"; sel.append(o0);
@@ -2597,6 +2600,14 @@ $("#gfDatei").addEventListener("click", async () => {
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).nachricht || "Fehler " + r.status);
     const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "frameside-" + gfId + "-fully.json"; a.click();
   } catch (e) { fehler(e); }
+});
+$("#gfKalTest").addEventListener("click", async e => {
+  const erg = $("#gfKalErg"); erg.classList.remove("versteckt"); erg.style.color = ""; erg.textContent = RW_T("Teste …"); e.currentTarget.disabled = true;
+  try {
+    const r = await api("verwaltung/geraete/" + encodeURIComponent(gfId) + "/kalender-test", { method: "POST", body: JSON.stringify({ kalender_url: $("#gfKal").value.trim(), kalender_user: $("#gfKalUser").value.trim(), kalender_pw: $("#gfKalPw").value }) });
+    erg.textContent = "✓ " + r.nachricht; erg.style.color = "var(--ok, #3ecf8e)";
+  } catch (err) { erg.textContent = "✗ " + err.message; erg.style.color = "var(--danger, #f87171)"; }
+  e.currentTarget.disabled = false;
 });
 const CHECK_TEXTE = {                                      // Texte zum Tablet-Check (der Server liefert nur Kennung und Status)
   online: { ok: "Das Gerät meldet sich beim Server.", fehler: "Das Gerät meldet sich gerade nicht. Ist es an, im WLAN, und zeigt es die Rahmen-Seite?" },
