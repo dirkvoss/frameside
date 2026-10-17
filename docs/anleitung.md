@@ -91,6 +91,8 @@ Zeigt die App das Gerät nicht, gib den Code vom Bildschirm unter **Geräte → 
 
 Das Gerät merkt sich die Kopplung und startet danach von selbst mit der Diashow. Tipp: Auf dem Tablet „Zum Home-Bildschirm hinzufügen“ bzw. Vollbild nutzen.
 
+**Dauerbetrieb am Tablet:** Damit ein Tablet nach Neustart und Stromausfall von selbst startet, den Akku schont (Ladegrenze mit Steckdose) und auch bei den Eltern läuft, siehe [Tablet als Bilderrahmen einrichten](tablet-einrichten.md). In der App zeigt **Geräte → ⚙ → Tablet einrichten und steuern → Tablet prüfen**, was noch fehlt.
+
 ## 5. Die erste Show senden
 
 Tippe Fotos an (oder „Tag wählen“) und dann unten auf **Auf den Rahmen**. Wenige Sekunden später zeigt der Rahmen deine Auswahl.

@@ -61,6 +61,10 @@ class FullyBruecke {
         });
     }
 
+    /** Zustand der Ladegrenze fuer den Server ("an:20:80", "aus:20:80", "fehler:20:80", "suche:20:80"); leer, wenn nicht eingerichtet. */
+    @JavascriptInterface
+    public String getLadegrenze() { return Ladegrenze.status(); }
+
     @JavascriptInterface
     public void restartApp() { a.neuStarten(); }
 }

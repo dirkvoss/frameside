@@ -1,6 +1,15 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.30.0]
+### Neu
+- **Ladegrenze für Tablets (Android-App 1.3.0):** Menü → „Ladegrenze (Steckdose)“. Die App hält den Akku in einem Bereich (z. B. 20–80 %), indem sie eine Shelly-Steckdose im selben WLAN (Gen1 bis Gen4, automatisch gefunden) bei der Obergrenze aus- und bei der Untergrenze einschaltet; andere Steckdosen gehen über eine Ein- und eine Aus-Web-Adresse. Alles lokal, ohne Konto, Cloud, Skript oder Firewall-Regel. In der Steckdose wird eine **Sicherung** gesetzt („nach Stromausfall an“, „nach 8 Stunden aus von selbst wieder an“), damit das Tablet nie leerläuft. Ändert sich die Adresse der Steckdose, sucht die App sie von selbst wieder. Per ADB einrichtbar: `--es ladegrenze shelly,<adresse>,20,80`.
+- **Tablet-Check:** Unter Geräte → ⚙ → „Tablet einrichten und steuern“ → „Tablet prüfen“ zeigt Frameside mit Haken und Kreuzen, ob das Tablet für den Dauerbetrieb bereit ist (nur lesend): Fernsteuerung, Start nach Neustart, Bildschirm an, Start-Adresse, Mikrofon, Fully Plus, Sperrbildschirm, Akku, Ladegrenze, Verbindungsweg (Heimnetz oder außen) und Hinweise zu Dingen, die der Server nicht sehen kann („Über anderen Apps anzeigen“, Neustart-Test).
+- **Ausführliche Anleitung „Tablet als Bilderrahmen einrichten“** (Deutsch und Englisch, `docs/tablet-einrichten.md`, `docs/tablet-setup.md`): Geräteempfehlung, Neustart-Test, Fire-Tablet-Sperrbildschirm per ADB, Ladegrenze, Tablet bei den Eltern (ohne DynDNS und Portfreigabe), Test zu Hause und die DNS-Falle, Checkliste zur Übergabe.
+### Geändert
+- **Tablet einrichten schaltet das Mikrofon in Fully aus** („Mikrofon-Zugriff“): Der Rahmen braucht keins, und auf Fire-Tablets fragte Fully sonst nach Neustarts wieder danach und die Anzeige wartete auf den Dialog. Nur bei Fully-Versionen, die die Einstellung kennen.
+- Der Herzschlag der Rahmen-Seite meldet jetzt den Verbindungsweg (Heimnetz/außen) und die Ladegrenze der Android-App an den Server.
+
 ## [2.29.0]
 ### Neu
 - **Android-TV-App einfach auf den Fernseher bekommen:** Der Server leitet seine kurze Adresse `<Server>/app` (z. B. `192.168.1.20:8090/app`) auf die neueste App-Datei weiter – in der kostenlosen App „Downloader“ am Fernseher muss man nicht mehr den langen GitHub-Link tippen. Im Dialog „Gerät hinzufügen“ gibt es dazu den neuen Block „Android TV, Google TV, Fire TV oder Shield: Frameside-App installieren“ (drei Schritte, die Adresse wird gleich angezeigt, Hinweis zum Bildschirmschoner). Übersetzt in Englisch, Französisch, Niederländisch und Spanisch.

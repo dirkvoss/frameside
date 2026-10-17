@@ -50,6 +50,7 @@ public class MainActivity extends Activity {
         starten();
         netzBeobachten();
         autostartHinweis();
+        Ladegrenze.starten(this);                         // nur wenn eingerichtet (Menue "Ladegrenze"); laeuft im Hintergrund weiter, solange die App offen ist
     }
 
     @Override
@@ -60,11 +61,36 @@ public class MainActivity extends Activity {
         starten();
     }
 
-    /** Per ADB vorgeben:  am start -n com.dirkvoss.frameside.tv/.MainActivity --es adresse 192.168.1.20:8090 */
+    /**
+     * Per ADB vorgeben:  am start -n com.dirkvoss.frameside.tv/.MainActivity --es adresse 192.168.1.20:8090
+     * Ladegrenze (Shelly) ohne Menue einrichten:  ... --es ladegrenze shelly,192.168.1.50,20,80   (ausschalten: --es ladegrenze aus)
+     */
     private void uebernehmeIntent(Intent i) {
         if (i == null) return;
         String a = i.getStringExtra("adresse");
         if (a != null && !a.trim().isEmpty()) Server.merken(this, Server.normal(a));
+        final String lg = i.getStringExtra("ladegrenze");
+        if (lg != null && !lg.trim().isEmpty()) new Thread(() -> ladegrenzeVorgeben(lg.trim()), "frameside-ladegrenze-vorgabe").start();
+    }
+
+    private void ladegrenzeVorgeben(String wert) {
+        if (wert.equals("aus")) { Ladegrenze.ausschalten(this); return; }
+        String[] t = wert.split(",");
+        try {
+            if (t.length != 4 || !t[0].equals("shelly")) throw new IllegalArgumentException("Format: shelly,<adresse>,<unten>,<oben>");
+            int u = Integer.parseInt(t[2].trim()), o = Integer.parseInt(t[3].trim());
+            String fehler = Ladegrenze.pruefeGrenzen(u, o);
+            if (fehler != null) throw new IllegalArgumentException(fehler);
+            Steckdose.Fund f = Steckdose.shellyPruefen(t[1].trim(), 2500);
+            if (f == null) throw new IllegalArgumentException("Unter " + t[1] + " antwortet kein Shelly");
+            Ladegrenze.Konfig k = new Ladegrenze.Konfig();
+            k.aktiv = true; k.art = "shelly"; k.host = f.host; k.id = f.id; k.unten = u; k.oben = o;
+            Ladegrenze.speichern(this, k);
+            Ladegrenze.starten(this);
+            android.util.Log.i("Frameside", "Ladegrenze per Intent: " + f.id + " " + u + "-" + o);
+        } catch (Exception e) {
+            android.util.Log.w("Frameside", "Ladegrenze per Intent nicht gesetzt: " + e.getMessage());
+        }
     }
 
     private void vollbild() {
@@ -247,13 +273,14 @@ public class MainActivity extends Activity {
     }
 
     private void menue() {
-        final String[] punkte = {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben"};
+        final String[] punkte = {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)"};
         new AlertDialog.Builder(this).setTitle("Frameside").setItems(punkte, (d, i) -> {
             if (i == 0 && !Server.gemerkt(this).isEmpty()) zeigeSeite(Server.gemerkt(this));
             else if (i == 1) { Server.merken(this, ""); zeigeSuche(); }
             else if (i == 2) adresseAbfragen();
             else if (i == 3) finish();
             else if (i == 4) autostartErlauben();
+            else if (i == 5) LadegrenzeDialog.zeigen(this);
         }).show();
     }
 

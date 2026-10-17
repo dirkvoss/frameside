@@ -21,7 +21,10 @@ The same app is the simplest way to turn a tablet into a frame – no browser, n
 
 What the app does for you: full screen, screen always on, reconnects after a network outage, rebuilds the display if it crashes, reports battery and charging state, dims the screen at night (brightness, as set in the Frameside app), and executes *Reload page / Restart display* from the Frameside app. Long-press the picture (tablet) or press Menu (remote) for the small menu.
 
-*Technical note:* the app exposes the five functions of Fully Kiosk's JavaScript interface (`window.fully`: battery level, plugged, brightness get/set, turn screen on, restart app), so the frame page behaves exactly as with Fully.
+### Charge limit (battery care for a tablet on its charger all day)
+Menu → **Charge limit (plug)**: pick a smart plug in your Wi-Fi (Shelly Gen1/Gen2/Gen3/Gen4 are found automatically, other plugs work with an on and an off web address) and a range such as 20–80 %. The app switches the plug off at the upper limit and on at the lower limit, and sets a safeguard in the plug (*after a power cut: on*, *after 8 hours off: switch back on by itself*) so the tablet never runs flat if the app or the Wi-Fi fails. Everything stays local: no account, no cloud, no script on the plug. The state is reported to the Frameside server (shown in the tablet check). Full guide: [docs/tablet-setup.md](../docs/tablet-setup.md).
+
+*Technical note:* the app exposes the functions of Fully Kiosk's JavaScript interface (`window.fully`: battery level, plugged, brightness get/set, turn screen on, restart app) plus `getLadegrenze` (charge-limit state), so the frame page behaves exactly as with Fully.
 
 ## Build
 Needs JDK 17 and the Android SDK (platform 34, build-tools 34.0.0).
@@ -34,3 +37,4 @@ A release build is signed with a key kept outside the repository (`FRAMESIDE_KEY
 
 ## Provision from the command line
 `adb shell am start -n com.dirkvoss.frameside.tv/.MainActivity --es adresse 192.168.1.20:8090`
+Charge limit without the menu: `... --es ladegrenze shelly,192.168.1.50,20,80` (switch off: `--es ladegrenze aus`).

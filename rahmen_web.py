@@ -3496,7 +3496,8 @@ def fully_profil(z, basis, opt=None):
          "disableStatusBar": ("b", True), "disableOtherApps": ("b", True), "enableZoom": ("b", False),
          "forceScreenOrientation": ("s", FULLY_AUSRICHTUNG.get(opt.get("ausrichtung") or "auto", "0")),
          "reloadEachSeconds": ("s", "0"), "reloadOnScreenOn": ("b", False), "reloadOnScreensaverStop": ("b", False),
-         "restartAfterUpdate": ("b", True), "setWifiWakelock": ("b", True)}
+         "restartAfterUpdate": ("b", True), "setWifiWakelock": ("b", True),
+         "microphoneAccess": ("b", False)}                           # der Rahmen braucht kein Mikrofon; sonst fragt Fire OS nach Neustarts erneut danach und die Seite wartet
     if opt.get("immer_an", True):
         p.update({"keepScreenOn": ("b", True), "keepOnWhileFullscreen": ("b", True), "disableScreenOff": ("b", True),
                   "screenOffTimer": ("s", "0"), "timeToScreenOffV2": ("s", "0"), "timeToScreensaverV2": ("s", "0")})
@@ -3508,6 +3509,9 @@ def fully_profil(z, basis, opt=None):
     if re.fullmatch(r"\d{1,3}", hell) and 1 <= int(hell) <= 255:
         p["screenBrightness"] = ("s", hell)
     return p
+
+
+FULLY_OPTIONAL = {"microphoneAccess"}                                 # nur setzen, wenn diese Fully-Version die Einstellung kennt (sonst bliebe sie "offen")
 
 
 def fully_gleich(soll, ist):
@@ -3529,7 +3533,8 @@ def fully_pruefen(host, pw, profil):
         raise HTTPException(502, f"{FULLY_UNERREICHBAR} (Technisch: {e})")
     if not isinstance(ist, dict) or str(ist.get("status", "")).lower() == "error":
         raise HTTPException(401, "Das Passwort stimmt nicht – es ist das „Remote Admin Password“ aus den Fully-Einstellungen.")
-    return [{"key": k, "soll": v, "ist": ist.get(k)} for k, (_, v) in profil.items() if not fully_gleich(v, ist.get(k))]
+    return [{"key": k, "soll": v, "ist": ist.get(k)} for k, (_, v) in profil.items()
+            if not (k in FULLY_OPTIONAL and k not in ist) and not fully_gleich(v, ist.get(k))]
 
 
 def fully_zugang(daten):
@@ -3602,6 +3607,69 @@ def fully_datei(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
            "selbstheilung": bool(daten.get("selbstheilung", True)), "helligkeit": str(daten.get("helligkeit") or "")}
     return Response(json.dumps({k: v for k, (_, v) in fully_profil(z, basis, opt).items()}, indent=1, ensure_ascii=False), media_type="application/json",
                     headers={"Content-Disposition": f'attachment; filename="frameside-{z}-fully.json"'})
+
+
+def bereitschaft_pruefen(z, daten):
+    """Tablet-Check: was ist fuer den Dauerbetrieb als Rahmen in Ordnung, was nicht. Liefert nur Kennungen und Werte, die Texte stehen in der Oberflaeche."""
+    g = GERAETE[z]
+    punkte = []
+
+    def p(kennung, status, wert=""):
+        punkte.append({"id": kennung, "status": status, "wert": str(wert)})
+    t = TV.get(z) or {}
+    online = time.time() - t.get("hb", 0) < 10
+    p("online", "ok" if online else "fehler")
+    if online and t.get("extern") is not None:
+        p("weg", "info", "aussen" if t["extern"] else "heimnetz")
+    if t.get("lg"):
+        zustand, unten, oben = t["lg"].split(":")
+        p("ladegrenze", "fehler" if zustand == "fehler" else "ok", f"{zustand}:{unten}:{oben}")
+    else:
+        p("ladegrenze", "info", "")
+    st = FULLY_STATE.get(z, {})
+    akku, laedt = st.get("akku"), st.get("laedt")
+    host = str(daten.get("fully_host") or g.get("fully_host") or g.get("fully_ad_host") or "").strip()
+    pw = str(daten.get("fully_pw") or g.get("fully_pw") or g.get("fully_ad_pw") or os.environ.get("RAHMEN_WEB_FULLY_PASSWORT", ""))
+    if FULLY_RE.fullmatch(host):
+        host = host if ":" in host else host + ":2323"
+        try:
+            def fragen(befehl):
+                return json.loads(fully_get(f"http://{host}/?" + urllib.parse.urlencode({"cmd": befehl, "type": "json", "password": pw}), 12))
+            info, ist = fragen("deviceInfo"), fragen("listSettings")
+            if str(info.get("status", "")).lower() == "error" or str(ist.get("status", "")).lower() == "error":
+                raise ValueError("Passwort")
+            p("fully", "ok")
+            p("autostart", "ok" if fully_gleich(True, ist.get("launchOnBoot")) else "fehler")
+            p("bildschirm_an", "ok" if fully_gleich(True, ist.get("keepScreenOn")) else "fehler")
+            erwartet = f"/tv/?ziel={z}"
+            p("adresse", "ok" if erwartet in str(ist.get("startURL") or "") else "warnung", ist.get("startURL") or "")
+            p("mikrofon", "ok" if ("microphoneAccess" not in ist or fully_gleich(False, ist.get("microphoneAccess"))) else "warnung")
+            p("plus", "ok" if info.get("isLicensed") else "warnung")
+            akku, laedt = info.get("batteryLevel", akku), bool(info.get("isPlugged", laedt))
+            if str(info.get("keyguardLocked")).lower() == "true" and str(info.get("screenOn")).lower() == "true":
+                p("sperrbildschirm", "warnung")
+            else:
+                p("sperrbildschirm", "info")
+        except (OSError, ValueError):
+            p("fully", "fehler")
+            p("sperrbildschirm", "info")
+    else:
+        p("fully", "info")                                                 # ohne Adresse/Passwort kein Zugriff auf die Fully-Einstellungen (das Tablet kann sich trotzdem selbst melden)
+        p("sperrbildschirm", "info")
+    if isinstance(akku, (int, float)):
+        p("akku", "ok" if (laedt or akku >= 40) else "warnung", f"{int(akku)}:{1 if laedt else 0}")
+    p("ueberlagerung", "info")
+    p("neustarttest", "info")
+    return {"ok": not any(x["status"] == "fehler" for x in punkte), "punkte": punkte}
+
+
+@app.post("/api/verwaltung/bereitschaft")
+def bereitschaft(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Tablet-Check fuer ein Geraet (nur lesend)."""
+    z = str(daten.get("id", ""))
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    return bereitschaft_pruefen(z, daten)
 
 
 # --------------------------------------------------------------------------- Einstellungen in der App
@@ -4242,8 +4310,11 @@ def steuer_senden(daten):
     return {"ok": True}
 
 
+LG_RE = re.compile(r"(an|aus|fehler|suche):\d{1,3}:\d{1,3}")
+
+
 @app.get("/api/tv/abfrage")
-def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, g=Depends(geraet)):
+def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, lg: str = "", g=Depends(geraet)):
     """Vom Fernseher alle 2 s aufgerufen (zaehlt zugleich als 'online'). s/n/m = was der Fernseher gerade wirklich tut."""
     if g.get("typ") == "geraet":
         if g.get("geraet") != ziel:
@@ -4260,8 +4331,10 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
     ip = client_ip(request)
     try:
         t["ip"] = ip if ipaddress.ip_address(ip).is_private else ""
+        t["extern"] = not ist_lan(ip)                                         # kommt das Geraet aus dem vertrauten Netz oder von aussen (Tablet bei den Eltern)?
     except ValueError:
-        t["ip"] = ""
+        t["ip"], t["extern"] = "", None
+    t["lg"] = lg if LG_RE.fullmatch(lg or "") else ""                         # Ladegrenze der Android-App: "an:20:80" (Steckdose an, Untergrenze, Obergrenze)
     if fj and 0 <= ak <= 100:
         akku_melden(ziel, ak, pl == 1)
     befehl = t.pop("befehl", None)               # einmalig: "neuladen" oder "neustart" (aus der App ausgeloest)

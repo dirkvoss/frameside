@@ -115,3 +115,18 @@ def test_geraetename_fire_tablet_und_android_tablet(app_laden):
     assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 11; KFONWI) AppleWebKit/537.36 Chrome/120 Safari/537.36 FramesideTV/1.2.0") == ("Fire-Tablet", "rahmen")
     assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 13; SM-X200) AppleWebKit/537.36 Chrome/120 Safari/537.36") == ("Android-Tablet", "rahmen")
     assert w.ua_beschreibung("Mozilla/5.0 (Linux; Android 9; AFTMM Build/PS7233) AppleWebKit/537.36")[1] == "tv"
+
+
+def test_mikrofon_wird_ausgeschaltet_wenn_das_tablet_die_einstellung_kennt(app_laden, monkeypatch):
+    """Der Rahmen braucht kein Mikrofon; Fire OS fragt sonst nach Neustarts erneut danach und die Seite wartet auf den Dialog."""
+    w, client, _ = app_laden(**LAN)
+    t = FakeTablet(ist=dict(FALSCH, microphoneAccess=True))
+    r = einrichten(client(), t, monkeypatch, w).json()
+    assert r["ok"] and t.ist["microphoneAccess"] is False
+
+
+def test_mikrofon_wird_nicht_angefasst_wenn_die_fully_version_sie_nicht_kennt(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    t = FakeTablet()                                         # FALSCH enthaelt "microphoneAccess" nicht
+    r = einrichten(client(), t, monkeypatch, w).json()
+    assert r["ok"] and "microphoneAccess" not in t.ist

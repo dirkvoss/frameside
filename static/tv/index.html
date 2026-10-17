@@ -592,6 +592,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     var f = window.fully, r = "", b, p;
     if (!f) return "";
     try { b = f.getBatteryLevel ? f.getBatteryLevel() : -1; p = f.isPlugged ? (f.isPlugged() ? 1 : 0) : -1; r = "&fj=1&ak=" + (b >= 0 ? Math.round(b) : -1) + "&pl=" + p; } catch (e) { r = "&fj=1"; }
+    try { var lg = f.getLadegrenze ? String(f.getLadegrenze() || "") : ""; if (/^(an|aus|fehler|suche):\d{1,3}:\d{1,3}$/.test(lg)) r += "&lg=" + lg; } catch (e) { /* nur die Android-App kennt die Ladegrenze */ }
     return r;
   }
   function abfrage() {

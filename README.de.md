@@ -177,6 +177,8 @@ Ein Tablet außerhalb deines Heimnetzes holt sich Programm und Fotos über das I
 4. **Testen wie von außen:** Das Tablet über den Hotspot deines Handys laufen lassen, Strom ziehen, WLAN aus und an. Das Dauerprogramm läuft mit den geladenen Fotos weiter, wenn das Netz ausfällt; kommt es zurück, verbindet sich die Seite von selbst.
 5. **Wenn niemand vor Ort ist:** Mit **Fully Kiosk Plus** startet das Tablet nach einem Neustart die Seite von selbst (*Start-URL*, *Beim Start öffnen*, *Bildschirm anlassen*, *Neu laden bei Netzwerk-Wiederkehr*, *Neustart der Anzeige nachts*). Unter ⚙ → *Wartung und Zugang von außen* kannst du aus der Ferne die **Seite neu laden** und die **Anzeige neu starten** und einstellen, nach wie vielen Minuten ohne Verbindung du eine **Meldung aufs Handy** bekommst (Pushover). Bei komplett leerem Akku muss jemand den Einschalter drücken.
 
+**Schritt-für-Schritt-Anleitung für Tablets** (welches Tablet, Neustart-Test, Sperrbildschirm beim Fire-Tablet, akkuschonende Ladegrenze mit Steckdose, Übergabe an die Eltern): [docs/tablet-einrichten.md](docs/tablet-einrichten.md). In der App zeigt **Geräte → ⚙ → Tablet einrichten und steuern → Tablet prüfen** mit Haken und Kreuzen, was noch fehlt.
+
 ## Tablet-Bildschirm nachts ausschalten (optional, mit Fully Kiosk)
 *Nur ein Komfort:* Im normalen Browser wird der Rahmen nachts einfach schwarz und läuft weiter; der Bildschirm bleibt dabei eingeschaltet.
 

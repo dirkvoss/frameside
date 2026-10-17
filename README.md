@@ -177,6 +177,8 @@ A tablet outside your home network fetches its programme and photos from your se
 4. **Test it as if from outside:** run the tablet through your phone's hotspot, pull the power, switch Wi-Fi off and on. The continuous programme keeps running with the photos already loaded when the network drops; when it returns the page reconnects by itself.
 5. **When nobody is there:** with **Fully Kiosk Plus** the tablet opens the page by itself after a restart (*Start URL*, *Launch on boot*, *Keep screen on*, *Reload on network reconnect*, *Restart the display at night*). Under ⚙ → *Maintenance and remote access* you can **reload the page** and **restart the display** remotely and set after how many minutes without a connection you get a **phone alert** (Pushover). With a completely empty battery someone has to press the power button.
 
+**Step-by-step guide for tablets** (which tablet, the restart test, Fire-tablet lock screen, battery-saving charge limit with a smart plug, hand-over to your parents): [docs/tablet-setup.md](docs/tablet-setup.md). In the app, **Devices → ⚙ → Set up and control the tablet → Check tablet** shows with ticks and crosses what is still missing.
+
 ## Switch the tablet screen off at night (optional, with Fully Kiosk)
 *Just a convenience:* in a normal browser the frame simply goes black at night and keeps running; the screen stays on.
 

@@ -858,6 +858,11 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <p class="tipp"><b>Du brauchst nichts zu installieren:</b> Der Rahmen läuft in jedem normalen Browser. Fully Kiosk ist nur ein optionales Extra (ca. 8 €), damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird.</p>
             <p class="tipp">Ohne diese Steuerung läuft der Rahmen einfach rund um die Uhr; die Fotos kommen auch so an.</p>
             <p class="tipp" id="gfTabletInfo"></p>
+            <h4 style="margin:14px 0 4px">Tablet-Check</h4>
+            <p class="tipp">Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert). Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.</p>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfCheck" type="button">Tablet prüfen</button></div>
+            <ul class="tipp versteckt" id="gfCheckListe" role="status" style="list-style:none;padding-left:0"></ul>
+            <p class="tipp">Ausführliche Anleitung: <a href="https://github.com/dirkvoss/frameside/blob/main/docs/tablet-einrichten.md" target="_blank" rel="noopener">Tablet als Bilderrahmen einrichten</a></p>
             <div id="gfTabletWege">
               <p class="tipp">Damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird, gibt es zwei Wege:</p>
               <p class="tipp">1. In Fully Kiosk unter „Erweiterte Web-Einstellungen“ die „JavaScript-Schnittstelle“ aktivieren (benötigt Fully Plus). Danach steuert sich das Tablet selbst – hier ist nichts weiter einzustellen.</p>
@@ -2587,6 +2592,45 @@ $("#gfDatei").addEventListener("click", async () => {
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).nachricht || "Fehler " + r.status);
     const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "frameside-" + gfId + "-fully.json"; a.click();
   } catch (e) { fehler(e); }
+});
+const CHECK_TEXTE = {                                      // Texte zum Tablet-Check (der Server liefert nur Kennung und Status)
+  online: { ok: "Das Gerät meldet sich beim Server.", fehler: "Das Gerät meldet sich gerade nicht. Ist es an, im WLAN, und zeigt es die Rahmen-Seite?" },
+  weg: { info: "Verbindungsweg" },
+  ladegrenze: { ok: "Ladegrenze aktiv", fehler: "Die Ladegrenze meldet einen Fehler: die Steckdose ist nicht erreichbar. Steckdose und WLAN prüfen.",
+                info: "Keine Ladegrenze eingerichtet. Die Frameside-Android-App kann den Akku mit einer Shelly-Steckdose auf einen Bereich begrenzen." },
+  fully: { ok: "Die Fernsteuerung von Fully ist erreichbar.", fehler: "Die Fernsteuerung von Fully ist nicht erreichbar. Adresse und Passwort stimmen, „Remote Administration“ ist an und Server und Tablet erreichen sich?",
+           info: "Kein Zugriff auf Fully. Trage unten Adresse und Passwort ein, dann prüft Frameside auch die Einstellungen am Tablet." },
+  autostart: { ok: "Startet nach Neustart und Stromausfall von selbst.", fehler: "Startet nach einem Neustart nicht von selbst. „Einrichten“ stellt das um." },
+  bildschirm_an: { ok: "Der Bildschirm bleibt an.", fehler: "Der Bildschirm geht von selbst aus. „Einrichten“ stellt das um." },
+  adresse: { ok: "Die Start-Adresse im Tablet gehört zu diesem Rahmen.", warnung: "Die Start-Adresse im Tablet passt nicht zu diesem Rahmen. „Einrichten“ setzt sie." },
+  mikrofon: { ok: "Mikrofon aus: nach Neustarts kommt kein Dialog.", warnung: "Das Mikrofon ist erlaubt. Nach Neustarts kann ein Dialog die Anzeige aufhalten. „Einrichten“ schaltet es aus." },
+  plus: { ok: "Fully Plus ist aktiv.", warnung: "Fully läuft ohne Plus-Lizenz. Dann gehen Nachtruhe und Akkumeldung nicht." },
+  sperrbildschirm: { info: "Der Sperrbildschirm muss aus sein, sonst startet die Anzeige nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine. Fire-Tablets: Passcode aus; den Wisch-Sperrbildschirm schaltet nur ADB ab (siehe Anleitung).",
+                     warnung: "Der Sperrbildschirm ist aktiv. Das Tablet startet nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine." },
+  ueberlagerung: { info: "Ab Android 10: In den Android-Einstellungen für die App „Über anderen Apps anzeigen“ erlauben, sonst startet sie nach dem Einschalten nicht von selbst." },
+  neustarttest: { info: "Zum Schluss einmal neu starten: Die Diashow muss ohne Berührung und ohne Dialog kommen." }
+};
+function checkZeile(x) {
+  const t = (CHECK_TEXTE[x.id] || {})[x.status];
+  if (!t) return null;
+  let text = RW_T(t);
+  if (x.id === "weg") text += ": " + RW_T(x.wert === "aussen" ? "von außen (über das Internet)" : "aus dem Heimnetz");
+  else if (x.id === "ladegrenze" && x.wert) { const [z, u, o] = x.wert.split(":"); text += " (" + RW_T(z === "an" ? "Steckdose an" : z === "aus" ? "Steckdose aus" : "Steckdose wird gesucht") + ", " + u + "–" + o + " %)"; }
+  else if (x.id === "akku") { const [n, l] = x.wert.split(":"); text = RW_T("Akku") + " " + n + " %, " + RW_T(l === "1" ? "lädt" : "nicht am Strom") + (x.status === "warnung" ? ". " + RW_T("Das Tablet lädt nicht. Netzteil und Kabel prüfen.") : ""); }
+  return { symbol: { ok: "✓", warnung: "⚠", fehler: "✗", info: "ℹ" }[x.status], farbe: { ok: "var(--ok, #3ecf8e)", warnung: "var(--warn, #e6b450)", fehler: "var(--danger, #f87171)", info: "" }[x.status], text };
+}
+$("#gfCheck").addEventListener("click", async e => {
+  const liste = $("#gfCheckListe"); liste.classList.remove("versteckt"); liste.textContent = RW_T("Prüfe …"); e.currentTarget.disabled = true;
+  try {
+    const r = await api("verwaltung/bereitschaft", { method: "POST", body: JSON.stringify({ id: gfId, fully_host: $("#gfFullyHost").value.trim(), fully_pw: $("#gfFullyPw").value }) });
+    liste.textContent = "";
+    for (const x of r.punkte.map(checkZeile).filter(Boolean)) {
+      const li = document.createElement("li"); li.style.margin = "4px 0";
+      const sym = document.createElement("b"); sym.textContent = x.symbol + " "; if (x.farbe) sym.style.color = x.farbe;
+      li.append(sym, document.createTextNode(x.text)); liste.append(li);
+    }
+  } catch (err) { liste.textContent = "✗ " + err.message; }
+  e.currentTarget.disabled = false;
 });
 $("#geraeteZu").addEventListener("click", () => { $("#geraeteDialog").classList.add("versteckt"); clearInterval(geraeteTimer); });
 
