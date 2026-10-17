@@ -87,6 +87,16 @@ Das Tablet **holt sich alles selbst** vom Server (es ruft bei deinem Server an, 
 - Zeigt der Name zu Hause auf die **interne** Adresse, hält Frameside das Tablet für ein Gerät im Heimnetz und stellt **keinen eigenen Zugang** aus. Bei den Eltern müsstest du dann nochmal koppeln.
 - Einfacher: das Tablet kurz im **Handy-Hotspot** koppeln.
 
+## 8a. Einfacher Zugang für die Person am Rahmen
+Wenn jemand (zum Beispiel deine Mutter) **selbst Fotos hinzufügen und eigene Shows zeigen** soll, ohne die Frameside-App zu kennen:
+1. In Immich ein **eigenes Konto** für die Person anlegen.
+2. In der App am Rahmen: **⚙ → Einfacher Zugang für eine Person**. Name, E-Mail und Passwort ihres Immich-Kontos eintragen, die **Adresse** angeben, unter der sie den Server erreicht (bei einem Rahmen bei den Eltern die Außen-Adresse), **Zugang anlegen**.
+3. **Link und QR-Code anzeigen.** Den Link schickst du ihr oder öffnest ihn auf ihrem Handy. iPhone: Safari → Teilen → **Zum Home-Bildschirm**. Ab dann ist es ein Symbol wie eine App.
+4. Die Seite hat vier große Knöpfe: **Fotos hinzufügen**, **Eine neue Show machen**, **Meine Shows**, **Wieder das normale Programm**.
+5. Steht der Rahmen hinter einer Außen-Adresse mit eingeschränkten Pfaden, in NPM `/einfach/` und `/api/einfach/` ergänzen und für `/api/einfach/hochladen` 40 MB erlauben (siehe die README).
+
+Die Person sieht nur ihr eigenes Konto, kann nichts löschen und nur auf den eingetragenen Rahmen zeigen. Du widerrufst den Link jederzeit am Rahmen.
+
 ## 9. Die Checkliste für die Übergabe
 - [ ] Neustart-Test ohne Berührung bestanden
 - [ ] Tablet-Check ohne Kreuze

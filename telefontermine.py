@@ -112,8 +112,8 @@ def geburtstage(liste):
     return namen
 
 
-def naechste(liste, jetzt, maximum=4, personen=True):
-    """Die naechsten Termine des heutigen Tages (laufende und kommende, ganztaegige zuerst); ist heute nichts mehr, die von morgen.
+def naechste(liste, jetzt, maximum=4, personen=True, vorschau=1):
+    """Die naechsten Termine des heutigen Tages (laufende und kommende, ganztaegige zuerst); ist heute nichts mehr, die von morgen, sonst die des naechsten Tages mit Terminen (je nach vorschau).
     liste: Eintraege mit tag, zeit, titel und optional ende. Ohne Endzeit gilt ein Termin eine Stunde lang."""
     jetzt_min = jetzt.hour * 60 + jetzt.minute
 
@@ -134,8 +134,13 @@ def naechste(liste, jetzt, maximum=4, personen=True):
                 continue
         heute.append(e)
     wahl = sortiert(heute)
-    if not wahl:
+    if not wahl and vorschau >= 1:                                    # vorschau = wie viele Tage der Rahmen vorausschaut, wenn heute nichts mehr ansteht (0 = nur heute)
         wahl = sortiert([e for e in liste if e.get("tag") == "morgen"])
+    if not wahl and vorschau >= 2:                                    # auch morgen nichts: der naechste Tag mit Terminen (Tag als Datum JJJJ-MM-TT)
+        spaeter = [e for e in liste if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(e.get("tag") or ""))]
+        if spaeter:
+            erster = min(e["tag"] for e in spaeter)
+            wahl = sortiert([e for e in spaeter if e["tag"] == erster])
     aus = []
     for e in wahl[:maximum]:
         z = {"tag": e["tag"], "zeit": e["zeit"], "titel": e["titel"]}

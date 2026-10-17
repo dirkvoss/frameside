@@ -1,6 +1,11 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.33.0]
+### Neu
+- **Einfacher Zugang für eine Person (z. B. Oma):** Am Rahmen unter ⚙ → „Einfacher Zugang für eine Person“ legst du einen Zugang an (Name, Immich-E-Mail und -Passwort des Kontos der Person; gespeichert wird nur ein eigener, widerrufbarer Schlüssel ohne Löschrechte). Du bekommst einen **Link und QR-Code** auf eine ganz einfache Seite mit großen Knöpfen: **Fotos hinzufügen** (landen im eigenen Immich-Konto), **eine neue Show machen** (Fotos antippen, jetzt zeigen oder mit Namen speichern), **Meine Shows** (zeigen, löschen) und **wieder das normale Programm**. Die Person sieht und ändert sonst nichts in der App und kann nur auf den eingetragenen Rahmen zeigen; der Link lässt sich jederzeit widerrufen. Läuft in allen fünf Sprachen. Für eine Außen-Adresse mit eingeschränkten Pfaden müssen `/einfach/` und `/api/einfach/` freigegeben und für `/api/einfach/hochladen` mehr als 1 MB erlaubt werden (siehe README, „Ein Rahmen an einem anderen Ort“).
+- **Vorschau der Termine je Rahmen einstellbar:** Unter Geräte → ⚙ → Kalender legst du fest, ob der Rahmen weiter vorausschaut, wenn heute nichts mehr ansteht, und wie viele Tage: **0** = nur heute, **1** = auch morgen (Standard, wie bisher), bis **14** Tage. Der Rahmen zeigt zuerst, was heute noch kommt, sonst die Termine des nächsten Tages mit Terminen innerhalb dieser Tage, mit Wochentag und Datum („Mi 21.10. 09:00 Pilates“). Gilt für Termine aus dem Kalender-Link; die Handy-Termine kennen weiter nur heute und morgen.
+
 ## [2.32.0]
 ### Neu
 - **„Kalender testen“ am Rahmen** (Geräte → ⚙ → Kalender): prüft Link, Benutzer und Passwort (auch vor dem Speichern) und nennt bei einem Fehler den Grund („Benutzer oder Passwort stimmen nicht“, „Unter diesem Link gibt es keinen Kalender“ …). Bei Erfolg steht dort der **lesbare Name des Kalenders** (z. B. „Family“ statt der langen Radicale-Adresse), die Zahl der Einträge und wie viele heute und morgen anstehen. Der Name erscheint auch beim Öffnen des Dialogs.

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script src="/i18n.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rahmen">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/icon-192.png">
+<title>Fotos für den Rahmen</title>
+<style>
+:root { --bg: #fbf7f0; --text: #1f2430; --soft: #5b6372; --karte: #ffffff; --rand: #e6dfd2; --akzent: #b8741a; --akzent-text: #ffffff; --ok: #1f7a4d; --fehler: #b3261e; --blau: #2b5fa8; }
+@media (prefers-color-scheme: dark) { :root { --bg: #14171d; --text: #f1ede4; --soft: #b6bcc9; --karte: #1d222b; --rand: #323a48; --akzent: #e0a04a; --akzent-text: #1a1308; --ok: #5fcf9a; --fehler: #ff8a80; --blau: #8fb7f0; } }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font: 22px/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom)); }
+main { max-width: 640px; margin: 0 auto; padding-top: 18px; }
+h1 { font-size: 1.5em; margin: 0 0 .15em; }
+p { margin: .4em 0; }
+.klein { color: var(--soft); font-size: .8em; }
+.knopf { display: flex; align-items: center; gap: .6em; width: 100%; border: 0; border-radius: 18px; padding: 20px 22px; margin: 12px 0; font: inherit; font-weight: 600; text-align: left; background: var(--akzent); color: var(--akzent-text); cursor: pointer; min-height: 72px; }
+.knopf .sym { font-size: 1.6em; line-height: 1; }
+.knopf.zweit { background: var(--karte); color: var(--text); border: 2px solid var(--rand); }
+.knopf.gruen { background: var(--ok); color: #fff; }
+.knopf.rot { background: transparent; color: var(--fehler); border: 2px solid var(--fehler); }
+.knopf:disabled { opacity: .5; }
+.knopf:active { transform: scale(.99); }
+.status { padding: 12px 16px; border-radius: 14px; background: var(--karte); border: 1px solid var(--rand); margin: 10px 0 18px; }
+.status.ok::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+.status.aus::before { content: "• "; color: var(--fehler); font-weight: 700; }
+.zurueck { background: none; border: 0; font: inherit; color: var(--blau); padding: 10px 0; margin: 4px 0 0; cursor: pointer; }
+#meldung { position: fixed; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); max-width: 608px; margin: 0 auto; padding: 16px 20px; border-radius: 16px; background: #1f2430; color: #fff; font-weight: 600; z-index: 9; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+#meldung.fehler { background: var(--fehler); color: #fff; }
+.versteckt { display: none !important; }
+.gitter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px 0 140px; }
+.foto { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--rand); border: 0; padding: 0; cursor: pointer; }
+.foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto .haken { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.85); color: transparent; display: grid; place-items: center; font-weight: 700; border: 2px solid #fff; }
+.foto.gewaehlt { outline: 5px solid var(--akzent); outline-offset: -5px; }
+.foto.gewaehlt .haken { background: var(--akzent); color: var(--akzent-text); }
+.leiste { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--rand); }
+.leiste .innen { max-width: 640px; margin: 0 auto; }
+.leiste .knopf { margin: 8px 0 0; min-height: 60px; padding: 14px 18px; }
+.zeile { display: flex; gap: 10px; }
+.zeile .knopf { flex: 1; margin: 8px 0 0; }
+input[type=text] { width: 100%; font: inherit; padding: 16px; border-radius: 14px; border: 2px solid var(--rand); background: var(--karte); color: var(--text); }
+.show { background: var(--karte); border: 1px solid var(--rand); border-radius: 18px; padding: 14px 18px; margin: 12px 0; }
+.show b { font-size: 1.05em; }
+.show .zeile .knopf { min-height: 56px; padding: 12px 14px; font-size: .9em; }
+.balken { height: 14px; border-radius: 8px; background: var(--rand); overflow: hidden; margin: 14px 0; }
+.balken i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+</style>
+</head>
+<body>
+<main>
+  <section id="start" class="versteckt">
+    <h1 id="gruss">Hallo!</h1>
+    <p id="status" class="status">Einen Moment …</p>
+    <button class="knopf" id="bFotos" type="button"><span class="sym">📷</span><span>Fotos hinzufügen</span></button>
+    <button class="knopf zweit" id="bNeu" type="button"><span class="sym">🖼️</span><span>Eine neue Show machen</span></button>
+    <button class="knopf zweit" id="bShows" type="button"><span class="sym">⭐</span><span>Meine Shows</span></button>
+    <button class="knopf zweit" id="bNormal" type="button"><span class="sym">↩️</span><span>Wieder das normale Programm</span></button>
+    <p class="klein">Neue Fotos kommen in dein Konto. Gelöscht wird hier nichts.</p>
+    <input id="datei" type="file" accept="image/*" multiple class="versteckt">
+  </section>
+
+  <section id="hochladen" class="versteckt">
+    <h1>Fotos werden gesendet</h1>
+    <p id="hochText">Bitte kurz warten …</p>
+    <div class="balken"><i id="hochBalken"></i></div>
+    <div id="hochErgebnis" class="versteckt">
+      <button class="knopf gruen" id="bDieseZeigen" type="button"><span class="sym">▶</span><span>Diese Fotos jetzt auf dem Rahmen zeigen</span></button>
+      <button class="knopf zweit" id="bHochFertig" type="button"><span class="sym">✓</span><span>Fertig</span></button>
+    </div>
+  </section>
+
+  <section id="auswahl" class="versteckt">
+    <button class="zurueck" id="bAuswahlZurueck" type="button">‹ Zurück</button>
+    <h1>Welche Fotos?</h1>
+    <p class="klein">Tippe die Fotos an, die in der Show sein sollen.</p>
+    <div class="gitter" id="gitter"></div>
+    <button class="knopf zweit" id="bMehr" type="button" style="margin-bottom:150px"><span>Ältere Fotos zeigen</span></button>
+    <div class="leiste"><div class="innen">
+      <p id="anzahl" style="margin:0">Noch nichts gewählt</p>
+      <div id="aktionen">
+        <div class="zeile"><button class="knopf gruen" id="bJetzt" type="button" disabled><span class="sym">▶</span><span>Jetzt zeigen</span></button>
+        <button class="knopf" id="bSpeichern" type="button" disabled><span class="sym">⭐</span><span>Speichern</span></button></div>
+      </div>
+      <div id="namenFeld" class="versteckt">
+        <input id="name" type="text" maxlength="60" placeholder="Name der Show, z. B. Urlaub 2026" aria-label="Name der Show">
+        <div class="zeile"><button class="knopf zweit" id="bNameAb" type="button"><span>Abbrechen</span></button>
+        <button class="knopf gruen" id="bNameOk" type="button"><span>Speichern und zeigen</span></button></div>
+      </div>
+    </div></div>
+  </section>
+
+  <section id="shows" class="versteckt">
+    <button class="zurueck" id="bShowsZurueck" type="button">‹ Zurück</button>
+    <h1>Meine Shows</h1>
+    <div id="showListe"></div>
+    <p id="keineShows" class="klein versteckt">Du hast noch keine Show gespeichert. Mit „Eine neue Show machen“ kannst du eine anlegen.</p>
+  </section>
+
+  <section id="ungueltig" class="versteckt">
+    <h1>Dieser Link gilt nicht mehr</h1>
+    <p>Bitte frage nach einem neuen Link.</p>
+  </section>
+</main>
+<div id="meldung" class="versteckt" role="status"></div>
+
+<script>
+(function () {
+  var T = function (s) { return window.RW_T ? window.RW_T(s) : s; };
+  var $ = function (id) { return document.getElementById(id); };
+  var ABSCHNITTE = ["start", "hochladen", "auswahl", "shows", "ungueltig"];
+  var gewaehlt = [], seite = 1, hochIds = [], meldungTimer = 0;
+
+  function zeige(name) { ABSCHNITTE.forEach(function (a) { $(a).classList.toggle("versteckt", a !== name); }); window.scrollTo(0, 0); }
+  function meldung(text, fehler) {
+    var m = $("meldung"); m.textContent = text; m.className = fehler ? "fehler" : ""; clearTimeout(meldungTimer);
+    meldungTimer = setTimeout(function () { m.className = "versteckt"; }, fehler ? 7000 : 4500);
+  }
+  function api(pfad, opt) {
+    opt = opt || {}; opt.credentials = "same-origin"; opt.headers = Object.assign({ "X-Rahmen": "1" }, opt.headers || {});
+    return fetch(pfad, opt).then(function (r) {
+      if (r.status === 401) { zeige("ungueltig"); throw new Error("401"); }
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) throw new Error(j.nachricht || j.detail || T("Das hat leider nicht geklappt."));
+        return j;
+      });
+    });
+  }
+  function fehler(e) { if (e && e.message !== "401") meldung(e.message, true); }
+
+  // ---------------------------------------------------------------- Start
+  function start() {
+    api("/api/einfach/ich").then(function (d) {
+      $("gruss").textContent = T("Hallo") + " " + d.name + "!";
+      var z = d.ziele || [], st = $("status");
+      if (!z.length) { st.className = "status aus"; st.textContent = T("Für dich ist noch kein Rahmen eingerichtet."); }
+      else if (z.some(function (x) { return x.online; })) { st.className = "status ok"; st.textContent = z.length === 1 ? T("Dein Rahmen ist an.") : T("Deine Rahmen sind erreichbar."); }
+      else { st.className = "status aus"; st.textContent = T("Dein Rahmen ist gerade aus oder nicht im Internet. Das macht nichts: Die Fotos kommen trotzdem an."); }
+      $("bFotos").disabled = !d.hochladen;
+      zeige("start");
+    }).catch(fehler);
+  }
+
+  // ---------------------------------------------------------------- Fotos hinzufuegen
+  $("bFotos").addEventListener("click", function () { $("datei").value = ""; $("datei").click(); });
+  $("datei").addEventListener("change", function () {
+    var dateien = Array.prototype.slice.call(this.files || []);
+    if (!dateien.length) return;
+    hochIds = []; var geschafft = 0, nicht = 0;
+    zeige("hochladen"); $("hochErgebnis").classList.add("versteckt"); $("hochBalken").style.width = "0";
+    function weiter(i) {
+      if (i >= dateien.length) {
+        $("hochBalken").style.width = "100%";
+        $("hochText").textContent = (geschafft ? "✓ " + (geschafft === 1 ? T("1 Foto ist angekommen.") : geschafft + " " + T("Fotos sind angekommen.")) : T("Es ist leider kein Foto angekommen.")) + (nicht ? " " + nicht + " " + T("hat nicht geklappt.") : "");
+        $("hochErgebnis").classList.remove("versteckt"); $("bDieseZeigen").classList.toggle("versteckt", !hochIds.length);
+        return;
+      }
+      $("hochText").textContent = T("Foto") + " " + (i + 1) + " " + T("von") + " " + dateien.length + " …";
+      $("hochBalken").style.width = Math.round(i * 100 / dateien.length) + "%";
+      var f = dateien[i];
+      fetch("/api/einfach/hochladen", { method: "PUT", credentials: "same-origin", body: f,
+        headers: { "X-Rahmen": "1", "X-Dateiname": encodeURIComponent(f.name || "foto.jpg"), "X-Datum": String(f.lastModified || Date.now()), "Content-Type": f.type || "application/octet-stream" } })
+        .then(function (r) { if (r.status === 401) { zeige("ungueltig"); throw new Error("401"); } return r.json().then(function (j) { if (!r.ok) throw new Error("x"); return j; }); })
+        .then(function (j) { geschafft++; if (j.id) hochIds.push(j.id); }, function (e) { if (e && e.message === "401") throw e; nicht++; })
+        .then(function () { weiter(i + 1); }, function () { /* Link ungueltig: schon angezeigt */ });
+    }
+    weiter(0);
+  });
+  $("bHochFertig").addEventListener("click", function () { zeige("start"); });
+  $("bDieseZeigen").addEventListener("click", function () { zeigen(hochIds.slice(), "Meine neuen Fotos", false); });
+
+  // ---------------------------------------------------------------- Neue Show
+  function aktualisiere() {
+    var n = gewaehlt.length;
+    $("anzahl").textContent = n ? (n === 1 ? T("1 Foto gewählt") : n + " " + T("Fotos gewählt")) : T("Noch nichts gewählt");
+    $("bJetzt").disabled = $("bSpeichern").disabled = !n;
+  }
+  function gitterFuellen(fotos) {
+    fotos.forEach(function (f) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "foto"; b.dataset.id = f.id; b.setAttribute("aria-label", f.tag || "Foto");
+      var i = document.createElement("img"); i.loading = "lazy"; i.alt = ""; i.src = "/api/einfach/vorschau/" + f.id;
+      var h = document.createElement("span"); h.className = "haken"; h.textContent = "✓";
+      b.appendChild(i); b.appendChild(h);
+      if (gewaehlt.indexOf(f.id) >= 0) b.classList.add("gewaehlt");
+      b.addEventListener("click", function () {
+        var k = gewaehlt.indexOf(f.id);
+        if (k >= 0) gewaehlt.splice(k, 1); else gewaehlt.push(f.id);
+        b.classList.toggle("gewaehlt", k < 0); aktualisiere();
+      });
+      $("gitter").appendChild(b);
+    });
+  }
+  function laden() {
+    api("/api/einfach/fotos?seite=" + seite).then(function (d) {
+      gitterFuellen(d.fotos || []); $("bMehr").classList.toggle("versteckt", !d.weiter);
+      if (seite === 1 && !(d.fotos || []).length) { $("anzahl").textContent = T("Noch keine Fotos. Füge zuerst Fotos hinzu."); }
+    }).catch(fehler);
+  }
+  $("bNeu").addEventListener("click", function () {
+    gewaehlt = []; seite = 1; $("gitter").textContent = ""; $("aktionen").classList.remove("versteckt"); $("namenFeld").classList.add("versteckt"); $("name").value = "";
+    aktualisiere(); zeige("auswahl"); laden();
+  });
+  $("bMehr").addEventListener("click", function () { seite++; laden(); });
+  $("bAuswahlZurueck").addEventListener("click", function () { zeige("start"); });
+  $("bJetzt").addEventListener("click", function () { zeigen(gewaehlt.slice(), "Meine Auswahl", false); });
+  $("bSpeichern").addEventListener("click", function () { $("aktionen").classList.add("versteckt"); $("namenFeld").classList.remove("versteckt"); $("name").focus(); });
+  $("bNameAb").addEventListener("click", function () { $("namenFeld").classList.add("versteckt"); $("aktionen").classList.remove("versteckt"); });
+  $("bNameOk").addEventListener("click", function () {
+    var n = $("name").value.trim();
+    if (!n) { meldung(T("Bitte gib der Show einen Namen."), true); return; }
+    zeigen(gewaehlt.slice(), n, true);
+  });
+  function zeigen(ids, name, speichern) {
+    api("/api/einfach/zeigen", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: ids, name: name, speichern: speichern }) })
+      .then(function () { meldung(speichern ? T("✓ Gespeichert. Die Show läuft gleich auf deinem Rahmen.") : T("✓ Die Fotos laufen gleich auf deinem Rahmen.")); zeige("start"); })
+      .catch(fehler);
+  }
+
+  // ---------------------------------------------------------------- Meine Shows
+  function showsLaden() {
+    api("/api/einfach/shows").then(function (d) {
+      var liste = $("showListe"); liste.textContent = "";
+      var s = d.shows || [];
+      $("keineShows").classList.toggle("versteckt", s.length > 0);
+      s.forEach(function (e) {
+        var k = document.createElement("div"); k.className = "show";
+        var t = document.createElement("div"); var b = document.createElement("b"); b.textContent = e.name; t.appendChild(b);
+        var u = document.createElement("div"); u.className = "klein"; u.textContent = e.anzahl + " " + T("Fotos") + (e.laeuft ? " · " + T("läuft gerade") : ""); t.appendChild(u); k.appendChild(t);
+        var z = document.createElement("div"); z.className = "zeile";
+        var s1 = document.createElement("button"); s1.type = "button"; s1.className = "knopf gruen"; s1.innerHTML = "<span class='sym'>▶</span>"; var l1 = document.createElement("span"); l1.textContent = T("Zeigen"); s1.appendChild(l1);
+        s1.addEventListener("click", function () {
+          api("/api/einfach/shows/" + encodeURIComponent(e.id) + "/starten", { method: "POST" }).then(function () { meldung(T("✓ Die Show läuft gleich auf deinem Rahmen.")); zeige("start"); }).catch(fehler);
+        });
+        var s2 = document.createElement("button"); s2.type = "button"; s2.className = "knopf rot"; s2.innerHTML = "<span class='sym'>🗑</span>"; var l2 = document.createElement("span"); l2.textContent = T("Löschen"); s2.appendChild(l2);
+        s2.addEventListener("click", function () {
+          if (!confirm(T("Diese Show löschen? Die Fotos bleiben erhalten."))) return;
+          api("/api/einfach/shows/" + encodeURIComponent(e.id), { method: "DELETE" }).then(showsLaden).catch(fehler);
+        });
+        z.appendChild(s1); z.appendChild(s2); k.appendChild(z); liste.appendChild(k);
+      });
+      zeige("shows");
+    }).catch(fehler);
+  }
+  $("bShows").addEventListener("click", showsLaden);
+  $("bShowsZurueck").addEventListener("click", function () { zeige("start"); });
+  $("bNormal").addEventListener("click", function () {
+    api("/api/einfach/normal", { method: "POST" }).then(function () { meldung(T("✓ Der Rahmen zeigt wieder sein normales Programm.")); }).catch(fehler);
+  });
+
+  start();
+})();
+</script>
+</body>
+</html>

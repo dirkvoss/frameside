@@ -832,6 +832,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <label class="tvfeld"><span>Benutzer für den Kalender (nur wenn er geschützt ist)</span> <input id="gfKalUser" type="text" autocomplete="off" aria-label="Benutzer für den Kalender"></label>
           <label class="tvfeld"><span>Passwort für den Kalender</span> <input id="gfKalPw" type="password" autocomplete="new-password" aria-label="Passwort für den Kalender"></label>
           <p class="tipp">Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.</p>
+          <label class="tvfeld"><span>Wenn heute nichts mehr ansteht: Termine bis zu … Tage voraus zeigen (0 = nur heute, 1 = auch morgen)</span> <input id="gfVorschau" type="number" min="0" max="14" inputmode="numeric" aria-label="Tage vorausschauen"></label>
+          <p class="tipp">Gilt für Termine aus dem Kalender-Link. Der Rahmen zeigt zuerst, was heute noch kommt; ist das nichts, den nächsten Tag mit Terminen innerhalb dieser Tage.</p>
           <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfKalTest" type="button">Kalender testen</button></div>
           <p class="tipp versteckt" id="gfKalErg" role="status"></p>
           <div class="tvknoepfe versteckt" id="gfKalWegZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein gefahr" id="gfKalWeg" type="button">Kalender-Link dieses Rahmens entfernen</button></div>
@@ -857,6 +859,19 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             </div>
             <p class="tipp">Steht der Rahmen außerhalb deines Heimnetzes, bekommt er beim Koppeln (Code am Rahmen, in der App unter „Gerät koppeln“) einen eigenen Zugang, der nur die Rahmen-Seiten öffnet. „Zugang widerrufen“ sperrt ihn, ohne die PIN zu ändern; danach muss der Rahmen neu gekoppelt werden.</p>
             <p class="tipp versteckt" id="gfWartungErg" role="status"></p>
+          </details>
+          <details id="gfEinfach" class="gfdetails versteckt">
+            <summary>Einfacher Zugang für eine Person (z. B. Oma)</summary>
+            <p class="tipp">Die Person bekommt einen Link (oder QR-Code) auf eine ganz einfache Seite mit großen Knöpfen: Fotos hinzufügen, eigene Shows machen und auf diesem Rahmen zeigen. Die Fotos landen in ihrem eigenen Immich-Konto. Sie kann sonst nichts in der App sehen oder ändern, und gelöscht wird nichts.</p>
+            <div id="gfEinfachListe"></div>
+            <h4 style="margin:12px 0 4px">Neuen Zugang anlegen</h4>
+            <label class="tvfeld"><span>Name der Person</span> <input id="gfEinfachName" type="text" maxlength="60" autocomplete="off" aria-label="Name der Person" placeholder="Oma"></label>
+            <label class="tvfeld"><span>E-Mail ihres Immich-Kontos</span> <input id="gfEinfachMail" type="text" autocomplete="off" aria-label="E-Mail ihres Immich-Kontos"></label>
+            <label class="tvfeld"><span>Passwort ihres Immich-Kontos</span> <input id="gfEinfachPw" type="password" autocomplete="new-password" aria-label="Passwort ihres Immich-Kontos"></label>
+            <p class="tipp">E-Mail und Passwort gehen nur an Immich. Gespeichert wird ein eigener, in Immich widerrufbarer Schlüssel ohne Löschrechte, nicht das Passwort.</p>
+            <label class="tvfeld stapel"><span>Adresse, unter der die Person den Server erreicht</span> <input id="gfEinfachBasis" type="text" autocomplete="off" aria-label="Adresse für den Link" placeholder="https://rahmen.example.com"></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfEinfachAnlegen" type="button">Zugang anlegen</button></div>
+            <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
           </details>
           <details id="gfTablet" class="gfdetails nur-gf-dauer">
             <summary>Tablet einrichten und steuern (Fully Kiosk)</summary>
@@ -2256,7 +2271,7 @@ async function geraetDialogOeffnen(id) {
   gfArt = g.art; $("#geraetTitel").textContent = RW_T(id ? "Gerät einstellen" : "Gerät hinzufügen");
   $("#gfArtZeile").classList.remove("versteckt"); $("#gfArt").value = g.art; gfArtAnpassen();
   $("#gfName").value = g.name; $("#gfFuellung").value = g.fuellung || ""; $("#gfQualitaet").value = g.qualitaet || "";
-  $("#gfAlarm").value = g.alarm_min == null ? "" : g.alarm_min; $("#gfWartung").classList.toggle("versteckt", !id); $("#gfWartungErg").classList.add("versteckt");
+  $("#gfAlarm").value = g.alarm_min == null ? "" : g.alarm_min; $("#gfWartung").classList.toggle("versteckt", !id); $("#gfEinfach").classList.toggle("versteckt", !id || gfArt !== "rahmen"); if (id) einfachLaden(); $("#gfWartungErg").classList.add("versteckt");
   $("#gfSek").value = g.sek || ""; gfLed = layoutEditor($("#gfLayout"), g.layout || std, std);
   $("#gfBewegung").checked = !!g.bewegung; $("#gfPaare").checked = !!g.paare; $("#gfErinnerungen").value = g.erinnerungen || ""; $("#gfFavoriten").value = g.favoriten || ""; $("#gfGeburtstagsfotos").checked = g.geburtstagsfotos !== false;
   $("#gfGaesteBlock").classList.toggle("versteckt", !id || !(konfig && konfig.hochladen));
@@ -2267,6 +2282,7 @@ async function geraetDialogOeffnen(id) {
   if (id) { try { const n = await api("notizen/" + encodeURIComponent(id)); $("#gfNotiz").value = n.text || ""; } catch (e) {} }
   gfWetter = g.wetter || null; gfOrtZeigen(); $("#gfOrtSuche").value = ""; $("#gfOrtTreffer").innerHTML = "";
   const ke = $("#gfKalErg"); ke.style.color = ""; ke.classList.toggle("versteckt", !g.kalender_name); ke.textContent = g.kalender_name ? RW_T("Kalender") + ": " + g.kalender_name : "";
+  $("#gfVorschau").value = g.termine_vorschau == null ? 1 : g.termine_vorschau;
   $("#gfKalUser").value = g.kalender_user || ""; $("#gfKalPw").value = ""; $("#gfKalPw").placeholder = g.kalender_pw_gesetzt ? RW_T("gesetzt – leer lassen zum Behalten") : "";
   $("#gfKal").value = ""; gfKalLoeschen = false; $("#gfKal").placeholder = g.kalender_gesetzt ? RW_T("gesetzt – zum Ändern neuen Link einfügen") : "https://…"; $("#gfKalWegZeile").classList.toggle("versteckt", !g.kalender_gesetzt);
   const sel = $("#gfUebernehmen"); sel.innerHTML = ""; const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "–"; sel.append(o0);
@@ -2551,6 +2567,7 @@ $("#gfSpeichern").addEventListener("click", async () => {
       if ($("#gfFullyPw").value) daten.fully_pw = $("#gfFullyPw").value;
     }
     if ($("#gfKal").value.trim()) daten.kalender_url = $("#gfKal").value.trim(); else if (gfKalLoeschen) daten.kalender_url = null;
+    { const v = $("#gfVorschau").value.trim(); daten.termine_vorschau = v === "" ? null : Math.max(0, Math.min(14, parseInt(v, 10) || 0)); }
     if (!gfKalLoeschen) { daten.kalender_user = $("#gfKalUser").value.trim(); if ($("#gfKalPw").value) daten.kalender_pw = $("#gfKalPw").value; }
   }
   const b = $("#gfSpeichern"); b.disabled = true;
@@ -2606,6 +2623,48 @@ $("#gfKalTest").addEventListener("click", async e => {
   try {
     const r = await api("verwaltung/geraete/" + encodeURIComponent(gfId) + "/kalender-test", { method: "POST", body: JSON.stringify({ kalender_url: $("#gfKal").value.trim(), kalender_user: $("#gfKalUser").value.trim(), kalender_pw: $("#gfKalPw").value }) });
     erg.textContent = "✓ " + r.nachricht; erg.style.color = "var(--ok, #3ecf8e)";
+  } catch (err) { erg.textContent = "✗ " + err.message; erg.style.color = "var(--danger, #f87171)"; }
+  e.currentTarget.disabled = false;
+});
+function einfachLink(token) {
+  const basis = ($("#gfEinfachBasis").value.trim() || location.origin).replace(/\/+$/, "");
+  return (/^https?:\/\//.test(basis) ? basis : "https://" + basis) + "/einfach/" + token;
+}
+async function einfachLaden() {
+  const box = $("#gfEinfachListe"); box.textContent = "";
+  try { $("#gfEinfachBasis").value = $("#gfEinfachBasis").value || localStorage.getItem("rw_einfach_basis") || ""; } catch (e) {}
+  let liste = [];
+  try { liste = (await api("verwaltung/einfach")).zugaenge.filter(z => (z.ziele || []).includes(gfId)); } catch (e) { return; }
+  for (const z of liste) {
+    const k = document.createElement("div"); k.style.cssText = "border:1px solid var(--rand,#444);border-radius:10px;padding:10px;margin:8px 0";
+    const t = document.createElement("div"); t.innerHTML = "<b></b>"; t.firstChild.textContent = z.name; k.appendChild(t);
+    const knoepfe = document.createElement("div"); knoepfe.className = "tvknoepfe"; knoepfe.style.cssText = "justify-content:flex-start;margin-top:6px;flex-wrap:wrap";
+    const zeigen = document.createElement("button"); zeigen.type = "button"; zeigen.className = "btn klein"; zeigen.textContent = RW_T("Link und QR-Code anzeigen");
+    const weg = document.createElement("button"); weg.type = "button"; weg.className = "btn klein gefahr"; weg.textContent = RW_T("Zugang widerrufen");
+    const link = document.createElement("div"); link.className = "versteckt";
+    zeigen.addEventListener("click", () => {
+      link.classList.toggle("versteckt"); if (link.classList.contains("versteckt")) return;
+      const url = einfachLink(z.token); link.textContent = "";
+      const inp = document.createElement("input"); inp.type = "text"; inp.readOnly = true; inp.value = url; inp.style.width = "100%"; inp.addEventListener("focus", () => inp.select());
+      const kopieren = document.createElement("button"); kopieren.type = "button"; kopieren.className = "btn klein"; kopieren.textContent = RW_T("Link kopieren");
+      kopieren.addEventListener("click", async () => { try { await navigator.clipboard.writeText(url); toast(RW_T("Link kopiert.")); } catch (e) { inp.select(); } });
+      const qr = document.createElement("div"); qr.style.cssText = "width:180px;margin:8px 0;background:#fff;padding:8px;border-radius:8px";
+      try { const q = qrcode(0, "M"); q.addData(url); q.make(); qr.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e) { qr.textContent = ""; }
+      link.append(inp, kopieren, qr);
+    });
+    weg.addEventListener("click", async () => {
+      if (!confirm(RW_T("Diesen Zugang widerrufen? Der Link funktioniert danach nicht mehr. Das Immich-Konto und die Fotos bleiben erhalten."))) return;
+      try { const r = await api("verwaltung/einfach/" + encodeURIComponent(z.id), { method: "DELETE" }); toast(r.nachricht); einfachLaden(); } catch (e) { fehler(e); }
+    });
+    knoepfe.append(zeigen, weg); k.append(knoepfe, link); box.appendChild(k);
+  }
+}
+$("#gfEinfachAnlegen").addEventListener("click", async e => {
+  const erg = $("#gfEinfachErg"); erg.classList.remove("versteckt"); erg.style.color = ""; erg.textContent = RW_T("Lege an …"); e.currentTarget.disabled = true;
+  try {
+    const r = await api("verwaltung/einfach", { method: "POST", body: JSON.stringify({ name: $("#gfEinfachName").value.trim() || "Oma", email: $("#gfEinfachMail").value.trim(), passwort: $("#gfEinfachPw").value, ziele: [gfId] }) });
+    try { localStorage.setItem("rw_einfach_basis", $("#gfEinfachBasis").value.trim()); } catch (x) {}
+    $("#gfEinfachPw").value = ""; erg.textContent = "✓ " + r.nachricht + " " + RW_T("Den Link findest du oben unter „Link und QR-Code anzeigen“."); erg.style.color = "var(--ok, #3ecf8e)"; einfachLaden();
   } catch (err) { erg.textContent = "✗ " + err.message; erg.style.color = "var(--danger, #f87171)"; }
   e.currentTarget.disabled = false;
 });

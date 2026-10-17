@@ -85,6 +85,16 @@ The tablet **fetches everything itself** from the server (it calls your server, 
 - If the name points at the **internal** address at home, Frameside takes the tablet for a device in the home network and issues **no access of its own**. You would have to pair again at your parents’.
 - Easier: pair the tablet briefly on your phone’s **hotspot**.
 
+## 8a. Simple access for the person at the frame
+If someone (for example your mother) should **add photos and show their own shows** without knowing the Frameside app:
+1. Create an **own account** for the person in Immich.
+2. In the app at the frame: **⚙ → Simple access for one person**. Enter name, e-mail and password of their Immich account, the **address** under which they reach the server (for a frame at your parents’, the outside address), **Create access**.
+3. **Show link and QR code.** Send her the link or open it on her phone. iPhone: Safari → Share → **Add to Home Screen**. From then on it is an icon like an app.
+4. The page has four big buttons: **Add photos**, **Make a new show**, **My shows**, **Back to the normal programme**.
+5. If the frame sits behind an outside address with restricted paths, add `/einfach/` and `/api/einfach/` in NPM and allow 40 MB for `/api/einfach/hochladen` (see the README).
+
+The person sees only their own account, cannot delete anything and can only show on the frame you entered. You revoke the link at the frame at any time.
+
 ## 9. Hand-over checklist
 - [ ] Restart test passed without touching it
 - [ ] Tablet check without crosses

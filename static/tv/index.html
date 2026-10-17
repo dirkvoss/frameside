@@ -255,6 +255,13 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     }
     gaesteErst = false;
   }
+  function tagMarke(tag) {                                                   // "" fuer heute, "morgen " oder bei spaeteren Tagen Wochentag und Datum ("Mi 21.10. ")
+    if (tag === "heute") return "";
+    if (tag === "morgen") return window.RW_T("morgen") + " ";
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(tag || "");
+    if (!m) return window.RW_T("morgen") + " ";
+    try { return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(window.RW_LOCALE || "de-DE", { weekday: "short", day: "numeric", month: "numeric" }) + " "; } catch (e) { return m[3] + "." + m[2] + ". "; }
+  }
   function zusatzZeichnen() {
     if (!EL.wetter) return;
     var d = zusatzDaten || {}, t = d.termine || [], box = EL.termine, i;
@@ -268,7 +275,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
       if (t[i].p && lay && lay.termine && lay.termine.person) {                          // Kuerzel der Person (nur wenn mehrere Handys teilen)
         var pb = document.createElement("span"), f = t[i].p.f || "#888888", hell = parseInt(f.substr(1, 2), 16) * 0.299 + parseInt(f.substr(3, 2), 16) * 0.587 + parseInt(f.substr(5, 2), 16) * 0.114;
         pb.className = "pbadge"; pb.textContent = t[i].p.k; pb.style.background = f; pb.style.color = hell > 150 ? "#000" : "#fff"; r.appendChild(pb);
-      } b.textContent = (t[i].tag === "heute" ? "" : window.RW_T("morgen") + " ") + t[i].zeit;
+      } b.textContent = tagMarke(t[i].tag) + t[i].zeit;
       r.appendChild(b); r.appendChild(document.createTextNode((t[i].zeit || t[i].tag !== "heute" ? " " : "") + t[i].titel)); box.appendChild(r);
     }
     grussPruefen(); gaesteZeichnen(); ambientAnzeige(ambient);

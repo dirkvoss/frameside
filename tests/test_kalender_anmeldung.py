@@ -225,3 +225,60 @@ def test_kalendername_erscheint_am_geraet_nach_dem_abruf(app_laden, monkeypatch)
     w.kalender_holen("wohnzimmer")
     g = [e for e in app.get("/api/verwaltung").json()["geraete"] if e["id"] == "wohnzimmer"][0]
     assert g["kalender_name"] == "Family"
+
+
+def test_naechster_tag_mit_terminen_wenn_heute_und_morgen_nichts_ist():
+    import telefontermine as TT
+    jetzt = datetime.datetime(2026, 10, 17, 13, 0)
+    liste = [{"tag": "heute", "zeit": "10:05", "titel": "vorbei"},                       # heute schon vorbei
+             {"tag": "2026-10-22", "zeit": "07:00", "titel": "Buerotag"}, {"tag": "2026-10-21", "zeit": "09:00", "titel": "Pilates"},
+             {"tag": "2026-10-21", "zeit": "", "titel": "Ganztag"}, {"tag": "2026-10-25", "zeit": "11:00", "titel": "spaeter"}]
+    n = TT.naechste(liste, jetzt, vorschau=7)
+    assert [(e["tag"], e["titel"]) for e in n] == [("2026-10-21", "Ganztag"), ("2026-10-21", "Pilates")]       # nur der erste Tag, ganztaegig zuerst
+    assert [e["titel"] for e in TT.naechste(liste + [{"tag": "morgen", "zeit": "08:00", "titel": "Morgen"}], jetzt, vorschau=7)] == ["Morgen"]      # morgen hat Vorrang
+    assert [e["titel"] for e in TT.naechste(liste + [{"tag": "heute", "zeit": "15:00", "titel": "Nachher"}], jetzt, vorschau=7)] == ["Nachher"]      # heute hat Vorrang
+    assert TT.naechste([{"tag": "kaputt", "zeit": "", "titel": "x"}], jetzt, vorschau=7) == []
+
+
+def test_rahmen_zeigt_den_naechsten_termintag_aus_dem_kalender_link(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"kalender_url": "https://example.org/c/", "kalender_user": "anna", "kalender_pw": "x", "termine_vorschau": 7}, headers=H)
+    drei = (datetime.date.today() + datetime.timedelta(days=3)).strftime("%Y%m%d")
+    ics = f"BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//t//t\nBEGIN:VEVENT\nUID:a@t\nDTSTART:{drei}T090000\nSUMMARY:Pilates\nEND:VEVENT\nEND:VCALENDAR\n"
+    monkeypatch.setattr(w, "http_text", lambda url, timeout=10, auth=None: ics)
+    w.ZUSATZ_CACHE.clear()
+    t = app.get("/api/rahmen/zusatz?ziel=wohnzimmer").json()["termine"]
+    assert [(e["zeit"], e["titel"]) for e in t] == [("09:00", "Pilates")]
+    assert t[0]["tag"] == (datetime.date.today() + datetime.timedelta(days=3)).isoformat()            # Datum statt "heute"/"morgen"
+
+
+def test_vorschau_waehlbar_nur_heute_morgen_oder_mehrere_tage():
+    import telefontermine as TT
+    jetzt = datetime.datetime(2026, 10, 17, 13, 0)
+    liste = [{"tag": "morgen", "zeit": "08:00", "titel": "Morgen"}, {"tag": "2026-10-21", "zeit": "09:00", "titel": "Pilates"}]
+    assert TT.naechste(liste, jetzt, vorschau=0) == []                                                      # nur heute: nichts
+    assert [e["titel"] for e in TT.naechste(liste, jetzt, vorschau=1)] == ["Morgen"]                        # Standard: heute, sonst morgen
+    assert [e["titel"] for e in TT.naechste(liste[1:], jetzt, vorschau=1)] == []                            # eine Woche weg: bei 1 nicht gezeigt
+    assert [e["titel"] for e in TT.naechste(liste[1:], jetzt, vorschau=2)] == ["Pilates"]                   # ab 2 der naechste Tag mit Terminen
+    assert [e["titel"] for e in TT.naechste(liste[1:], jetzt)] == []                                        # ohne Angabe wie bisher (heute/morgen)
+
+
+def test_vorschau_je_rahmen_speichern_und_anwenden(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    app = client()
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"kalender_url": "https://example.org/c/"}, headers=H)
+    assert w.termine_vorschau("wohnzimmer") == 1 and w.termine_vorschau("flur") == 1                       # Standard
+    for falsch in (-1, 15, "abc", True, 2.5):
+        assert app.put("/api/verwaltung/geraete/wohnzimmer", json={"termine_vorschau": falsch}, headers=H).status_code == 400, falsch
+    r = app.put("/api/verwaltung/geraete/wohnzimmer", json={"termine_vorschau": 7}, headers=H)
+    assert r.status_code == 200 and r.json()["geraet"]["termine_vorschau"] == 7
+    assert w.termine_vorschau("flur") == 1                                                                  # nur dieser Rahmen
+    drei = (datetime.date.today() + datetime.timedelta(days=3)).strftime("%Y%m%d")
+    ics = f"BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//t//t\nBEGIN:VEVENT\nUID:a@t\nDTSTART:{drei}T090000\nSUMMARY:Pilates\nEND:VEVENT\nEND:VCALENDAR\n"
+    monkeypatch.setattr(w, "http_text", lambda url, timeout=10, auth=None: ics)
+    assert [e["titel"] for e in app.get("/api/rahmen/zusatz?ziel=wohnzimmer").json()["termine"]] == ["Pilates"]      # 7 Tage: der Termin in 3 Tagen erscheint
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"termine_vorschau": 1}, headers=H)
+    assert app.get("/api/rahmen/zusatz?ziel=wohnzimmer").json()["termine"] == []                           # 1 Tag: nicht mehr (anderer Cache-Schluessel, sofort wirksam)
+    app.put("/api/verwaltung/geraete/wohnzimmer", json={"termine_vorschau": None}, headers=H)
+    assert w.termine_vorschau("wohnzimmer") == 1                                                            # leer = Standard

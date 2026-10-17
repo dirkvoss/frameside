@@ -421,6 +421,11 @@ async def person_zuordnen(request: Request, call_next):
         b = benutzer_lesen().get(sitzung["uid"]) or {}
         UID_CTX.set(sitzung["uid"])
         H.KEY_CTX.set(b.get("key"))
+    elif request.url.path.startswith("/api/einfach/"):                     # einfacher Zugang (Link): eigenes Konto und eigene Shows der Person
+        e = einfach_eintrag(request)
+        if e:
+            UID_CTX.set(e["uid"])
+            H.KEY_CTX.set((benutzer_lesen().get(e["uid"]) or {}).get("key"))
     return await call_next(request)
 
 
@@ -1954,7 +1959,7 @@ def anzeige_version(z):
     """Kurze Kennung der Anzeige-Einstellungen eines Rahmens (Anordnung, Quellen, Handy-Termine): der Rahmen laedt neu, sobald sie sich aendert."""
     staende = sorted((k, hashlib.md5(json.dumps(v.get("termine"), sort_keys=True).encode()).hexdigest()[:8], v.get("kuerzel") or "", v.get("farbe") or "") for k, v in telefone_fuer(z).items())
     e = GERAETE.get(z) or {}
-    roh = json.dumps([layout_fuer(z), zusatz_liste(z), staende, kalender_url(z), wetter_ort(z), bool(e.get("bewegung")), bool(e.get("paare")), notiz_fuer(z), rahmen_nacht(z), gruss_fuer(z), gaeste_zusatz(z)], sort_keys=True)
+    roh = json.dumps([layout_fuer(z), zusatz_liste(z), staende, kalender_url(z), termine_vorschau(z), wetter_ort(z), bool(e.get("bewegung")), bool(e.get("paare")), notiz_fuer(z), rahmen_nacht(z), gruss_fuer(z), gaeste_zusatz(z)], sort_keys=True)
     return hashlib.md5(roh.encode()).hexdigest()[:8]
 
 
@@ -2774,6 +2779,16 @@ def _ics_termine_einfach(text, heute, tage=2, maximum=4):
     return [{k: v for k, v in e.items() if k != "_k"} for e in ergebnis if e["titel"]][:maximum]
 
 
+VORSCHAU_STANDARD = 1
+VORSCHAU_MAX = 14
+
+
+def termine_vorschau(z=None):
+    """Wie viele Tage ein Rahmen vorausschaut, wenn heute nichts mehr ansteht: 0 = nur heute, 1 = auch morgen (Standard), bis 14 Tage."""
+    v = (GERAETE.get(z) or {}).get("termine_vorschau") if z else None
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= VORSCHAU_MAX else VORSCHAU_STANDARD
+
+
 def kalender_zugang(z=None):
     """(Kalender-Link, Anmeldung) fuer einen Rahmen. Benutzer und Passwort gelten nur fuer den eigenen Link des Rahmens (nie fuer den allgemeinen)."""
     url = kalender_url(z)
@@ -2799,7 +2814,7 @@ def kalender_holen(z=None):
     text = http_text(url, auth=auth) if auth else http_text(url)
     if z:
         KAL_NAMEN[z] = kalender_name(text)
-    return ics_termine(text, datetime.date.today(), maximum=40)
+    return ics_termine(text, datetime.date.today(), tage=termine_vorschau(z) + 1, maximum=60)             # heute plus so viele Tage, wie der Rahmen vorausschauen soll
 
 
 def kalender_roh(z=None):
@@ -2831,10 +2846,10 @@ def rahmen_zusatz(ziel: str = "", g=Depends(geraet)):
         if w:
             out["wetter"] = w
     if "kalender" in zusatz:
-        t = zusatz_gecacht(f"kalender:{z}", 600, lambda: kalender_roh(z))
+        t = zusatz_gecacht(f"kalender:{z}:{termine_vorschau(z)}", 600, lambda: kalender_roh(z))
         if t is not None:
             mit_kuerzel = sum(1 for v in telefone_fuer(z).values() if v.get("kuerzel"))
-            out["termine"] = TT.naechste(t, datetime.datetime.now(), personen=mit_kuerzel >= 2)           # Kuerzel nur, wenn mehrere Handys auf diesem Rahmen teilen
+            out["termine"] = TT.naechste(t, datetime.datetime.now(), personen=mit_kuerzel >= 2, vorschau=termine_vorschau(z))           # Kuerzel nur, wenn mehrere Handys auf diesem Rahmen teilen
             out["geburtstage"] = TT.geburtstage(t)
     return out
 
@@ -3214,7 +3229,7 @@ RAHMEN_NUR_FELDER = ("sek", "anzeige", "quellen", "zeitplan", "erinnerungen", "f
 def geraet_ansicht(z, e):
     t = TV.get(z) or {}
     return {"qualitaet": e.get("qualitaet") or "", "layout": layout_fuer(z), "layout_eigen": bool(e.get("layout")), "bewegung": bool(e.get("bewegung")), "paare": bool(e.get("paare")), "erinnerungen": e.get("erinnerungen") or "", "favoriten": e.get("favoriten") or "", "geburtstagsfotos": e.get("geburtstagsfotos", True), "wetter": e.get("wetter") or None, "termin_quellen": e.get("termin_quellen") or [],
-            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_name": KAL_NAMEN.get(z, ""), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
+            "kalender_gesetzt": bool(e.get("kalender_url")), "kalender_name": KAL_NAMEN.get(z, ""), "termine_vorschau": termine_vorschau(z), "kalender_user": e.get("kalender_user") or "", "kalender_pw_gesetzt": bool(e.get("kalender_pw")), "selbst": meldet_selbst(z), "ip": t.get("ip") or "", "akku": (FULLY_STATE.get(z) or {}).get("akku"), "id": z, "art": e["art"], "name": e["name"], "sek": e.get("sek"), "fuellung": e.get("fuellung") or "", "anzeige": e.get("anzeige") or [],
             "nacht": e.get("nacht") or "", "quellen": e.get("quellen") or "", "zeitplan": e.get("zeitplan") or "",
             "fully_host": e.get("fully_host") or "", "fully_pw_gesetzt": bool(e.get("fully_pw")), "fully_ad_host": e.get("fully_ad_host") or "", "fully_ad_pw_gesetzt": bool(e.get("fully_ad_pw")), "fully_ausrichtung": e.get("fully_ausrichtung") or "auto", "fully_immer_an": e.get("fully_immer_an", True), "fully_selbststart": e.get("fully_selbststart", True),
             "fully_selbstheilung": e.get("fully_selbstheilung", True), "fully_helligkeit": e.get("fully_helligkeit") or "", "adb_host": e.get("adb_host") or "", "alarm_min": e.get("alarm_min")}
@@ -3302,6 +3317,14 @@ def geraet_felder(daten, art):
                 raise HTTPException(400, "Kalender-Link bitte als https://… eintragen")
             else:
                 setzen["kalender_url"] = u.replace("webcal://", "https://", 1) if u.startswith("webcal://") else u
+        if "termine_vorschau" in daten:
+            tv = daten["termine_vorschau"]
+            if tv in (None, ""):
+                weg.append("termine_vorschau")
+            elif isinstance(tv, bool) or not isinstance(tv, int) or not 0 <= tv <= VORSCHAU_MAX:
+                raise HTTPException(400, f"Die Vorschau muss eine Zahl von 0 bis {VORSCHAU_MAX} sein")
+            else:
+                setzen["termine_vorschau"] = tv
         if "kalender_url" in weg:
             weg += ["kalender_user", "kalender_pw"]                             # ohne eigenen Link gibt es keine eigene Anmeldung
         else:
@@ -4882,6 +4905,211 @@ async def hochladen(request: Request, _=Depends(anmeldung), __=Depends(csrf)):
     ergebnis = await run_in_threadpool(upload_zu_immich, daten, typ, name, datum, schluessel)
     H.log.info("Upload: %s (%d KB) -> %s%s", name, groesse // 1024, ergebnis["id"], "" if ergebnis["neu"] else " (schon vorhanden)")
     return ergebnis
+
+
+# --------------------------------------------------------------------------- Einfacher Zugang (eine ganz einfache Seite fuer eine Person, z. B. die Mutter)
+# Ein Link (ohne Anmeldung) oeffnet eine Seite mit grossen Knoepfen: Fotos hinzufuegen, eigene Shows anlegen, speichern und auf dem Rahmen zeigen.
+# Die Person arbeitet in ihrem EIGENEN Immich-Konto (eigener, widerrufbarer Schluessel, keine Loeschrechte). Der Link gilt nur fuer die Rahmen,
+# die dort eingetragen sind; alles andere der App bleibt gesperrt (anderes Cookie, anderer Pfad).
+EINFACH_FILE = os.environ.get("RAHMEN_WEB_EINFACH_FILE", os.path.join(os.path.dirname(EINST_FILE) or ".", "rahmen_web_einfach.json"))
+EINFACH_COOKIE = "rw_einfach"
+EINFACH_LOCK = threading.Lock()
+EINFACH_FEHL = {}                                                          # IP -> Zeiten falscher Links
+
+
+def einfach_lesen():
+    d = lies_json(EINFACH_FILE, {})
+    return d if isinstance(d, dict) else {}
+
+
+def einfach_eintrag(request):
+    """Der Eintrag zum Cookie dieser Anfrage (mit Kennung) oder None."""
+    kennung, _, token = (request.cookies.get(EINFACH_COOKIE) or "").partition(".")
+    e = einfach_lesen().get(kennung)
+    if e and token and secrets.compare_digest(str(e.get("token", "")), token):
+        return {"id": kennung, **e}
+    return None
+
+
+def einfach_zugang(request: Request):
+    e = einfach_eintrag(request)
+    if not e:
+        raise HTTPException(401, "Dieser Link gilt nicht mehr. Bitte um einen neuen Link.")
+    return e
+
+
+def einfach_ziele(e):
+    """Die Rahmen, auf denen diese Person etwas zeigen darf (nur die eingetragenen und noch vorhandenen)."""
+    return [z for z in e.get("ziele") or [] if z in RAHMEN_ZIELE] or ([PLAYER] if PLAYER and not e.get("ziele") else [])
+
+
+@app.get("/einfach/{token}", include_in_schema=False)
+def einfach_oeffnen(token: str, request: Request):
+    """Der persoenliche Link: liefert die einfache Seite und setzt das Cookie."""
+    ip, jetzt_ = client_ip(request), time.time()
+    with EINFACH_LOCK:
+        fehl = [t for t in EINFACH_FEHL.get(ip, []) if jetzt_ - t < 3600]
+        if len(fehl) >= 20:
+            raise HTTPException(429, "Zu viele Versuche. Bitte spaeter erneut versuchen.")
+        for kennung, e in einfach_lesen().items():
+            if secrets.compare_digest(str(e.get("token", "")), token):
+                EINFACH_FEHL.pop(ip, None)
+                antwort = FileResponse(os.path.join(STATIC_DIR, "einfach", "index.html"))        # die Seite kommt direkt unter dem Link (kein Umleiten): so bleibt das Symbol auf dem Home-Bildschirm des iPhones angemeldet
+                antwort.set_cookie(EINFACH_COOKIE, f"{kennung}.{token}", max_age=400 * 86400, httponly=True, samesite="strict",
+                                   secure=request.headers.get("x-forwarded-proto") == "https")
+                return antwort
+        EINFACH_FEHL[ip] = fehl + [jetzt_]
+    raise HTTPException(404, "Dieser Link gilt nicht (mehr).")
+
+
+@app.get("/api/einfach/ich")
+def einfach_ich(e=Depends(einfach_zugang)):
+    ziele = einfach_ziele(e)
+    jetzt_ = time.time()
+    with EINFACH_LOCK:
+        alle = einfach_lesen()
+        if e["id"] in alle and jetzt_ - alle[e["id"]].get("zuletzt", 0) > 600:
+            alle[e["id"]]["zuletzt"] = int(jetzt_)
+            schreibe_json(EINFACH_FILE, alle)
+    return {"name": e["name"], "hochladen": bool(upload_schluessel()),
+            "ziele": [{"id": z, "name": RAHMEN_ZIELE.get(z, "Bilderrahmen"), "online": bool(z in TV and jetzt_ - TV[z]["hb"] < 10)} for z in ziele]}
+
+
+@app.get("/api/einfach/fotos")
+def einfach_fotos(seite: int = 1, e=Depends(einfach_zugang)):
+    """Die neuesten Fotos des eigenen Immich-Kontos (keine Videos, keine Screenshots)."""
+    d = H.api("POST", "/search/metadata", {"order": "desc", "size": 60, "page": max(seite, 1), "type": "IMAGE"})["assets"]
+    return {"fotos": [foto_dict(a) for a in d["items"] if not H.ist_screenshot(a)], "weiter": int(d["nextPage"]) if d.get("nextPage") else None}
+
+
+@app.get("/api/einfach/vorschau/{asset_id}")
+def einfach_vorschau(asset_id: str, s: str = "thumb", e=Depends(einfach_zugang)):
+    return vorschau(asset_id, s)
+
+
+@app.put("/api/einfach/hochladen")
+async def einfach_hochladen(request: Request, e=Depends(einfach_zugang), __=Depends(csrf)):
+    """Ein Foto in das eigene Immich-Konto (Album des Upload-Albums), genau wie 'Meine Fotos' der App."""
+    return await hochladen(request)
+
+
+@app.get("/api/einfach/shows")
+def einfach_shows(e=Depends(einfach_zugang)):
+    d = shows()
+    return {"shows": [s for s in d["shows"] if s["gemerkt"]]}
+
+
+@app.post("/api/einfach/zeigen")
+def einfach_zeigen(daten: dict, e=Depends(einfach_zugang), __=Depends(csrf)):
+    """Die gewaehlten Fotos auf dem Rahmen zeigen; mit 'speichern' zusaetzlich als benannte Show merken."""
+    ziele = einfach_ziele(e)
+    if not ziele:
+        raise HTTPException(400, "Fuer diesen Zugang ist kein Rahmen eingetragen")
+    speichern = bool(daten.get("speichern"))
+    name = name_pruefen(daten.get("name")) if speichern or daten.get("name") else "Meine Auswahl"
+    return anzeigen({"name": name, "ids": daten.get("ids"), "ziele": ziele, "speichern": speichern})
+
+
+@app.post("/api/einfach/shows/{show_id}/starten")
+def einfach_show_starten(show_id: str, e=Depends(einfach_zugang), __=Depends(csrf)):
+    ziele = einfach_ziele(e)
+    if not ziele:
+        raise HTTPException(400, "Fuer diesen Zugang ist kein Rahmen eingetragen")
+    return show_anzeigen(show_id, {"ziele": ziele})
+
+
+@app.put("/api/einfach/shows/{show_id}")
+def einfach_show_aendern(show_id: str, daten: dict, e=Depends(einfach_zugang), __=Depends(csrf)):
+    return show_aendern(show_id, {k: daten[k] for k in ("name", "ids") if k in daten})
+
+
+@app.delete("/api/einfach/shows/{show_id}")
+def einfach_show_loeschen(show_id: str, e=Depends(einfach_zugang), __=Depends(csrf)):
+    return show_loeschen(show_id)
+
+
+@app.post("/api/einfach/normal")
+def einfach_normal(e=Depends(einfach_zugang), __=Depends(csrf)):
+    """Zurueck zum normalen Programm des Rahmens."""
+    for z in einfach_ziele(e):
+        normal({"ziel": z})
+    return {"ok": True, "nachricht": "Der Rahmen zeigt wieder sein normales Programm."}
+
+
+# Verwaltung (nur mit Anmeldung in der App)
+def immich_konto_verbinden(email, passwort):
+    """Mit E-Mail und Passwort eines Immich-Kontos einen eigenen, widerrufbaren Frameside-Schluessel anlegen (wie bei der Anmeldung). Gespeichert wird nur der Schluessel."""
+    try:
+        antwort = immich_aufruf("POST", "/auth/login", {"email": email, "password": passwort})
+    except urllib.error.HTTPError as ex:
+        if ex.code in (400, 401):
+            raise HTTPException(400, "E-Mail oder Passwort des Immich-Kontos stimmen nicht")
+        raise HTTPException(502, "Immich ist gerade nicht erreichbar")
+    except OSError:
+        raise HTTPException(502, "Immich ist gerade nicht erreichbar")
+    if not antwort or not antwort.get("accessToken"):
+        raise HTTPException(400, "E-Mail oder Passwort des Immich-Kontos stimmen nicht")
+    token, uid = antwort["accessToken"], antwort["userId"]
+    try:
+        schluessel = (benutzer_lesen().get(uid) or {}).get("key")
+        if schluessel:
+            try:
+                rechte = (immich_aufruf("GET", "/api-keys/me", schluessel=schluessel) or {}).get("permissions") or []
+                if "all" not in rechte and "asset.upload" not in rechte:
+                    schluessel = None
+            except urllib.error.HTTPError:
+                schluessel = None
+        if not schluessel:
+            schluessel = immich_aufruf("POST", "/api-keys", {"name": KEY_NAME, "permissions": KEY_RECHTE}, token)["secret"]
+        with AUTH_LOCK:
+            alle = benutzer_lesen()
+            alle[uid] = {"name": antwort.get("name") or email, "email": email, "key": schluessel, "zuletzt": time.time()}
+            schreibe_json(BENUTZER_FILE, alle)
+    finally:
+        try:
+            immich_aufruf("POST", "/auth/logout", {}, token)
+        except Exception:  # noqa: BLE001
+            pass
+    return uid, antwort.get("name") or email
+
+
+@app.get("/api/verwaltung/einfach")
+def einfach_verwaltung_liste(_=Depends(anmeldung)):
+    return {"zugaenge": [{"id": k, "name": e.get("name"), "ziele": e.get("ziele") or [], "token": e.get("token"), "erstellt": e.get("erstellt"), "zuletzt": e.get("zuletzt")}
+                         for k, e in einfach_lesen().items()]}
+
+
+@app.post("/api/verwaltung/einfach")
+def einfach_verwaltung_anlegen(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Legt einen einfachen Zugang an: Name, Rahmen und das Immich-Konto der Person (E-Mail und Passwort werden nur an Immich weitergereicht)."""
+    name = name_pruefen(daten.get("name"))
+    ziele = daten.get("ziele")
+    if not isinstance(ziele, list) or not ziele or not all(isinstance(z, str) and z in RAHMEN_ZIELE for z in ziele):
+        raise HTTPException(400, "Bitte mindestens einen Rahmen waehlen")
+    email = str(daten.get("email", "")).strip().lower()[:200]
+    passwort = str(daten.get("passwort", ""))[:200]
+    if not email or not passwort:
+        raise HTTPException(400, "Bitte E-Mail und Passwort des Immich-Kontos eintragen")
+    uid, _anzeige = immich_konto_verbinden(email, passwort)
+    kennung, token = secrets.token_hex(4), secrets.token_urlsafe(24)
+    with EINFACH_LOCK:
+        alle = einfach_lesen()
+        alle[kennung] = {"name": name, "uid": uid, "ziele": list(dict.fromkeys(ziele)), "token": token, "erstellt": int(time.time())}
+        schreibe_json(EINFACH_FILE, alle)
+    H.log.info("Einfacher Zugang angelegt: %s (%s)", name, kennung)
+    return {"ok": True, "id": kennung, "token": token, "nachricht": f"Der Zugang für „{name}“ ist angelegt."}
+
+
+@app.delete("/api/verwaltung/einfach/{kennung}")
+def einfach_verwaltung_loeschen(kennung: str, _=Depends(anmeldung), __=Depends(csrf)):
+    """Widerruft den Link sofort. Das Immich-Konto und seine Fotos bleiben unberuehrt."""
+    with EINFACH_LOCK:
+        alle = einfach_lesen()
+        if kennung not in alle:
+            raise HTTPException(404, "Zugang nicht gefunden")
+        name = alle.pop(kennung).get("name")
+        schreibe_json(EINFACH_FILE, alle)
+    return {"ok": True, "nachricht": f"Der Link von „{name}“ gilt nicht mehr."}
 
 
 if os.path.isdir(STATIC_DIR):
