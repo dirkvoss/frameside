@@ -47,3 +47,32 @@ def test_tablet_check_zeile_traegt_kennung_und_der_update_knopf_haengt_daran():
     j = html.index("for (const x of r.punkte.map(p => checkZeile(p, anderes))")
     schleife = html[j:j + 1500]
     assert 'x.id === "app" && x.status === "warnung"' in schleife and "App jetzt aktualisieren" in schleife
+
+
+GERAETE_DIALOG_KENNUNGEN = ['gfArt', 'gfName', 'gfFuellung', 'gfQualitaet', 'gfSek', 'gfBewegung', 'gfPaare', 'gfErinnerungen', 'gfFavoriten', 'gfGeburtstagsfotos', 'gfLayout', 'gfUebernehmen', 'gfOrtName', 'gfOrtSuche', 'gfOrtTreffer', 'gfHandys', 'gfKal', 'gfKalUser', 'gfKalPw', 'gfVorschau', 'gfKalTest', 'gfKalErg', 'gfKalWeg', 'gfKalWegZeile', 'gfNachtZeiten', 'gfQuellen', 'gfQuelleNeu', 'gfPlan', 'gfPlanNeu', 'gfNotizBlock', 'gfNotiz', 'gfNotizSenden', 'gfGaesteBlock', 'gfGaesteStart', 'gfGrussBlock', 'gfGrussSenden', 'gfWartung', 'gfAlarm', 'gfNeuladen', 'gfNeustart', 'gfZugangWeg', 'gfEinfach', 'gfEinfachAnlegen', 'gfTablet', 'gfCheck', 'gfNeustartTest', 'gfProblem', 'gfLadeVerlauf', 'gfRepLaden', 'gfRepStart', 'gfZugangWeg2', 'gfFullyHost', 'gfFullyPw', 'gfEinr', 'gfPruef', 'gfDatei', 'gfSpeichern', 'gfAbbrechen', 'gfLoeschen', 'gfDirekt', 'gfVerbindenZeile', 'gfKennungZeile', 'gfArtZeile']
+
+
+def test_geraetedialog_hat_reiter_und_verliert_kein_feld():
+    """Der Gerätedialog ist in Reiter geteilt (Allgemein, Anzeige, Programm, Tablet, Mehr); jedes Feld von früher gibt es weiter, jedes liegt in genau einem Reiter."""
+    import re
+    html = open(os.path.join(RAIZ, "static", "index.html"), encoding="utf-8").read()
+    dialog = html[html.index('<div id="geraetDialog"'):html.index('<div id="verteilenDialog"')]
+    for tab in ("allg", "anz", "prog", "tab", "mehr"):
+        assert f'data-gt="{tab}"' in dialog, tab
+        assert dialog.count(f'<div class="gf gt-panel') >= 5
+    for kennung in GERAETE_DIALOG_KENNUNGEN:
+        assert dialog.count(f'id="{kennung}"') == 1, kennung
+    panels = re.split(r'<div class="gf gt-panel[^"]*" data-gt="', dialog)[1:]
+    assert len(panels) == 5
+    gesehen = {}
+    for p in panels:
+        tab = p[:p.index('"')]
+        for kennung in GERAETE_DIALOG_KENNUNGEN:
+            if f'id="{kennung}"' in p:
+                assert kennung not in gesehen, (kennung, gesehen.get(kennung), tab)
+                gesehen[kennung] = tab
+    assert gesehen["gfName"] == "allg" and gesehen["gfLayout"] == "anz" and gesehen["gfQuellen"] == "prog" and gesehen["gfCheck"] == "tab" and gesehen["gfNotizBlock"] == "mehr"
+    for kennung in ("gfArtZeile", "gfKennungZeile", "gfDirekt", "gfVerbindenZeile"):                 # Technik gehoert in die Profi-Ansicht
+        zeile = next(z for z in dialog.splitlines() if f'id="{kennung}"' in z)
+        assert "nur-profi" in zeile, kennung
+    assert "body:not(.profi) .nur-profi" in html

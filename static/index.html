@@ -47,6 +47,14 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 250px); }
 button, select, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .versteckt { display: none !important; }
+/* Reiter im Gerätedialog */
+.gf.gt-panel:not(.gt-aktiv) { display: none; }                  /* höhere Spezifität als .gf (display: grid), das weiter unten steht */
+.gt-leiste { display: flex; gap: 4px; margin: 2px 0 4px; padding: 8px 0 10px; overflow-x: auto; scrollbar-width: none; position: sticky; top: -18px; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
+.gt-leiste::-webkit-scrollbar { display: none; }
+.gt-tab { flex: 1 0 auto; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 8px 7px; font: 600 13px/1.2 inherit; font-family: inherit; text-align: center; cursor: pointer; transition: background .15s, color .15s; }
+.gt-tab:hover { color: var(--text); }
+.gt-tab.gt-aktiv { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.gt-panel > h3:first-child { margin-top: 4px; }
 body:not(.profi) .nur-profi { display: none !important; }       /* Technik-Einstellungen (Fully, ADB, manuelle Wege): nur in der Profi-Ansicht */
 body.profi .nicht-profi { display: none !important; }
 /* Erste Schritte */
@@ -777,53 +785,36 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
   <div class="tvkarte">
     <h2 id="geraetTitel">Gerät einstellen</h2>
     <div class="gf">
-      <div class="tvfeld stapel" id="gfArtZeile"><span>Art (falsch angelegt? hier ändern)</span>
+      <div class="gt-leiste" id="gfTabs" role="tablist">
+        <button type="button" class="gt-tab gt-aktiv" role="tab" data-gt="allg">Allgemein</button>
+        <button type="button" class="gt-tab" role="tab" data-gt="anz">Anzeige</button>
+        <button type="button" class="gt-tab" role="tab" data-gt="prog">Programm</button>
+        <button type="button" class="gt-tab nur-gf-dauer" role="tab" data-gt="tab">Tablet</button>
+        <button type="button" class="gt-tab" role="tab" data-gt="mehr">Mehr</button>
+      </div>
+      <div class="gf gt-panel gt-aktiv" data-gt="allg">
+      <div class="tvfeld stapel nur-profi" id="gfArtZeile"><span>Art (falsch angelegt? hier ändern)</span>
         <select id="gfArt" aria-label="Art"><option value="tv">Fernseher (Smart-TV oder TV-Stick mit Browser)</option><option value="rahmen">Bilderrahmen (Tablet, Raspberry Pi oder Bildschirm mit Dauerprogramm)</option></select></div>
-      <details class="gfdetails versteckt" id="gfDirekt">
+      <details class="gfdetails versteckt nur-profi" id="gfDirekt">
         <summary>Für Fortgeschrittene: per ADB direkt am Fernseher öffnen</summary>
         <label class="tvfeld"><span>Adresse des Fernsehers</span> <input id="gfAdb" type="text" autocomplete="off" aria-label="Adresse des Fernsehers" placeholder="192.168.1.30"></label>
         <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfOeffnen" type="button">Seite am Fernseher öffnen</button></div>
         <p class="tipp versteckt" id="gfOeffnenErg" role="status"></p>
       </details>
-      <div class="tvknoepfe versteckt" id="gfVerbindenZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfVerbinden" type="button">Verbindungs-Link und QR-Code anzeigen</button></div>
-      <div class="tvfeld versteckt" id="gfKennungZeile"><span>Kennung (z. B. für Home Assistant)</span><code id="gfKennung"></code></div>
+      <div class="tvknoepfe versteckt nur-profi" id="gfVerbindenZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfVerbinden" type="button">Verbindungs-Link und QR-Code anzeigen</button></div>
+      <div class="tvfeld versteckt nur-profi" id="gfKennungZeile"><span>Kennung (z. B. für Home Assistant)</span><code id="gfKennung"></code></div>
       <label class="tvfeld"><span>Name</span> <input id="gfName" type="text" maxlength="60" autocomplete="off" aria-label="Name"></label>
       <label class="tvfeld"><span>Hintergrund</span> <select id="gfFuellung" aria-label="Hintergrund"><option value="">Standard</option><option value="unscharf">Unscharf</option><option value="zuschnitt">Zuschnitt</option><option value="balken">Schwarze Balken</option></select></label>
-      <label class="tvfeld"><span>Bildschärfe</span> <select id="gfQualitaet" aria-label="Bildschärfe"><option value="">Automatisch (empfohlen)</option><option value="standard">Standard</option><option value="hoch">Hoch (für 4K-Bildschirme)</option></select></label>
-      <div class="nur-gf-rahmen">
+      <label class="tvfeld nur-profi"><span>Bildschärfe</span> <select id="gfQualitaet" aria-label="Bildschärfe"><option value="">Automatisch (empfohlen)</option><option value="standard">Standard</option><option value="hoch">Hoch (für 4K-Bildschirme)</option></select></label>
         <div class="gf">
           <label class="tvfeld nur-gf-dauer"><span>Sekunden pro Foto</span> <input id="gfSek" type="number" min="3" max="120" inputmode="numeric" aria-label="Sekunden pro Foto"></label>
-          <div id="gfNotizBlock" class="versteckt">
-            <h3>Notiz an diesen Rahmen</h3>
-            <p class="tipp">Ein kurzer Text, der für eine Weile am Rahmen erscheint, zum Beispiel „Heute Abend Pizza“.</p>
-            <label class="tvfeld stapel"><span>Text</span> <input id="gfNotiz" type="text" maxlength="200" autocomplete="off" aria-label="Notiz" placeholder="Heute Abend Pizza 🍕"></label>
-            <label class="tvfeld"><span>Anzeigen für</span> <select id="gfNotizDauer" aria-label="Anzeigedauer"><option value="1">1 Stunde</option><option value="6" selected>6 Stunden</option><option value="24">1 Tag</option><option value="72">3 Tage</option><option value="168">1 Woche</option></select></label>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfNotizSenden" type="button">Notiz senden</button><button class="btn klein gefahr" id="gfNotizWeg" type="button">Notiz entfernen</button></div>
-            <p class="tipp versteckt" id="gfNotizErg" role="status"></p>
-          </div>
-          <div id="gfGaesteBlock" class="versteckt">
-            <h3>Fest: Fotos von Gästen</h3>
-            <p class="tipp">Am Rahmen erscheint ein QR-Code. Gäste scannen ihn, laden Fotos hoch und sehen sie gleich am Rahmen. Die Fotos landen in deinem Immich (Album „Showcase-Uploads“, Namen mit „Gast-“).</p>
-            <label class="tvfeld"><span>Dauer</span> <select id="gfGaesteDauer" aria-label="Dauer"><option value="4">4 Stunden</option><option value="8" selected>8 Stunden</option><option value="24">1 Tag</option><option value="72">3 Tage</option></select></label>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfGaesteStart" type="button">Fest starten</button><button class="btn klein gefahr versteckt" id="gfGaesteEnde" type="button">Fest beenden</button></div>
-            <div id="gfGaesteInfo" class="versteckt"><p class="tipp">Adresse für die Gäste:</p><div class="assi-adr"><code id="gfGaesteLink"></code></div><div id="gfGaesteQr" style="width:150px;max-width:50%;margin:8px auto;background:#fff;padding:8px;border-radius:10px"></div><p class="tipp" id="gfGaesteZahl"></p></div>
-          </div>
-          <div id="gfGrussBlock" class="versteckt">
-            <h3>Gruß mit Foto an diesen Rahmen</h3>
-            <p class="tipp">Das Foto erscheint als Nächstes am Rahmen, mit deinem Text. Wer am Rahmen darauf tippt, schickt dir ein ❤️ (Pushover).</p>
-            <label class="tvfeld"><span>Von</span> <input id="gfGrussVon" type="text" maxlength="40" autocomplete="off" aria-label="Absender" placeholder="Anna"></label>
-            <label class="tvfeld stapel"><span>Text</span> <input id="gfGrussText" type="text" maxlength="200" autocomplete="off" aria-label="Text" placeholder="Hallo Oma!"></label>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap"><button class="btn klein" id="gfGrussFoto" type="button">📷 Foto wählen</button><span class="tipp" id="gfGrussDatei" style="align-self:center;margin:0"></span><input type="file" id="gfGrussDateiWahl" accept="image/jpeg,image/png,image/webp,image/heic" hidden></div>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfGrussSenden" type="button">Gruß senden</button><button class="btn klein gefahr" id="gfGrussWeg" type="button">Gruß entfernen</button></div>
-            <p class="tipp versteckt" id="gfGrussErg" role="status"></p>
-          </div>
-          <h3>Anzeige auf diesem Rahmen</h3>
-          <p class="tipp">Was eingeblendet wird und wo. Jeder Rahmen hat seine eigene Anordnung.</p>
           <label class="tvfeld"><span>Sanfter Zoom bei jedem Foto</span> <input type="checkbox" id="gfBewegung" style="flex:none"></label>
           <label class="tvfeld"><span>Zwei Hochkant-Fotos nebeneinander</span> <input type="checkbox" id="gfPaare" style="flex:none"></label>
-          <label class="tvfeld nur-gf-dauer"><span>Erinnerungen („An diesem Tag“) im Dauerprogramm</span> <select id="gfErinnerungen" aria-label="Erinnerungen"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
-          <label class="tvfeld nur-gf-dauer"><span>Favoriten (⭐ in Immich) öfter zeigen</span> <select id="gfFavoriten" aria-label="Favoriten"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
-          <label class="tvfeld nur-gf-dauer"><span>Am Geburtstag Fotos der Person zeigen</span> <input type="checkbox" id="gfGeburtstagsfotos" style="flex:none"></label>
+        </div>
+      </div>
+      <div class="gf gt-panel" data-gt="anz">
+          <h3>Anzeige auf diesem Rahmen</h3>
+          <p class="tipp">Was eingeblendet wird und wo. Jeder Rahmen hat seine eigene Anordnung.</p>
           <div id="gfLayout"></div>
           <label class="tvfeld versteckt" id="gfUebernehmenZeile"><span>Anordnung übernehmen von</span> <select id="gfUebernehmen" aria-label="Anordnung übernehmen von"><option value="">–</option></select></label>
           <h3>Wetter und Termine auf diesem Rahmen</h3>
@@ -833,17 +824,20 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <p class="tipp">Ohne eigenen Ort gilt der Standard aus den Einstellungen.</p>
           <p class="tipp"><b>Termine von diesen Handys zeigt der Rahmen:</b></p>
           <div id="gfHandys"></div>
+          <label class="tvfeld"><span>Wenn heute nichts mehr ansteht: Termine bis zu … Tage voraus zeigen (0 = nur heute, 1 = auch morgen)</span> <input id="gfVorschau" type="number" min="0" max="14" inputmode="numeric" aria-label="Tage vorausschauen"></label>
+          <p class="tipp">Gilt für Termine aus dem Kalender-Link. Der Rahmen zeigt zuerst, was heute noch kommt; ist das nichts, den nächsten Tag mit Terminen innerhalb dieser Tage.</p>
+          <details class="gfdetails" id="gfKalDetails">
+            <summary>Kalender-Link (iCal)</summary>
           <label class="tvfeld stapel"><span>Kalender-Link (iCal) nur für diesen Rahmen</span> <input id="gfKal" type="text" autocomplete="off" aria-label="Kalender-Link" placeholder="https://…"></label>
           <label class="tvfeld"><span>Benutzer für den Kalender (nur wenn er geschützt ist)</span> <input id="gfKalUser" type="text" autocomplete="off" aria-label="Benutzer für den Kalender"></label>
           <label class="tvfeld"><span>Passwort für den Kalender</span> <input id="gfKalPw" type="password" autocomplete="new-password" aria-label="Passwort für den Kalender"></label>
           <p class="tipp">Zum Beispiel für Radicale oder Nextcloud: die Adresse des Kalenders, dazu Benutzer und Passwort. Das Passwort wird nur auf dem Server gespeichert und nie wieder angezeigt.</p>
-          <label class="tvfeld"><span>Wenn heute nichts mehr ansteht: Termine bis zu … Tage voraus zeigen (0 = nur heute, 1 = auch morgen)</span> <input id="gfVorschau" type="number" min="0" max="14" inputmode="numeric" aria-label="Tage vorausschauen"></label>
-          <p class="tipp">Gilt für Termine aus dem Kalender-Link. Der Rahmen zeigt zuerst, was heute noch kommt; ist das nichts, den nächsten Tag mit Terminen innerhalb dieser Tage.</p>
           <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfKalTest" type="button">Kalender testen</button></div>
           <p class="tipp versteckt" id="gfKalErg" role="status"></p>
           <div class="tvknoepfe versteckt" id="gfKalWegZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein gefahr" id="gfKalWeg" type="button">Kalender-Link dieses Rahmens entfernen</button></div>
-          <label class="tvfeld"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
-          <div class="tvfeld" id="gfNachtZeiten"><span>Nachtruhe (Bildschirm aus)</span><span class="reihe"><input id="gfNachtVon" type="time" aria-label="von"> – <input id="gfNachtBis" type="time" aria-label="bis"></span></div>
+          </details>
+      </div>
+      <div class="gf gt-panel" data-gt="prog">
           <div class="nur-gf-dauer"><h3>Dauerprogramm</h3>
           <p class="tipp">Was der Rahmen zeigt, wenn niemand etwas schickt. Ohne Eintrag gilt die allgemeine Einstellung der Installation.</p>
           <div id="gfQuellen"></div>
@@ -853,38 +847,23 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <div id="gfPlan"></div>
           <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfPlanNeu" type="button">＋ Zeitfenster</button></div>
           </div>
-          <details id="gfWartung" class="gfdetails versteckt">
-            <summary>Wartung und Zugang von außen</summary>
-            <label class="tvfeld nur-gf-dauer"><span>Meldung aufs Handy, wenn der Rahmen länger nicht erreichbar ist (Minuten, 0 = nie)</span> <input id="gfAlarm" type="number" min="0" max="1440" inputmode="numeric" aria-label="Meldung nach Minuten"></label>
-            <p class="tipp nur-gf-dauer">Leer lassen = allgemeine Einstellung. Für einen Rahmen an einem anderen Ort ist ein größerer Wert sinnvoll, damit kurze Störungen nicht gleich melden.</p>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
-              <button class="btn klein" id="gfNeuladen" type="button">↻ Seite neu laden</button>
-              <button class="btn klein" id="gfNeustart" type="button">⟳ Anzeige neu starten (Fully)</button>
-              <button class="btn klein gefahr" id="gfZugangWeg" type="button">Zugang widerrufen</button>
-            </div>
-            <p class="tipp">Steht der Rahmen außerhalb deines Heimnetzes, bekommt er beim Koppeln (Code am Rahmen, in der App unter „Gerät koppeln“) einen eigenen Zugang, der nur die Rahmen-Seiten öffnet. „Zugang widerrufen“ sperrt ihn, ohne die PIN zu ändern; danach muss der Rahmen neu gekoppelt werden.</p>
-            <p class="tipp versteckt" id="gfWartungErg" role="status"></p>
-          </details>
-          <details id="gfEinfach" class="gfdetails versteckt">
-            <summary>Einfacher Zugang für eine Person (z. B. Oma)</summary>
-            <p class="tipp">Die Person bekommt einen Link (oder QR-Code) auf eine ganz einfache Seite mit großen Knöpfen: Fotos hinzufügen, eigene Shows machen und auf diesem Rahmen zeigen. Die Fotos landen in ihrem eigenen Immich-Konto. Sie kann sonst nichts in der App sehen oder ändern, und gelöscht wird nichts.</p>
-            <div id="gfEinfachListe"></div>
-            <h4 style="margin:12px 0 4px">Neuen Zugang anlegen</h4>
-            <label class="tvfeld"><span>Name der Person</span> <input id="gfEinfachName" type="text" maxlength="60" autocomplete="off" aria-label="Name der Person" placeholder="Oma"></label>
-            <label class="tvfeld"><span>E-Mail ihres Immich-Kontos</span> <input id="gfEinfachMail" type="text" autocomplete="off" aria-label="E-Mail ihres Immich-Kontos"></label>
-            <label class="tvfeld"><span>Passwort ihres Immich-Kontos</span> <input id="gfEinfachPw" type="password" autocomplete="new-password" aria-label="Passwort ihres Immich-Kontos"></label>
-            <p class="tipp">E-Mail und Passwort gehen nur an Immich. Gespeichert wird ein eigener, in Immich widerrufbarer Schlüssel ohne Löschrechte, nicht das Passwort.</p>
-            <label class="tvfeld stapel"><span>Adresse, unter der die Person den Server erreicht</span> <input id="gfEinfachBasis" name="frameside-link-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Adresse für den Link" placeholder="https://rahmen.example.com"></label>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn primaer" id="gfEinfachAnlegen" type="button" style="margin-top:6px">Zugang anlegen</button></div>
-            <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
-          </details>
-          <details id="gfTablet" class="gfdetails nur-gf-dauer">
+          <h3 class="nur-gf-dauer">Besondere Fotos</h3>
+          <label class="tvfeld nur-gf-dauer"><span>Erinnerungen („An diesem Tag“) im Dauerprogramm</span> <select id="gfErinnerungen" aria-label="Erinnerungen"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
+          <label class="tvfeld nur-gf-dauer"><span>Favoriten (⭐ in Immich) öfter zeigen</span> <select id="gfFavoriten" aria-label="Favoriten"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
+          <label class="tvfeld nur-gf-dauer"><span>Am Geburtstag Fotos der Person zeigen</span> <input type="checkbox" id="gfGeburtstagsfotos" style="flex:none"></label>
+          <h3>Nachtruhe</h3>
+          <label class="tvfeld"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
+          <div class="tvfeld" id="gfNachtZeiten"><span>Nachtruhe (Bildschirm aus)</span><span class="reihe"><input id="gfNachtVon" type="time" aria-label="von"> – <input id="gfNachtBis" type="time" aria-label="bis"></span></div>
+      </div>
+      <div class="gf gt-panel" data-gt="tab">
+          <details id="gfTablet" class="gfdetails nur-gf-dauer" open>
             <summary><span class="nur-profi">Tablet einrichten und steuern (Fully Kiosk)</span><span class="nicht-profi">Tablet prüfen</span></summary>
             <p class="tipp nur-profi"><b>Du brauchst nichts zu installieren:</b> Der Rahmen läuft in jedem normalen Browser. Fully Kiosk ist nur ein optionales Extra (ca. 8 €), damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird.</p>
             <p class="tipp nur-profi">Ohne diese Steuerung läuft der Rahmen einfach rund um die Uhr; die Fotos kommen auch so an.</p>
             <p class="tipp" id="gfTabletInfo"></p>
             <h4 style="margin:14px 0 4px">Tablet-Check</h4>
-            <p class="tipp">Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert). Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.</p>
+            <p class="tipp">Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert).</p>
+            <p class="tipp nur-profi">Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.</p>
             <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfCheck" type="button">Tablet prüfen</button> <button class="btn klein" id="gfNeustartTest" type="button">Neustart-Test</button> <button class="btn klein" id="gfProblem" type="button">Problem melden</button> <button class="btn klein" id="gfLadeVerlauf" type="button">Ladeverlauf</button></div>
             <ul class="tipp versteckt" id="gfLadeListe" style="list-style:none;padding-left:0"></ul>
             <p class="tipp versteckt" id="gfNeustartTestErg" role="status"></p>
@@ -923,7 +902,57 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
               <p class="tipp">Erreicht der Server das Tablet nicht (anderes Netz, z. B. bei den Eltern)? Dann die Einstellungsdatei laden, aufs Tablet bringen und in Fully unter Einstellungen → Andere Einstellungen → „Einstellungen importieren“ wählen.</p>
             </div>
           </details>
-        </div>
+      </div>
+      <div class="gf gt-panel" data-gt="mehr">
+          <div id="gfNotizBlock" class="versteckt">
+            <h3>Notiz an diesen Rahmen</h3>
+            <p class="tipp">Ein kurzer Text, der für eine Weile am Rahmen erscheint, zum Beispiel „Heute Abend Pizza“.</p>
+            <label class="tvfeld stapel"><span>Text</span> <input id="gfNotiz" type="text" maxlength="200" autocomplete="off" aria-label="Notiz" placeholder="Heute Abend Pizza 🍕"></label>
+            <label class="tvfeld"><span>Anzeigen für</span> <select id="gfNotizDauer" aria-label="Anzeigedauer"><option value="1">1 Stunde</option><option value="6" selected>6 Stunden</option><option value="24">1 Tag</option><option value="72">3 Tage</option><option value="168">1 Woche</option></select></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfNotizSenden" type="button">Notiz senden</button><button class="btn klein gefahr" id="gfNotizWeg" type="button">Notiz entfernen</button></div>
+            <p class="tipp versteckt" id="gfNotizErg" role="status"></p>
+          </div>
+          <div id="gfGaesteBlock" class="versteckt">
+            <h3>Fest: Fotos von Gästen</h3>
+            <p class="tipp">Am Rahmen erscheint ein QR-Code. Gäste scannen ihn, laden Fotos hoch und sehen sie gleich am Rahmen. Die Fotos landen in deinem Immich (Album „Showcase-Uploads“, Namen mit „Gast-“).</p>
+            <label class="tvfeld"><span>Dauer</span> <select id="gfGaesteDauer" aria-label="Dauer"><option value="4">4 Stunden</option><option value="8" selected>8 Stunden</option><option value="24">1 Tag</option><option value="72">3 Tage</option></select></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfGaesteStart" type="button">Fest starten</button><button class="btn klein gefahr versteckt" id="gfGaesteEnde" type="button">Fest beenden</button></div>
+            <div id="gfGaesteInfo" class="versteckt"><p class="tipp">Adresse für die Gäste:</p><div class="assi-adr"><code id="gfGaesteLink"></code></div><div id="gfGaesteQr" style="width:150px;max-width:50%;margin:8px auto;background:#fff;padding:8px;border-radius:10px"></div><p class="tipp" id="gfGaesteZahl"></p></div>
+          </div>
+          <div id="gfGrussBlock" class="versteckt">
+            <h3>Gruß mit Foto an diesen Rahmen</h3>
+            <p class="tipp">Das Foto erscheint als Nächstes am Rahmen, mit deinem Text. Wer am Rahmen darauf tippt, schickt dir ein ❤️ (Pushover).</p>
+            <label class="tvfeld"><span>Von</span> <input id="gfGrussVon" type="text" maxlength="40" autocomplete="off" aria-label="Absender" placeholder="Anna"></label>
+            <label class="tvfeld stapel"><span>Text</span> <input id="gfGrussText" type="text" maxlength="200" autocomplete="off" aria-label="Text" placeholder="Hallo Oma!"></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap"><button class="btn klein" id="gfGrussFoto" type="button">📷 Foto wählen</button><span class="tipp" id="gfGrussDatei" style="align-self:center;margin:0"></span><input type="file" id="gfGrussDateiWahl" accept="image/jpeg,image/png,image/webp,image/heic" hidden></div>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfGrussSenden" type="button">Gruß senden</button><button class="btn klein gefahr" id="gfGrussWeg" type="button">Gruß entfernen</button></div>
+            <p class="tipp versteckt" id="gfGrussErg" role="status"></p>
+          </div>
+          <details id="gfEinfach" class="gfdetails versteckt">
+            <summary>Einfacher Zugang für eine Person (z. B. Oma)</summary>
+            <p class="tipp">Die Person bekommt einen Link (oder QR-Code) auf eine ganz einfache Seite mit großen Knöpfen: Fotos hinzufügen, eigene Shows machen und auf diesem Rahmen zeigen. Die Fotos landen in ihrem eigenen Immich-Konto. Sie kann sonst nichts in der App sehen oder ändern, und gelöscht wird nichts.</p>
+            <div id="gfEinfachListe"></div>
+            <h4 style="margin:12px 0 4px">Neuen Zugang anlegen</h4>
+            <label class="tvfeld"><span>Name der Person</span> <input id="gfEinfachName" type="text" maxlength="60" autocomplete="off" aria-label="Name der Person" placeholder="Oma"></label>
+            <label class="tvfeld"><span>E-Mail ihres Immich-Kontos</span> <input id="gfEinfachMail" type="text" autocomplete="off" aria-label="E-Mail ihres Immich-Kontos"></label>
+            <label class="tvfeld"><span>Passwort ihres Immich-Kontos</span> <input id="gfEinfachPw" type="password" autocomplete="new-password" aria-label="Passwort ihres Immich-Kontos"></label>
+            <p class="tipp">E-Mail und Passwort gehen nur an Immich. Gespeichert wird ein eigener, in Immich widerrufbarer Schlüssel ohne Löschrechte, nicht das Passwort.</p>
+            <label class="tvfeld stapel"><span>Adresse, unter der die Person den Server erreicht</span> <input id="gfEinfachBasis" name="frameside-link-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Adresse für den Link" placeholder="https://rahmen.example.com"></label>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn primaer" id="gfEinfachAnlegen" type="button" style="margin-top:6px">Zugang anlegen</button></div>
+            <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
+          </details>
+          <details id="gfWartung" class="gfdetails versteckt">
+            <summary>Wartung und Zugang von außen</summary>
+            <label class="tvfeld nur-gf-dauer"><span>Meldung aufs Handy, wenn der Rahmen länger nicht erreichbar ist (Minuten, 0 = nie)</span> <input id="gfAlarm" type="number" min="0" max="1440" inputmode="numeric" aria-label="Meldung nach Minuten"></label>
+            <p class="tipp nur-gf-dauer">Leer lassen = allgemeine Einstellung. Für einen Rahmen an einem anderen Ort ist ein größerer Wert sinnvoll, damit kurze Störungen nicht gleich melden.</p>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+              <button class="btn klein" id="gfNeuladen" type="button">↻ Seite neu laden</button>
+              <button class="btn klein" id="gfNeustart" type="button">⟳ Anzeige neu starten (Fully)</button>
+              <button class="btn klein gefahr" id="gfZugangWeg" type="button">Zugang widerrufen</button>
+            </div>
+            <p class="tipp">Steht der Rahmen außerhalb deines Heimnetzes, bekommt er beim Koppeln (Code am Rahmen, in der App unter „Gerät koppeln“) einen eigenen Zugang, der nur die Rahmen-Seiten öffnet. „Zugang widerrufen“ sperrt ihn, ohne die PIN zu ändern; danach muss der Rahmen neu gekoppelt werden.</p>
+            <p class="tipp versteckt" id="gfWartungErg" role="status"></p>
+          </details>
       </div>
     </div>
     <div class="tvknoepfe">
@@ -2000,6 +2029,13 @@ function quellenSchreiben(box) {
   }
   return teile.join(", ");
 }
+function gtWaehlen(t) {                                    // Reiter im Gerätedialog umschalten
+  for (const b of document.querySelectorAll("#gfTabs .gt-tab")) { const a = b.dataset.gt === t; b.classList.toggle("gt-aktiv", a); b.setAttribute("aria-selected", a ? "true" : "false"); }
+  for (const p of document.querySelectorAll("#geraetDialog .gt-panel")) p.classList.toggle("gt-aktiv", p.dataset.gt === t);
+  if (t === "tab") $("#gfTablet").open = true;                      // im Reiter „Tablet“ gleich aufgeklappt
+  const k = document.querySelector("#geraetDialog .tvkarte"); if (k) k.scrollTop = 0;
+}
+for (const b of document.querySelectorAll("#gfTabs .gt-tab")) b.addEventListener("click", () => gtWaehlen(b.dataset.gt));
 function gfArtAnpassen() { const r = $("#gfArt").value === "rahmen"; for (const e of document.querySelectorAll(".nur-gf-dauer")) e.classList.toggle("versteckt", !r); }      // Anzeige-Einstellungen gelten fuer beide Arten, das Dauerprogramm nur fuer Rahmen
 $("#gfArt").addEventListener("change", gfArtAnpassen);
 $("#gfQuelleNeu").addEventListener("click", () => $("#gfQuellen").append(quelleZeile()));
@@ -2271,7 +2307,7 @@ async function telefoneLaden() {                                // Kalender von 
   }
 }
 async function geraetDialogOeffnen(id) {
-  gfId = id || null; gfArt = "rahmen"; let std = null, handys = [];
+  gfId = id || null; gfArt = "rahmen"; let std = null, handys = []; gtWaehlen("allg");
   let g = { art: "rahmen", name: "", sek: "", fuellung: "", anzeige: [], nacht: "", quellen: "", zeitplan: "", fully_host: "", fully_pw_gesetzt: false };
   try {
     const v = await api("verwaltung");

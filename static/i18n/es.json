@@ -858,7 +858,16 @@
   "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter.": "Sin HTTPS (https://) la tableta no guarda reserva de fotos: si falla el Wi-Fi, la presentación no continúa con fotos guardadas.",
   "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "Si la tableta está fuera de tu red doméstica, introduce esta dirección en la app:",
   "App jetzt aktualisieren": "Actualizar la app ahora",
-  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Esta versión de la app aún no puede actualizarse sola: actualízala a mano una vez, después funciona con un botón."
+  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Esta versión de la app aún no puede actualizarse sola: actualízala a mano una vez, después funciona con un botón.",
+  "Allgemein": "General",
+  "Anzeige": "Pantalla",
+  "Programm": "Programa",
+  "Tablet": "Tableta",
+  "Mehr": "Más",
+  "Besondere Fotos": "Fotos especiales",
+  "Nachtruhe": "Descanso nocturno",
+  "Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert).": "Comprueba si la tableta está lista para el uso continuo como marco (solo lectura, no se cambia nada).",
+  "Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.": "Para los ajustes de Fully necesitas abajo la dirección y la contraseña; sin ellas la comprobación solo muestra lo que el dispositivo comunica al servidor."
  },
  "muster": [
   [

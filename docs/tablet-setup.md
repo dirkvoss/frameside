@@ -6,7 +6,7 @@ This guide takes a new tablet to a frame that starts by itself after every resta
 In four steps, without Fully and without scripts:
 1. **Get the app:** In Frameside under **Devices → ＋ Add device**, scan the QR code with the tablet (or open `<server>/app`), download the file from GitHub and install it. The first time, allow “install apps from this source” once.
 2. **Connect:** Open the app. It finds the server in your home network by itself (otherwise type the address, shown in the assistant). The tablet appears in Frameside, you give it a name and choose “What is the tablet for?” → **Connect**.
-3. **Check:** At the device **⚙ → Check tablet** shows with ticks and crosses what is missing and whether the app is up to date. If there is a warning, “Reload page” and “Restart display” right below help.
+3. **Check:** At the device **⚙ → “Tablet” tab → Check tablet** shows with ticks and crosses what is missing and whether the app is up to date. If there is a warning, “Reload page” and “Restart display” right below help.
 4. **Restart test:** Press **Restart test**, restart the tablet and do not touch it. Frameside tells you when it is back by itself. After that, if you like, set up the **charge limit** in the app (menu → “Charge limit (socket)”).
 
 Everything else in this guide (Fully, ADB, your own socket scripts, manual pairing) is for advanced users: switch **Settings → View** to **Expert** and those sections appear in the app.

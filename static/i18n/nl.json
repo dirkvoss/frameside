@@ -858,7 +858,16 @@
   "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter.": "Zonder HTTPS (https://) bewaart de tablet geen fotoreserve: bij wifi-uitval draait de diavoorstelling niet door met opgeslagen foto's.",
   "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "Staat de tablet buiten je thuisnetwerk, voer dan dit adres in de app in:",
   "App jetzt aktualisieren": "App nu bijwerken",
-  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Deze app-versie kan zichzelf nog niet bijwerken: werk hem één keer met de hand bij, daarna gaat het met een knop."
+  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Deze app-versie kan zichzelf nog niet bijwerken: werk hem één keer met de hand bij, daarna gaat het met een knop.",
+  "Allgemein": "Algemeen",
+  "Anzeige": "Weergave",
+  "Programm": "Programma",
+  "Tablet": "Tablet",
+  "Mehr": "Meer",
+  "Besondere Fotos": "Bijzondere foto's",
+  "Nachtruhe": "Nachtrust",
+  "Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert).": "Controleert of de tablet klaar is voor continu gebruik als fotolijst (alleen lezen, er wordt niets gewijzigd).",
+  "Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.": "Voor de Fully-instellingen heb je hieronder het adres en wachtwoord nodig; zonder die toont de controle alleen wat het apparaat aan de server meldt."
  },
  "muster": [
   [

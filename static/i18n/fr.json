@@ -858,7 +858,16 @@
   "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter.": "Sans HTTPS (https://), la tablette ne garde pas de réserve de photos : en cas de panne du Wi-Fi, le diaporama ne continue pas avec des photos en mémoire.",
   "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "Si la tablette est en dehors de votre réseau domestique, saisissez cette adresse dans l'app :",
   "App jetzt aktualisieren": "Mettre à jour l'app maintenant",
-  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Cette version de l'app ne peut pas encore se mettre à jour toute seule : mettez-la à jour à la main une fois, ensuite cela marche avec un bouton."
+  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Cette version de l'app ne peut pas encore se mettre à jour toute seule : mettez-la à jour à la main une fois, ensuite cela marche avec un bouton.",
+  "Allgemein": "Général",
+  "Anzeige": "Affichage",
+  "Programm": "Programme",
+  "Tablet": "Tablette",
+  "Mehr": "Plus",
+  "Besondere Fotos": "Photos spéciales",
+  "Nachtruhe": "Repos nocturne",
+  "Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert).": "Vérifie si la tablette est prête pour un fonctionnement permanent comme cadre (lecture seule, rien n'est modifié).",
+  "Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.": "Pour les réglages de Fully, il faut l'adresse et le mot de passe ci-dessous ; sans eux, la vérification montre seulement ce que l'appareil signale au serveur."
  },
  "muster": [
   [

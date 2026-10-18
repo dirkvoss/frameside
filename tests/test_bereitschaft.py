@@ -264,3 +264,13 @@ def test_tablet_app_wird_nicht_auf_1920_pixel_verkleinert():
     assert "/FramesideTV/.test(navigator.userAgent) && !/FramesideTablet/.test(navigator.userAgent)" in seite       # nur der Fernseher bekommt die 1920er Breite
     app = open(os.path.join(raiz, "android", "app", "src", "main", "java", "com", "dirkvoss", "frameside", "tv", "MainActivity.java"), encoding="utf-8").read()
     assert '" FramesideTablet"' in app and "istFernseher()" in app
+
+
+def test_app_waehlt_einen_einzelnen_entwicklungs_server_nicht_von_selbst():
+    import os
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    app = open(os.path.join(raiz, "android", "app", "src", "main", "java", "com", "dirkvoss", "frameside", "tv", "MainActivity.java"), encoding="utf-8").read()
+    i = app.index('"dev".equals(treffer.get(0).version)')
+    j = app.index("Server.merken(MainActivity.this, treffer.get(0).adresse)")
+    assert i < j                                                                              # der Dev-Fall steht VOR der automatischen Wahl
+    assert "zeigeSeite" not in app[i:j]                                                      # und verbindet nicht selbst

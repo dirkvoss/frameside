@@ -1,6 +1,13 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.36.0]
+### Geändert
+- **Der Dialog „Gerät einstellen“ ist aufgeräumt: fünf Reiter statt eines langen Formulars.** **Allgemein** (Name, Hintergrund, Sekunden pro Foto, Zoom, Hochkant-Paare), **Anzeige** (Anordnung der Einblendungen, Wetter-Ort, Termine von Handys, Vorschau-Tage, der Kalender-Link in einem zugeklappten Block), **Programm** (Dauerprogramm, Zeitplan, besondere Fotos, Nachtruhe), **Tablet** (Tablet-Check, Neustart-Test, Ladeverlauf, Zugang widerrufen) und **Mehr** (Notiz, Fest mit Gästefotos, Gruß mit Foto, Einfacher Zugang, Wartung). Kein Feld ist weggefallen, jedes liegt in genau einem Reiter.
+- **Technik nur in der Profi-Ansicht:** „Art ändern“, „Kennung (Home Assistant)“, „Bildschärfe“, der ADB-Weg und „Verbindungs-Link und QR-Code“ erscheinen nur noch bei Einstellungen → Ansicht → Profi. Im Reiter „Tablet“ steht im Standard nur noch der Tablet-Check, der Hinweis zu Fully gehört zur Profi-Ansicht.
+### Behoben
+- **Android-App 1.4.2: Ein einzelner Entwicklungs-Server wird nicht mehr von selbst gewählt.** Die App sucht nur im eigenen Netz. Stand dort nur ein Entwicklungs-Server (Version „dev“), verband sie sich damit, obwohl der eigentliche Server in einem anderen Netz stand. Jetzt fragt sie in diesem Fall („Entwicklungs-Server gefunden“) und weist auf die Möglichkeit hin, die Adresse einzutippen. Bei genau einem normalen Server verbindet sie sich weiter von selbst, bei mehreren fragt sie wie bisher.
+
 ## [2.35.2]
 ### Behoben
 - **Der Knopf „App jetzt aktualisieren“ im Tablet-Check erschien nie** (Fehler seit 2.35.0). Die Zeilen des Tablet-Checks kannten ihre Kennung nicht, deshalb wusste die Seite nicht, bei welcher Zeile der Knopf stehen soll. Jetzt trägt jede Zeile Kennung, Status und Wert mit; ein Test hält das fest.

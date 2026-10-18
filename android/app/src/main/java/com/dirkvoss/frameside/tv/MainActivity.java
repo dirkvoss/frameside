@@ -243,6 +243,10 @@ public class MainActivity extends Activity {
                     if (treffer.isEmpty()) {
                         ((TextView) l.getChildAt(0)).setText("Nichts gefunden");
                         status.setText("Läuft Frameside im selben WLAN oder Netzwerk? Du kannst die Adresse auch eintippen, zum Beispiel 192.168.1.20:8090.");
+                    } else if (treffer.size() == 1 && "dev".equals(treffer.get(0).version) && wurzel.getChildAt(0) == l) {
+                        // ein einzelner Entwicklungs-Server (Version "dev") wird nie von selbst gewaehlt: der eigentliche Server steht oft in einem anderen Netz
+                        ((TextView) l.getChildAt(0)).setText("Entwicklungs-Server gefunden");
+                        status.setText("Das ist ein Entwicklungs-Server. Mit OK auswählen, oder die Adresse deines Servers eintippen (z. B. wenn er in einem anderen Netz steht).");
                     } else if (treffer.size() == 1 && Server.gemerkt(MainActivity.this).isEmpty() && wurzel.getChildAt(0) == l) {
                         Server.merken(MainActivity.this, treffer.get(0).adresse);
                         zeigeSeite(treffer.get(0).adresse);
