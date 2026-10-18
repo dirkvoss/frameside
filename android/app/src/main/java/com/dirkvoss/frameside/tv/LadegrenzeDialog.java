@@ -3,8 +3,10 @@ package com.dirkvoss.frameside.tv;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.text.InputType;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,13 +25,23 @@ final class LadegrenzeDialog {
         if (k.aktiv) { punkte.add("Grenzen ändern"); punkte.add("Ladegrenze ausschalten"); }
         String kopf = !k.aktiv ? "Die Ladegrenze ist aus. Mit einer schaltbaren Steckdose im selben WLAN hält Frameside den Akku in einem Bereich (z. B. 20 bis 80 %) und schont ihn so."
                 : "Aktiv: " + k.unten + " bis " + k.oben + " %\n" + (Ladegrenze.letzteMeldung().isEmpty() ? "wird gestartet …" : Ladegrenze.letzteMeldung());
-        new AlertDialog.Builder(a).setTitle("Ladegrenze").setMessage(kopf).setItems(punkte.toArray(new String[0]), (d, i) -> {
-            String p = punkte.get(i);
+        // Text und Auswahl in einer Liste: AlertDialog zeigt bei gesetztem Text (setMessage) die Eintraege (setItems) nicht an
+        final ListView lv = new ListView(a);
+        final TextView kopfAnsicht = new TextView(a);
+        kopfAnsicht.setText(kopf);
+        kopfAnsicht.setPadding(48, 24, 48, 24);
+        lv.addHeaderView(kopfAnsicht, null, false);
+        lv.setAdapter(new ArrayAdapter<>(a, android.R.layout.simple_list_item_1, punkte));
+        final AlertDialog dlg = new AlertDialog.Builder(a).setTitle("Ladegrenze").setView(lv).setNegativeButton("Schließen", null).create();
+        lv.setOnItemClickListener((parent, view, position, id) -> {
+            dlg.dismiss();
+            String p = punkte.get(position - lv.getHeaderViewsCount());
             if (p.startsWith("Shelly")) suchen(a, k);
             else if (p.startsWith("Web-Adressen")) adressen(a, k);
             else if (p.startsWith("Grenzen")) grenzen(a, k);
             else { Ladegrenze.ausschalten(a); Toast.makeText(a, "Ladegrenze aus. Die Steckdose bleibt eingeschaltet.", Toast.LENGTH_LONG).show(); }
-        }).setNegativeButton("Schließen", null).show();
+        });
+        dlg.show();
     }
 
     private static void suchen(final Activity a, final Ladegrenze.Konfig k) {

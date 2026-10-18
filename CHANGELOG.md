@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.34.1]
+### Behoben
+- **Android-App 1.3.1: Schrift und Symbole auf Tablets waren zu klein.** Die App stellte die Seite im „Übersichtsmodus“ dar und verkleinerte sie damit auf einem Tablet; jetzt gilt der Übersichtsmodus nur noch am Fernseher, am Tablet ist die Darstellung wie in Fully.
+- **Android-App 1.3.1: Der Dialog „Ladegrenze“ zeigte nur den Text und „Schließen“.** Die Auswahl (Shelly-Steckdose suchen, Web-Adressen eintippen, Grenzen ändern, ausschalten) wurde von Android nicht angezeigt, wenn der Dialog auch einen Text hatte. Text und Auswahl stehen jetzt in einer Liste.
+- **Die App-Datei am GitHub-Release ist jetzt wirklich die neue:** Bisher hing dort die alte Version 1.0.0 vom 10. Oktober (die CI übernimmt nur die APK des vorigen Releases, sie baut keine); die Funktionen der Versionen 1.2 und 1.3 (Tablet-Player, Fully-Brücke, Ladegrenze) fehlten in der Download-Datei.
+
 ## [2.34.0]
 ### Neu
 - **Profi-Ansicht (serverweit):** In den Einstellungen wählst du die **Ansicht**: **Standard** (Voreinstellung) oder **Profi**. Im Standard zeigt Frameside nur den einfachen Weg für Tablets: die **Frameside-App** und den **Tablet-Check**. Die Technik-Einstellungen (Fully mit Adresse, Passwort und „Einrichten“, „Gerät von Hand hinzufügen“, ADB, Link und Adresse für den Browser) erscheinen erst in der Profi-Ansicht. Der Schalter gilt für alle Browser und Geräte.

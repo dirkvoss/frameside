@@ -112,6 +112,13 @@ public class MainActivity extends Activity {
 
     // ------------------------------------------------------------------ Seite
 
+    private boolean istFernseher() {
+        try {
+            return ((android.app.UiModeManager) getSystemService(UI_MODE_SERVICE)).getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+                    || getPackageManager().hasSystemFeature("android.software.leanback");
+        } catch (Exception e) { return false; }
+    }
+
     private void zeigeSeite(String server) {
         fehlerSichtbar = false;
         wurzel.removeAllViews();
@@ -125,7 +132,7 @@ public class MainActivity extends Activity {
             w.setMediaPlaybackRequiresUserGesture(false);
             w.setCacheMode(WebSettings.LOAD_DEFAULT);
             w.setUseWideViewPort(true);                 // die Seite ist fuer 1920 x 1080 gebaut (meldet sich ueber den Benutzer-Agent "FramesideTV")
-            w.setLoadWithOverviewMode(true);
+            w.setLoadWithOverviewMode(istFernseher());          // nur am Fernseher auf die Breite schrumpfen; am Tablet in normaler Groesse (wie Fully: Weitwinkel an, Uebersicht aus)
             w.setUserAgentString(w.getUserAgentString() + " FramesideTV/" + version());
             web.addJavascriptInterface(new FullyBruecke(this), "fully");     // Akku, Helligkeit, Neustart fuer die Rahmen-Seite (wie die Fully-Schnittstelle)
             web.setWebChromeClient(new WebChromeClient());
