@@ -414,3 +414,30 @@ def test_fokus_endpoint_und_bildschaerfe(app_laden, monkeypatch):
     assert app.put(f"/api/verwaltung/geraete/{z}", json={"qualitaet": "hoch"}, headers=H).status_code == 200
     assert app.get(f"/api/config?ziel={z}").json()["rahmen_qualitaet"] == "hoch"
     assert app.put(f"/api/verwaltung/geraete/{z}", json={"qualitaet": "mega"}, headers=H).status_code == 400
+
+
+def test_kopplungscode_ist_einmalig(app_laden, monkeypatch):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24", RAHMEN_WEB_RAHMEN_ZIELE="flur=Flur")
+    tablet, app = client("192.168.1.60"), client("192.168.1.50")
+    code = tablet.post("/api/koppeln/neu", headers={"X-Rahmen": "1"}).json()["code"]
+    assert app.post("/api/koppeln", json={"code": code, "ziel": "flur"}, headers={"X-Rahmen": "1"}).status_code == 200
+    jetzt = [w.time.time()]
+    monkeypatch.setattr(w.time, "time", lambda: jetzt[0])
+    assert tablet.get("/api/koppeln/status?code=" + code).json()["ziel"] == "flur"       # das Tablet holt seinen Zugang ab
+    jetzt[0] += w.KOPPEL_NACHFRIST - 5
+    assert tablet.get("/api/koppeln/status?code=" + code).status_code == 200            # kurze Nachfrist, falls die Antwort verloren ging
+    jetzt[0] += 10
+    assert tablet.get("/api/koppeln/status?code=" + code).status_code == 404            # danach ist der Code verbraucht
+
+
+def test_tablet_art_gibt_voreinstellungen_beim_anlegen(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    tablet, app = client("192.168.1.60"), client("192.168.1.50")
+    H = {"X-Rahmen": "1"}
+    for name, vorlage, sek, vorschau in (("Kueche", "kueche", 10, None), ("Opa", "senior", 15, 3), ("Flur", "", None, None), ("Quatsch", "unbekannt", None, None)):
+        code = tablet.post("/api/koppeln/neu", headers=H).json()["code"]
+        r = app.post("/api/koppeln/neues-geraet", json={"code": code, "name": name, "art": "rahmen", "vorlage": vorlage}, headers=H).json()
+        g = w.GERAETE[r["id"]]
+        assert g.get("sek") == sek and g.get("termine_vorschau") == vorschau, name
+        tablet.cookies.clear()
+    assert w.GERAETE["opa"]["anzeige"] == ["datum", "zeit"]

@@ -47,6 +47,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 250px); }
 button, select, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .versteckt { display: none !important; }
+body:not(.profi) .nur-profi { display: none !important; }       /* Technik-Einstellungen (Fully, ADB, manuelle Wege): nur in der Profi-Ansicht */
+body.profi .nicht-profi { display: none !important; }
 /* Erste Schritte */
 .startkarte { margin: 12px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
 .startkopf { display: flex; align-items: center; gap: 10px; } .startkopf b { flex: 1; } .startkopf .zaehler { color: var(--muted); font-size: 13px; }
@@ -647,6 +649,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
   <div class="tvkarte">
     <h2 id="einstTitel">Einstellungen</h2>
     <div class="gf">
+      <label class="tvfeld"><span>Ansicht</span> <select id="eAnsicht" aria-label="Ansicht"><option value="standard">Standard</option><option value="profi">Profi</option></select></label>
+      <p class="tipp">Standard zeigt nur den einfachen Weg mit der App. Profi zeigt zusätzlich Fully, ADB und die manuellen Wege.</p>
       <h3>Vorgaben für alle Rahmen</h3>
       <p class="tipp">Gelten, wenn bei einem Rahmen (⚙ unter „Geräte“) nichts anderes eingestellt ist.</p>
       <label class="tvfeld"><span>Sekunden pro Foto</span> <input id="eSek" type="number" min="3" max="120" inputmode="numeric" aria-label="Sekunden pro Foto"></label>
@@ -698,11 +702,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
   <div class="tvkarte">
     <h2 id="assiTitel">Gerät hinzufügen</h2>
     <div id="assiFinden" class="gf">
-      <p class="tipp">Öffne am Fernseher oder Tablet im Browser diese Adresse. Das Gerät erscheint dann hier von selbst:</p>
-      <div class="assi-adr"><code id="assiFindAdresse"></code></div>
-      <div id="assiWartend"></div>
-      <p class="assi-status" id="assiFindStatus">Suche nach Geräten …</p>
-      <details class="gfdetails" id="assiApp"><summary>Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)</summary>
+      <details class="gfdetails" id="assiApp" open><summary>Android- oder Fire-Tablet: Frameside-App installieren (empfohlen)</summary>
         <p class="tipp">Die App braucht keine Einstellungen und keinen Browser: Sie findet den Server selbst, bleibt im Vollbild, hält den Bildschirm an und startet nach dem Einschalten von selbst.</p>
         <ol class="tipp" style="padding-left:20px;margin:6px 0">
           <li>Am Tablet diesen QR-Code mit der Kamera scannen (oder den Link im Browser öffnen) und die Datei laden.</li>
@@ -710,9 +710,14 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <li>Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf <b>Verbinden</b>.</li>
         </ol>
         <div id="assiAppQr" style="max-width:180px;margin:8px auto"></div>
+        <p class="tipp">Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein: <code id="assiAppServer"></code></p>
         <div class="assi-adr"><code id="assiAppLink">github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk</code></div>
         <p class="tipp">Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.</p>
       </details>
+      <p class="tipp">Öffne am Fernseher oder Tablet im Browser diese Adresse. Das Gerät erscheint dann hier von selbst:</p>
+      <div class="assi-adr"><code id="assiFindAdresse"></code></div>
+      <div id="assiWartend"></div>
+      <p class="assi-status" id="assiFindStatus">Suche nach Geräten …</p>
       <details class="gfdetails" id="assiTvApp"><summary>Android TV, Google TV, Fire TV oder Shield: Frameside-App installieren</summary>
         <p class="tipp">Die App findet den Server selbst, startet im Vollbild und lässt sich als Bildschirmschoner einrichten.</p>
         <ol class="tipp" style="padding-left:20px;margin:6px 0">
@@ -724,7 +729,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
         <p class="tipp">Bildschirmschoner: Einstellungen → Geräteeinstellungen → Bildschirmschoner → Frameside. Fire TV erlaubt meines Wissens keine eigenen Bildschirmschoner – dort läuft Frameside als normale App.</p>
       </details>
     </div>
-    <details class="gfdetails" id="assiHandarbeit"><summary>Gerät von Hand hinzufügen</summary>
+    <details class="gfdetails nur-profi" id="assiHandarbeit"><summary>Gerät von Hand hinzufügen</summary>
     <div id="assiSchritt1" class="gf">
       <p class="tipp">Was für ein Gerät ist das? Davon hängt ab, welche Einstellungen es bekommt.</p>
       <div class="tvfeld stapel"><span>Art</span>
@@ -744,7 +749,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
         <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="assiCodeOk" type="button">Koppeln</button></div>
         <p class="tipp versteckt" id="assiCodeErg" role="status"></p>
       </div>
-      <details class="gfdetails" id="assiLinkTeil" style="order:2">
+      <details class="gfdetails nur-profi" id="assiLinkTeil" style="order:2">
         <summary>Link und QR-Code (zum Scannen mit dem Tablet)</summary>
       <p class="tipp">Öffne am Tablet oder Fernseher diese Adresse im Browser – oder scanne den QR-Code mit der Kamera des Tablets.</p>
       <div id="assiQr"></div>
@@ -755,7 +760,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       <p class="tipp" id="assiKurz"></p>
       </details>
       <div style="order:3">
-      <details class="gfdetails" id="assiDirekt">
+      <details class="gfdetails nur-profi" id="assiDirekt">
         <summary>Für Fortgeschrittene: per ADB direkt am Fernseher öffnen</summary>
         <p class="tipp">Nur für Android TV, Shield und Fire TV – und nur, wenn dort die Entwickler-Funktion „Netzwerk-Debugging“ (ADB) eingeschaltet ist, was bei den meisten Geräten nicht der Fall ist. Dann öffnet der Server die Seite selbst, ohne Tippen mit der Fernbedienung. Der Server muss den Fernseher im Netz erreichen; beim ersten Mal bestätigst du am Fernseher „Immer erlauben“. Für alle anderen Fernseher gilt: einfach die kurze Adresse oben im Browser eingeben.</p>
         <label class="tvfeld"><span>Adresse des Fernsehers</span> <input id="assiAdb" type="text" autocomplete="off" aria-label="Adresse des Fernsehers" placeholder="192.168.1.30"></label>
@@ -874,22 +879,26 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
           </details>
           <details id="gfTablet" class="gfdetails nur-gf-dauer">
-            <summary>Tablet einrichten und steuern (Fully Kiosk)</summary>
-            <p class="tipp"><b>Du brauchst nichts zu installieren:</b> Der Rahmen läuft in jedem normalen Browser. Fully Kiosk ist nur ein optionales Extra (ca. 8 €), damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird.</p>
-            <p class="tipp">Ohne diese Steuerung läuft der Rahmen einfach rund um die Uhr; die Fotos kommen auch so an.</p>
+            <summary><span class="nur-profi">Tablet einrichten und steuern (Fully Kiosk)</span><span class="nicht-profi">Tablet prüfen</span></summary>
+            <p class="tipp nur-profi"><b>Du brauchst nichts zu installieren:</b> Der Rahmen läuft in jedem normalen Browser. Fully Kiosk ist nur ein optionales Extra (ca. 8 €), damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird.</p>
+            <p class="tipp nur-profi">Ohne diese Steuerung läuft der Rahmen einfach rund um die Uhr; die Fotos kommen auch so an.</p>
             <p class="tipp" id="gfTabletInfo"></p>
             <h4 style="margin:14px 0 4px">Tablet-Check</h4>
             <p class="tipp">Prüft, ob das Tablet für den Dauerbetrieb als Rahmen bereit ist (nur lesend, es wird nichts verändert). Für die Einstellungen von Fully brauchst du unten Adresse und Passwort; ohne sie zeigt der Check nur, was das Gerät dem Server meldet.</p>
-            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfCheck" type="button">Tablet prüfen</button></div>
+            <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfCheck" type="button">Tablet prüfen</button> <button class="btn klein" id="gfNeustartTest" type="button">Neustart-Test</button> <button class="btn klein" id="gfProblem" type="button">Problem melden</button> <button class="btn klein" id="gfLadeVerlauf" type="button">Ladeverlauf</button></div>
+            <ul class="tipp versteckt" id="gfLadeListe" style="list-style:none;padding-left:0"></ul>
+            <p class="tipp versteckt" id="gfNeustartTestErg" role="status"></p>
+            <p class="tipp versteckt" id="gfReparatur" style="margin-top:8px">Etwas ist nicht in Ordnung? <button class="btn klein" id="gfRepLaden" type="button">↻ Seite neu laden</button> <button class="btn klein" id="gfRepStart" type="button">⟳ Anzeige neu starten</button></p>
+            <p class="tipp">Tablet verloren oder verkauft? <button class="btn klein gefahr" id="gfZugangWeg2" type="button">Zugang des Tablets widerrufen</button></p>
             <ul class="tipp versteckt" id="gfCheckListe" role="status" style="list-style:none;padding-left:0"></ul>
             <p class="tipp">Ausführliche Anleitung: <a href="https://github.com/dirkvoss/frameside/blob/main/docs/tablet-einrichten.md" target="_blank" rel="noopener">Tablet als Bilderrahmen einrichten</a></p>
-            <div id="gfTabletWege">
+            <div id="gfTabletWege" class="nur-profi">
               <p class="tipp">Damit sich der Bildschirm nachts wirklich ausschaltet und der Akkustand gemeldet wird, gibt es zwei Wege:</p>
               <p class="tipp">1. In Fully Kiosk unter „Erweiterte Web-Einstellungen“ die „JavaScript-Schnittstelle“ aktivieren (benötigt Fully Plus). Danach steuert sich das Tablet selbst – hier ist nichts weiter einzustellen.</p>
               <p class="tipp">2. Oder in Fully „Remote Admin“ einschalten und hier Adresse und Passwort eintragen:</p>
             </div>
-            <div class="tvknoepfe versteckt" id="gfFullyAnzeigen" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfFullyAn" type="button">Adresse und Passwort trotzdem einrichten</button></div>
-            <div class="gf" id="gfFullyFelder">
+            <div class="tvknoepfe versteckt nur-profi" id="gfFullyAnzeigen" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfFullyAn" type="button">Adresse und Passwort trotzdem einrichten</button></div>
+            <div class="gf nur-profi" id="gfFullyFelder">
               <label class="tvfeld"><span>Adresse des Tablets</span> <input id="gfFullyHost" type="text" autocomplete="off" aria-label="Adresse des Tablets" placeholder="192.168.1.50"></label>
               <div class="tvknoepfe versteckt" id="gfIpZeile" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfIpNehmen" type="button"></button></div>
               <label class="tvfeld"><span>Passwort</span> <input id="gfFullyPw" type="password" autocomplete="new-password" aria-label="Passwort"></label>
@@ -1858,6 +1867,7 @@ function beispielListe() {
 async function konfigLaden() {
   try {
     konfig = await (await fetch("/api/config", { cache: "no-store" })).json();
+    document.body.classList.toggle("profi", !!konfig.profi);
     document.body.classList.remove("modus-laden"); document.body.classList.add("modus-" + (konfig.modus || "beides"));
     document.querySelectorAll("[data-version]").forEach(e => { e.textContent = `${konfig.name || "Frameside"} · ${RW_T("Version")} ${konfig.version || ""} · ${RW_T("Entwickelt von")} Dirk Voß`; });
     document.querySelectorAll("[data-version-kurz]").forEach(e => { e.textContent = /^\d/.test(konfig.version || "") ? "v" + konfig.version : (konfig.version || ""); });
@@ -2335,6 +2345,7 @@ function einstFuellen(d) {
     const l = document.createElement("label"); l.className = "tvfeld"; const t = document.createElement("span"); t.textContent = RW_T(name);
     const c = document.createElement("input"); c.type = "checkbox"; c.dataset.art = k; c.checked = d.meldungen[k] !== false; c.style.flex = "none"; l.append(t, c); mb.append(l);
   }
+  $("#eAnsicht").value = d.profi ? "profi" : "standard";
   $("#eAlarm").value = d.alarm_min != null ? d.alarm_min : ""; $("#eAlarm").placeholder = String(d.standard.alarm_min);
   $("#eTvUrl").value = d.tv_url || ""; $("#eTvUrl").placeholder = d.standard.tv_url || "tv.example.com";
   $("#eAliase").innerHTML = ""; for (const a of d.aliase) $("#eAliase").append(aliasZeile(a));
@@ -2353,7 +2364,7 @@ async function einstOeffnen() {
   appQrZeigen(); $("#einstDialog").classList.remove("versteckt"); telefoneLaden();
 }
 function einstSammeln() {
-  const k = { sek: $("#eSek").value, fuellung_rahmen: $("#eFuellungR").value, fuellung_tv: $("#eFuellungT").value, tv_url: $("#eTvUrl").value.trim(), alarm_min: $("#eAlarm").value,
+  const k = { sek: $("#eSek").value, fuellung_rahmen: $("#eFuellungR").value, fuellung_tv: $("#eFuellungT").value, tv_url: $("#eTvUrl").value.trim(), alarm_min: $("#eAlarm").value, profi: $("#eAnsicht").value === "profi",
     meldungen: Object.fromEntries([...$$("#eMeldungen input")].map(c => [c.dataset.art, c.checked])), wetter: einstWetter,
     aliase: [...$$("#eAliase .qzeile")].map(z => { const i = z.querySelectorAll("input"); return { name: i[0].value.trim(), person: i[1].value.trim() }; }) };
   if ($("#eKal").value.trim()) k.kalender_url = $("#eKal").value.trim();
@@ -2454,14 +2465,17 @@ function assiWartendZeichnen(liste) {
     const a = document.createElement("select"); a.setAttribute("aria-label", RW_T("Art")); a.style.cssText = "width:100%;margin:0 0 6px";
     for (const [w, bez] of [["tv", "Fernseher"], ["rahmen", "Bilderrahmen / Tablet"]]) { const o = document.createElement("option"); o.value = w; o.textContent = RW_T(bez); a.appendChild(o); }
     a.value = g.art;
+    const v = document.createElement("select"); v.setAttribute("aria-label", RW_T("Wofür ist das Tablet?")); v.style.cssText = "width:100%;margin:0 0 6px";
+    for (const [w, bez] of [["", "Wohnzimmer oder normal"], ["kueche", "Küche: Uhrzeit und Datum im Bild"], ["senior", "Für eine ältere Person: Datum und Uhrzeit, Termine für 3 Tage"]]) { const o = document.createElement("option"); o.value = w; o.textContent = RW_T(bez); v.appendChild(o); }
+    const vSicht = () => { v.style.display = a.value === "rahmen" ? "" : "none"; }; a.addEventListener("change", vSicht); vSicht();
     const b = document.createElement("button"); b.className = "btn primaer"; b.type = "button"; b.textContent = RW_T("Verbinden");
     b.addEventListener("click", async () => {
       const name = n.value.trim(); if (!name) { toast(RW_T("Bitte einen Namen eingeben."), true); n.focus(); return; }
       b.disabled = true;
-      try { const r = await api("koppeln/neues-geraet", { method: "POST", body: JSON.stringify({ code: g.code, name, art: a.value }) }); await konfigLaden(); assiVerbinden(r.id, a.value, true); }
+      try { const r = await api("koppeln/neues-geraet", { method: "POST", body: JSON.stringify({ code: g.code, name, art: a.value, vorlage: v.value }) }); await konfigLaden(); assiVerbinden(r.id, a.value, true); }
       catch (e) { fehler(e); b.disabled = false; }
     });
-    k.append(n, a, b); box.appendChild(k);
+    k.append(n, a, v, b); box.appendChild(k);
     if (g.code === assiZielCode) { k.style.borderColor = "#d9a441"; k.style.borderWidth = "2px"; if (!assiZielErledigt) { assiZielErledigt = true; setTimeout(() => n.focus(), 50); } }
   }
 }
@@ -2478,7 +2492,7 @@ async function assiSuchen() {
 function assiOeffnen(zielCode) {
   assiZielCode = typeof zielCode === "string" ? zielCode : ""; assiZielErledigt = false;
   $("#assiTitel").textContent = RW_T("Gerät hinzufügen"); $("#assiFinden").classList.remove("versteckt"); $("#assiHandarbeit").classList.remove("versteckt"); $("#assiHandarbeit").open = false; $("#assiSchritt2").classList.add("versteckt");
-  $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, "");
+  $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, ""); $("#assiAppServer").textContent = tvBasis();
   $("#assiTvAppAdr").textContent = tvBasis().replace(/^https?:\/\//, "") + "/app";       // kurze Adresse, die zur App-Datei weiterleitet (am Fernseher in Downloader tippen)
   if (!$("#assiAppQr").innerHTML) { try { const qr = qrcode(0, "M"); qr.addData("https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk"); qr.make(); $("#assiAppQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { /* ohne QR bleibt der Link */ } }
   $("#assiName").value = ""; $("#assiArt").value = "rahmen"; $("#assiWartend").textContent = ""; $("#assiDialog").classList.remove("versteckt");
@@ -2684,13 +2698,20 @@ const CHECK_TEXTE = {                                      // Texte zum Tablet-C
   sperrbildschirm: { info: "Der Sperrbildschirm muss aus sein, sonst startet die Anzeige nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine. Fire-Tablets: Passcode aus; den Wisch-Sperrbildschirm schaltet nur ADB ab (siehe Anleitung).",
                      warnung: "Der Sperrbildschirm ist aktiv. Das Tablet startet nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine." },
   ueberlagerung: { info: "Ab Android 10: In den Android-Einstellungen für die App „Über anderen Apps anzeigen“ erlauben, sonst startet sie nach dem Einschalten nicht von selbst." },
+  geraet: { info: "Erkanntes Gerät" },
+  reserve: { ok: "Bei WLAN-Ausfall zeigt das Tablet bis zu 150 schon gesehene Fotos weiter (HTTPS ist aktiv).", info: "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter." },
+  anzeige: { ok: "Die Diashow läuft: das Bild wechselt.", warnung: "Das Bild wechselt nicht mehr, die Anzeige hängt wohl. „Seite neu laden“ oder „Anzeige neu starten“ hilft meistens." },
+  app: { ok: "Die Frameside-App ist aktuell.", warnung: "Es gibt eine neuere Frameside-App. Lade sie noch einmal von GitHub (Gerät hinzufügen → App installieren) und installiere sie über die alte." },
   neustarttest: { info: "Zum Schluss einmal neu starten: Die Diashow muss ohne Berührung und ohne Dialog kommen." }
 };
-function checkZeile(x) {
-  const t = (CHECK_TEXTE[x.id] || {})[x.status];
+let letzterCheck = [];
+function checkZeile(x, keinFire) {
+  const t = keinFire && x.id === "sperrbildschirm" && x.status === "info" ? "Der Sperrbildschirm muss aus sein, sonst startet die Anzeige nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine." : (CHECK_TEXTE[x.id] || {})[x.status];
   if (!t) return null;
   let text = RW_T(t);
-  if (x.id === "weg") text += ": " + RW_T(x.wert === "aussen" ? "von außen (über das Internet)" : "aus dem Heimnetz");
+  if (x.id === "geraet") text += ": " + x.wert;
+  else if (x.id === "app") text += " (" + RW_T("Version") + " " + x.wert.split(":")[0] + ")";
+  else if (x.id === "weg") text += ": " + RW_T(x.wert === "aussen" ? "von außen (über das Internet)" : "aus dem Heimnetz");
   else if (x.id === "ladegrenze" && x.wert) { const [z, u, o] = x.wert.split(":"); text += " (" + RW_T(z === "an" ? "Steckdose an" : z === "aus" ? "Steckdose aus" : "Steckdose wird gesucht") + ", " + u + "–" + o + " %)"; }
   else if (x.id === "akku") { const [n, l] = x.wert.split(":"); text = RW_T("Akku") + " " + n + " %, " + RW_T(l === "1" ? "lädt" : "nicht am Strom") + (x.status === "warnung" ? ". " + RW_T("Das Tablet lädt nicht. Netzteil und Kabel prüfen.") : ""); }
   return { symbol: { ok: "✓", warnung: "⚠", fehler: "✗", info: "ℹ" }[x.status], farbe: { ok: "var(--ok, #3ecf8e)", warnung: "var(--warn, #e6b450)", fehler: "var(--danger, #f87171)", info: "" }[x.status], text };
@@ -2699,13 +2720,60 @@ $("#gfCheck").addEventListener("click", async e => {
   const liste = $("#gfCheckListe"); liste.classList.remove("versteckt"); liste.textContent = RW_T("Prüfe …"); e.currentTarget.disabled = true;
   try {
     const r = await api("verwaltung/bereitschaft", { method: "POST", body: JSON.stringify({ id: gfId, fully_host: $("#gfFullyHost").value.trim(), fully_pw: $("#gfFullyPw").value }) });
-    liste.textContent = "";
-    for (const x of r.punkte.map(checkZeile).filter(Boolean)) {
+    liste.textContent = ""; letzterCheck = r.punkte;
+    const fire = r.punkte.some(x => x.id === "geraet" && x.wert === "Fire-Tablet"), anderes = r.punkte.some(x => x.id === "geraet" && x.wert !== "Fire-Tablet");
+    $("#gfReparatur").classList.toggle("versteckt", !r.punkte.some(x => x.status === "warnung" || x.status === "fehler"));
+    for (const x of r.punkte.map(p => checkZeile(p, anderes)).filter(Boolean)) {
       const li = document.createElement("li"); li.style.margin = "4px 0";
       const sym = document.createElement("b"); sym.textContent = x.symbol + " "; if (x.farbe) sym.style.color = x.farbe;
       li.append(sym, document.createTextNode(x.text)); liste.append(li);
     }
   } catch (err) { liste.textContent = "✗ " + err.message; }
+  e.currentTarget.disabled = false;
+});
+let neustartTimer = 0;
+$("#gfNeustartTest").addEventListener("click", async e => {
+  const erg = $("#gfNeustartTestErg"); erg.classList.remove("versteckt"); erg.style.color = ""; clearInterval(neustartTimer);
+  try { await api("verwaltung/neustarttest", { method: "POST", body: JSON.stringify({ id: gfId }) }); } catch (err) { erg.textContent = "✗ " + err.message; return; }
+  const wo = gfId;
+  const stand = async () => {
+    if (gfId !== wo || $("#geraetDialog").classList.contains("versteckt")) { clearInterval(neustartTimer); return; }
+    let r; try { r = await api("verwaltung/neustarttest/" + encodeURIComponent(wo)); } catch (err) { return; }
+    if (r.zustand === "fertig") { erg.textContent = "✓ " + RW_T("Das Tablet ist von selbst wieder da. Die Anzeige läuft ohne Berührung.") + " (" + r.aus_sek + " s)"; erg.style.color = "var(--ok, #3ecf8e)"; clearInterval(neustartTimer); }
+    else if (r.zustand === "zeit") { erg.textContent = "✗ " + RW_T("Nach 15 Minuten ist das Tablet nicht zurückgekommen. Prüfe Sperrbildschirm, „Über anderen Apps anzeigen“ und WLAN."); erg.style.color = "var(--danger, #f87171)"; clearInterval(neustartTimer); }
+    else if (r.zustand === "aus") erg.textContent = "… " + RW_T("Das Tablet ist aus. Frameside wartet, bis es von selbst wiederkommt …");
+    else erg.textContent = "… " + RW_T("Starte das Tablet jetzt neu (ausschalten und wieder einschalten) und fasse es danach nicht mehr an. Frameside wartet …");
+  };
+  await stand(); neustartTimer = setInterval(stand, 4000);
+});
+async function gfReparieren(aktion) {
+  const erg = $("#gfNeustartTestErg"); erg.classList.remove("versteckt"); erg.style.color = "";
+  try { const r = await api("geraete/" + encodeURIComponent(gfId) + "/befehl", { method: "POST", body: JSON.stringify({ aktion }) }); erg.textContent = "✓ " + RW_T(r.nachricht); erg.style.color = "var(--ok, #3ecf8e)"; }
+  catch (err) { erg.textContent = "✗ " + err.message; erg.style.color = "var(--danger, #f87171)"; }
+}
+$("#gfLadeVerlauf").addEventListener("click", async () => {
+  const ul = $("#gfLadeListe"); ul.classList.remove("versteckt"); ul.textContent = RW_T("Lade …");
+  try {
+    const r = await api("verwaltung/geraete/" + encodeURIComponent(gfId) + "/ladeverlauf"); ul.textContent = "";
+    if (!r.verlauf.length) { ul.textContent = RW_T("Noch keine Wechsel aufgezeichnet. Frameside merkt sich ab jetzt, wann das Tablet Strom bekommt oder verliert."); return; }
+    for (const e of r.verlauf) {
+      const li = document.createElement("li"); li.style.margin = "3px 0";
+      const wann = new Date(e.t * 1000).toLocaleString(RW_LANG === "de" ? "de-DE" : RW_LANG, { weekday: "short", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+      li.textContent = wann + " – " + RW_T(e.laedt ? "Strom an" : "Strom aus") + ", " + RW_T("Akku") + " " + e.akku + " %"; ul.append(li);
+    }
+  } catch (err) { ul.textContent = "✗ " + err.message; }
+});
+$("#gfRepLaden").addEventListener("click", () => gfReparieren("neuladen"));
+$("#gfRepStart").addEventListener("click", () => gfReparieren("neustart"));
+$("#gfZugangWeg2").addEventListener("click", () => $("#gfZugangWeg").click());
+$("#gfProblem").addEventListener("click", async e => {                      // Diagnose in die Zwischenablage: Version, Ampel, Zeit (keine Passwoerter)
+  const erg = $("#gfNeustartTestErg"); erg.classList.remove("versteckt"); erg.style.color = ""; e.currentTarget.disabled = true;
+  try {
+    if (!letzterCheck.length) { await $("#gfCheck").click(); await new Promise(r => setTimeout(r, 2500)); }
+    const zeilen = letzterCheck.map(checkZeile).filter(Boolean).map(z => z.symbol + " " + z.text);
+    const text = ["Frameside " + (konfig.version || "") + " – " + (new Date()).toISOString().slice(0, 16).replace("T", " "), "Gerät: " + gfId, "", ...zeilen].join("\n");
+    await navigator.clipboard.writeText(text); erg.textContent = "✓ " + RW_T("Die Diagnose ist in der Zwischenablage. Füge sie in eine Nachricht ein.");
+  } catch (err) { erg.textContent = "✗ " + RW_T("Das Kopieren ging nicht. Prüfe das Tablet und markiere die Zeilen von Hand."); erg.style.color = "var(--danger, #f87171)"; }
   e.currentTarget.disabled = false;
 });
 $("#geraeteZu").addEventListener("click", () => { $("#geraeteDialog").classList.add("versteckt"); clearInterval(geraeteTimer); });

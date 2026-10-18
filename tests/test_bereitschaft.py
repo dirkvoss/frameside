@@ -114,3 +114,129 @@ def test_unbekanntes_geraet_und_ohne_anmeldung(app_laden):
     w, client, _ = app_laden(**LAN)
     assert client().post("/api/verwaltung/bereitschaft", json={"id": "gibtsnicht"}, headers=H).status_code == 404
     assert client("203.0.113.9").post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).status_code == 401
+
+
+def test_app_version_und_update_hinweis(app_laden):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    gelesen = lambda: {x["id"]: x for x in c.post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).json()["punkte"]}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    assert "app" not in gelesen()                                             # Browser oder Fully: keine App-Version
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1", headers={"User-Agent": "Mozilla/5.0 FramesideTV/1.2.1"})
+    assert gelesen()["app"] == {"id": "app", "status": "warnung", "wert": "1.2.1:" + w.APP_AKTUELL}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1", headers={"User-Agent": "Mozilla/5.0 FramesideTV/" + w.APP_AKTUELL})
+    assert gelesen()["app"]["status"] == "ok"
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1", headers={"User-Agent": "Mozilla/5.0 FramesideTV/dream"})
+    assert "app" not in gelesen()
+
+
+def test_app_aktuell_passt_zur_android_app():
+    import os, re
+    import conftest  # noqa: F401
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    gradle = open(os.path.join(raiz, "android", "app", "build.gradle")).read()
+    quelle = open(os.path.join(raiz, "rahmen_web.py"), encoding="utf-8").read()
+    assert re.search(r'versionName "([\d.]+)"', gradle).group(1) == re.search(r'APP_AKTUELL = "([\d.]+)"', quelle).group(1)
+
+
+def test_neustarttest_wartet_auf_das_tablet(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    status = lambda: c.get("/api/verwaltung/neustarttest/rahmen").json()
+    assert status()["zustand"] == "keiner"
+    jetzt = [1000.0]
+    monkeypatch.setattr(w.time, "time", lambda: jetzt[0])
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    assert c.post("/api/verwaltung/neustarttest", json={"id": "rahmen"}, headers=H).json()["ok"] is True
+    jetzt[0] += 2
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    assert status()["zustand"] == "wartet"
+    jetzt[0] += 60                                                            # Tablet meldet sich nicht mehr
+    assert status()["zustand"] == "aus"
+    jetzt[0] += 40                                                            # ... und kommt von selbst zurueck
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    r = status()
+    assert r["zustand"] == "fertig" and r["aus_sek"] >= 60
+    assert c.get("/api/verwaltung/neustarttest/gibtsnicht").status_code == 404
+
+
+def test_neustarttest_gilt_nicht_als_bestanden_bei_kurzer_pause_und_laeuft_ab(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    jetzt = [5000.0]
+    monkeypatch.setattr(w.time, "time", lambda: jetzt[0])
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    c.post("/api/verwaltung/neustarttest", json={"id": "rahmen"}, headers=H)
+    jetzt[0] += 10                                                            # nur ein kurzer Aussetzer
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1")
+    assert c.get("/api/verwaltung/neustarttest/rahmen").json()["zustand"] == "wartet"
+    jetzt[0] += w.NEUSTARTTEST_MAX + 5
+    assert c.get("/api/verwaltung/neustarttest/rahmen").json()["zustand"] == "zeit"
+
+
+def test_geraetename_und_haengende_anzeige(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    fire = {"User-Agent": "Mozilla/5.0 (Linux; Android 11; KFTUWI) AppleWebKit/537.36 FramesideTV/1.3.0"}
+    gelesen = lambda: {x["id"]: x for x in c.post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).json()["punkte"]}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3", headers=fire)
+    p = gelesen()
+    assert p["geraet"]["wert"] == "Fire-Tablet" and p["anzeige"]["status"] == "ok"
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=" + str(w.ANZEIGE_HAENGT_SEK + 5), headers=fire)
+    assert gelesen()["anzeige"] == {"id": "anzeige", "status": "warnung", "wert": str(w.ANZEIGE_HAENGT_SEK + 5)}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=0&ra=5000", headers=fire)      # kein Dauerprogramm: kein Urteil ueber das Bild
+    assert "anzeige" not in gelesen()
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1", headers={"User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-T505) Chrome/120"})
+    assert gelesen()["geraet"]["wert"] == "Android-Tablet"
+
+
+def test_ladeverlauf_haelt_nur_wechsel_fest(app_laden):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    ab = lambda ak, pl: c.get(f"/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1&ak={ak}&pl={pl}")
+    ab(50, 1); ab(49, 1)                                                       # kein Wechsel: nichts aufzeichnen
+    assert c.get("/api/verwaltung/geraete/rahmen/ladeverlauf").json()["verlauf"] == []
+    ab(80, 0); ab(79, 0); ab(20, 1)
+    r = c.get("/api/verwaltung/geraete/rahmen/ladeverlauf").json()
+    assert [(e["laedt"], e["akku"]) for e in r["verlauf"]] == [(True, 20), (False, 80)]       # neueste zuerst
+    assert r["akku"] == 20 and r["laedt"] is True
+    assert c.get("/api/verwaltung/geraete/gibtsnicht/ladeverlauf").status_code == 404
+
+
+def test_wochenbericht_nennt_was_aufmerksamkeit_braucht(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1&ak=60&pl=1&a=1&ra=3")
+    titel, text = w.wochenbericht_text()
+    assert titel == "Wochenbericht: alle Rahmen in Ordnung" and "Bilderrahmen: in Ordnung (Akku 60 %)" in text
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1&ak=12&pl=0&a=1&ra=3", headers={"User-Agent": "FramesideTV/1.0.0"})
+    titel, text = w.wochenbericht_text()
+    assert "1 von 1" in titel and "Akku 12 % ohne Strom" in text and "App veraltet (1.0.0)" in text
+    titel, text = w.wochenbericht_text(jetzt=w.time.time() + 4 * 3600)                    # Tablet seit Stunden stumm
+    assert "offline seit 4 Std." in text
+
+
+def test_wochenbericht_geht_sonntags_einmal_raus(app_laden, monkeypatch):
+    import datetime
+    w, client, _ = app_laden(**LAN)
+    gesendet = []
+    monkeypatch.setattr(w, "pushover", lambda titel, text, prio=0: gesendet.append(titel))
+    monkeypatch.setattr(w, "immich_aufruf", lambda *a, **k: {})
+    sonntag = datetime.datetime(2026, 10, 18, 18, 30)                                    # ein Sonntag
+    w.weitere_wache_pruefen(sonntag)
+    w.weitere_wache_pruefen(sonntag + datetime.timedelta(minutes=5))                      # nicht noch einmal in derselben Woche
+    assert sum(t.startswith("Wochenbericht") for t in gesendet) == 1
+    w.weitere_wache_pruefen(datetime.datetime(2026, 10, 19, 18, 30))                      # Montag: nichts
+    assert sum(t.startswith("Wochenbericht") for t in gesendet) == 1
+
+
+def test_offline_reserve_gibt_es_nur_mit_https(app_laden):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    gelesen = lambda: {x["id"]: x for x in c.post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).json()["punkte"]}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3&o=http%3A%2F%2F192.168.1.20%3A8090")
+    assert gelesen()["reserve"]["status"] == "info"
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3&o=https%3A%2F%2Frahmen.example.org")
+    assert gelesen()["reserve"]["status"] == "ok"
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3")                         # kein Wert gemeldet (aeltere Seite): kein Urteil
+    assert "reserve" not in gelesen()

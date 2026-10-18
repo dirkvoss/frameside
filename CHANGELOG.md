@@ -1,6 +1,25 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.34.0]
+### Neu
+- **Profi-Ansicht (serverweit):** In den Einstellungen wählst du die **Ansicht**: **Standard** (Voreinstellung) oder **Profi**. Im Standard zeigt Frameside nur den einfachen Weg für Tablets: die **Frameside-App** und den **Tablet-Check**. Die Technik-Einstellungen (Fully mit Adresse, Passwort und „Einrichten“, „Gerät von Hand hinzufügen“, ADB, Link und Adresse für den Browser) erscheinen erst in der Profi-Ansicht. Der Schalter gilt für alle Browser und Geräte.
+- **Tablet-Check zeigt, ob die Frameside-App aktuell ist.** Die App meldet ihre Version; ist eine neuere da, steht in der Ampel „Es gibt eine neuere Frameside-App“ mit dem Weg, sie zu aktualisieren.
+- **Geführter Neustart-Test** (Geräte → ⚙ → „Neustart-Test“): Du startest das Tablet neu und fasst es nicht mehr an; Frameside wartet, bis es ausgeht und von selbst wiederkommt, und meldet „✓ von selbst wieder da (nach … s)“ oder nach 15 Minuten, was zu prüfen ist.
+- **Tablet-Check erkennt das Gerät** (Fire-Tablet, Android-Tablet …) und zeigt „Erkanntes Gerät“; für Nicht-Fire-Geräte entfällt der Fire-Hinweis zum Sperrbildschirm. Außerdem prüft er, ob die **Diashow läuft** (das Bild wechselt) und meldet eine hängende Anzeige.
+- **Reparieren mit einem Klick:** Zeigt der Tablet-Check ein Warnzeichen, erscheinen direkt darunter „Seite neu laden“ und „Anzeige neu starten“.
+- **„Problem melden“:** kopiert Version, Zeit und die Zeilen des Tablet-Checks in die Zwischenablage (ohne Passwörter), zum Einfügen in eine Nachricht.
+- **„Zugang des Tablets widerrufen“** steht jetzt direkt im Tablet-Check („Tablet verloren oder verkauft?“), nicht mehr nur unter „Wartung“.
+- **Tablet-Art beim Anlegen:** Im Assistenten „Gerät hinzufügen“ wählst du bei einem Bilderrahmen „Wofür ist das Tablet?“: **Wohnzimmer** (Standard), **Küche** (Uhrzeit und Datum im Bild, 10 Sekunden je Foto) oder **für eine ältere Person** (Datum und Uhrzeit, 15 Sekunden je Foto, Termine für 3 Tage). Alles lässt sich danach am Gerät ändern.
+- **Ladeverlauf:** Unter Geräte → ⚙ → „Ladeverlauf“ siehst du, wann das Tablet zuletzt Strom bekommen oder verloren hat, mit Akkustand. Frameside merkt sich die letzten 60 Wechsel je Rahmen.
+- **Wochenbericht aufs Handy:** Sonntags ab 18 Uhr eine Pushover-Meldung „Wochenbericht: alle Rahmen in Ordnung“ oder welcher Rahmen Aufmerksamkeit braucht (offline, Bild hängt, Akku niedrig ohne Strom, App veraltet). In den Einstellungen unter den Meldungen abschaltbar.
+- **Offline-Reserve im Tablet-Check:** Der Check zeigt, ob das Tablet bei WLAN-Ausfall schon gesehene Fotos weiterzeigt (bis zu 150, nur mit HTTPS) oder nicht.
+- **Die App-Schritte nennen die Server-Adresse**, die man in der App eintippt, wenn das Tablet außerhalb des Heimnetzes steht.
+### Geändert
+- **„Gerät hinzufügen“ zeigt zuerst den App-Weg** (aufgeklappt): App laden, Frameside öffnen, auf „Verbinden“ tippen.
+### Sicherheit
+- **Kopplungscodes sind einmalig:** Nachdem das Tablet seinen Zugang abgeholt hat, antwortet der Code nur noch zwei Minuten (falls die Antwort verloren ging), danach gilt er als verbraucht. Zuvor blieb er bis zum Ablauf der 15 Minuten gültig.
+
 ## [2.33.1]
 ### Geändert
 - **Einfacher Zugang: die Adresse für den Link wird vorgeschlagen.** Läuft der Rahmen von außen (Tablet bei den Eltern), meldet die Rahmen-Seite die Adresse, unter der sie läuft, und das Feld „Adresse, unter der die Person den Server erreicht“ ist damit schon ausgefüllt. Das Feld ist jetzt als Internetadresse gekennzeichnet, damit Browser dort keine Postadresse mehr einsetzen. Der Knopf „Zugang anlegen“ ist jetzt hervorgehoben und wird nicht mehr übersehen.

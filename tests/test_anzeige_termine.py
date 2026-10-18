@@ -488,7 +488,7 @@ def test_speicher_und_kalender_meldungen_und_abschalten(app_laden, monkeypatch):
     # abschalten in den Einstellungen
     assert app.put("/api/einstellungen", json={"meldungen": {"kalender": False, "speicher": False}}, headers=H).status_code == 200
     ansicht = app.get("/api/einstellungen").json()
-    assert ansicht["meldungen"] == {"immich": True, "speicher": False, "kalender": False, "monat": True}
+    assert ansicht["meldungen"] == {"immich": True, "speicher": False, "kalender": False, "monat": True, "woche": True}
     w.weitere_wache_pruefen(jetzt + datetime.timedelta(days=2))
     assert len(g2) == 1
     assert app.put("/api/einstellungen", json={"meldungen": {"unbekannt": False}}, headers=H).status_code == 400

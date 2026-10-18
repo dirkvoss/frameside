@@ -680,7 +680,7 @@ def logout(response: Response, _=Depends(csrf)):
 def konfig(ziel: str = ""):
     """Oeffentliche Darstellung der Installation (kein Geheimnis): Name, Beispiele fuer die Suche, Adresse der Fernseher-Seite. Mit ?ziel= gelten die Einstellungen dieses Geraets."""
     z = ziel if ziel in GERAETE else None
-    return {"name": APP_NAME, "version": VERSION, "modus": MODUS, "auth": AUTH, "musik_upload": MUSIK_UPLOAD, "hochladen": bool(UPLOAD_KEY) or AUTH != "pin", "hochladen_mb": UPLOAD_MAX_MB, "konfiguriert": konfiguriert(), "tv_url": tv_url(), "beispiele": BEISPIELE, "beispiele_en": BEISPIELE_EN,
+    return {"name": APP_NAME, "version": VERSION, "profi": bool(EINST.get("profi")), "modus": MODUS, "auth": AUTH, "musik_upload": MUSIK_UPLOAD, "hochladen": bool(UPLOAD_KEY) or AUTH != "pin", "hochladen_mb": UPLOAD_MAX_MB, "konfiguriert": konfiguriert(), "tv_url": tv_url(), "beispiele": BEISPIELE, "beispiele_en": BEISPIELE_EN,
             "ziele": {k: v for k, v in TV_ZIELE.items() if k not in TV_VERSTECKT and k not in RAHMEN_ZIELE},
             "rahmen": list(RAHMEN_ZIELE), "rahmen_namen": dict(RAHMEN_ZIELE), "rahmen_sek": gwert(z, "sek", std_sek()), "rahmen_fuellung": gwert(z, "fuellung", std_fuellung_rahmen()), "tv_fuellung": gwert(z, "fuellung", std_fuellung_tv()),
             "rahmen_anzeige": gwert(z, "anzeige", std_anzeige()), "rahmen_layout": layout_fuer(z), "rahmen_bewegung": bool((GERAETE.get(z) or {}).get("bewegung")), "rahmen_paare": bool((GERAETE.get(z) or {}).get("paare")), "rahmen_nacht": rahmen_nacht(z), "rahmen_qualitaet": (GERAETE.get(z) or {}).get("qualitaet") or "", "rahmen_zusatz": zusatz_liste(z), "koppeln": True,
@@ -3137,9 +3137,28 @@ def fully_bildschirm(z, an):
     FULLY_STATE.setdefault(z, {})["bildschirm"] = "an" if an else "aus"
 
 
+LADEVERLAUF_FILE = os.environ.get("RAHMEN_WEB_LADEVERLAUF_FILE", os.path.join(os.path.dirname(EINST_FILE), "rahmen_web_ladeverlauf.json"))
+LADEVERLAUF = lies_json(LADEVERLAUF_FILE, {})                              # Rahmen -> [{"t": Sekunden, "laedt": bool, "akku": %}, ...] (nur Wechsel)
+if not isinstance(LADEVERLAUF, dict):
+    LADEVERLAUF = {}
+LADEVERLAUF_MAX = 60
+
+
+def ladeverlauf_merken(z, akku, laedt):
+    liste = LADEVERLAUF.setdefault(z, [])
+    liste.append({"t": int(time.time()), "laedt": bool(laedt), "akku": int(akku)})
+    del liste[:-LADEVERLAUF_MAX]
+    try:
+        schreibe_json(LADEVERLAUF_FILE, LADEVERLAUF)
+    except OSError as e:
+        H.log.warning("Ladeverlauf nicht speicherbar: %s", e)
+
+
 def akku_melden(z, akku, laedt):
     """Merkt den Akkustand eines Tablets und warnt einmal, wenn er niedrig ist und das Tablet nicht laedt (egal ob es ihn selbst meldet oder ueber Fully abgefragt wurde)."""
     st = FULLY_STATE.setdefault(z, {})
+    if st.get("laedt") is not None and st["laedt"] != laedt:                  # Strom an/aus: im Ladeverlauf festhalten
+        ladeverlauf_merken(z, akku, laedt)
     st["akku"], st["laedt"] = akku, laedt
     if akku <= FULLY_AKKU_MIN and not laedt and not st.get("akku_gemeldet"):
         st["akku_gemeldet"] = True
@@ -3738,6 +3757,17 @@ def bereitschaft_pruefen(z, daten):
     t = TV.get(z) or {}
     online = time.time() - t.get("hb", 0) < 10
     p("online", "ok" if online else "fehler")
+    if online and t.get("modell"):
+        p("geraet", "info", t["modell"])
+    if online and t.get("ambient") and (t.get("bild_alter") or 0) > ANZEIGE_HAENGT_SEK:
+        p("anzeige", "warnung", int(t["bild_alter"]))                         # Dauerprogramm laeuft, aber das Bild wechselt nicht mehr
+    elif online and t.get("ambient"):
+        p("anzeige", "ok")
+    if online and t.get("https") is not None and t.get("ambient"):
+        p("reserve", "ok" if t["https"] else "info")
+    if online and t.get("app"):
+        neu = app_version_ordnung(t["app"]) is not None and app_version_ordnung(t["app"]) < app_version_ordnung(APP_AKTUELL)
+        p("app", "warnung" if neu else "ok", f"{t['app']}:{APP_AKTUELL}")
     if online and t.get("extern") is not None:
         p("weg", "info", "aussen" if t["extern"] else "heimnetz")
     if t.get("lg"):
@@ -3791,6 +3821,41 @@ def bereitschaft(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     return bereitschaft_pruefen(z, daten)
 
 
+@app.get("/api/verwaltung/geraete/{z}/ladeverlauf")
+def ladeverlauf_lesen(z: str, _=Depends(anmeldung)):
+    """Wann hat das Tablet zuletzt Strom bekommen oder verloren (neueste zuerst, mit Akkustand)."""
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    return {"verlauf": list(reversed(LADEVERLAUF.get(z, [])))[:20], "akku": (FULLY_STATE.get(z) or {}).get("akku"), "laedt": (FULLY_STATE.get(z) or {}).get("laedt")}
+
+
+@app.post("/api/verwaltung/neustarttest")
+def neustarttest_starten(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Startet den geführten Neustart-Test: der Server wartet, bis das Tablet ausgeht und von selbst wieder meldet."""
+    z = str(daten.get("id", ""))
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    TV[z]["neustarttest"] = {"start": time.time(), "fertig": None}
+    return {"ok": True}
+
+
+@app.get("/api/verwaltung/neustarttest/{z}")
+def neustarttest_status(z: str, _=Depends(anmeldung)):
+    """keiner | wartet (Tablet noch an) | aus (Tablet meldet sich nicht mehr) | fertig | zeit (nach 15 Minuten nicht zurueck)."""
+    if z not in GERAETE:
+        raise HTTPException(404, "Gerät nicht gefunden")
+    t = TV.get(z) or {}
+    nt = t.get("neustarttest")
+    if not nt:
+        return {"zustand": "keiner"}
+    jetzt = time.time()
+    if nt.get("fertig"):
+        return {"zustand": "fertig", "aus_sek": nt.get("aus_sek", 0)}
+    if jetzt - nt["start"] > NEUSTARTTEST_MAX:
+        return {"zustand": "zeit"}
+    return {"zustand": "aus" if jetzt - t.get("hb", 0) >= NEUSTARTTEST_LUECKE and t.get("hb", 0) >= nt["start"] - 5 else "wartet", "sek": int(jetzt - nt["start"])}
+
+
 # --------------------------------------------------------------------------- Einstellungen in der App
 _lade_personen_orig = H.lade_personen
 
@@ -3828,7 +3893,7 @@ def einst_ansicht():
             "wetter": EINST.get("wetter") or None, "wetter_env": bool(WETTER_ORT) and not EINST.get("wetter"),
             "kalender_gesetzt": bool(EINST.get("kalender_url")), "kalender_env": bool(KALENDER_URL) and not EINST.get("kalender_url"),
             "pushover_gesetzt": bool(pe.get("user") and pe.get("token")), "pushover_geraet": pe.get("device") or "",
-            "aliase": EINST.get("aliase") or [], "personen": namen, "meldungen": {k: meldung_an(k) for k in MELDUNGEN_ARTEN}, "meldungen_namen": MELDUNGEN_ARTEN,
+            "aliase": EINST.get("aliase") or [], "profi": bool(EINST.get("profi")), "personen": namen, "meldungen": {k: meldung_an(k) for k in MELDUNGEN_ARTEN}, "meldungen_namen": MELDUNGEN_ARTEN,
             "standard": {"sek": RAHMEN_SEK, "fuellung_rahmen": RAHMEN_FUELLUNG, "fuellung_tv": TV_FUELLUNG, "anzeige": RAHMEN_ANZEIGE, "alarm_min": RAHMEN_ALARM_MIN, "tv_url": TV_URL}}
 
 
@@ -3919,6 +3984,8 @@ def einstellungen_aendern(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
         if not isinstance(m, dict) or any(k not in MELDUNGEN_ARTEN or not isinstance(v, bool) for k, v in m.items()):
             raise HTTPException(400, "Meldungen: unbekannte Art oder ungültiger Wert")
         setzen("meldungen", {k: v for k, v in m.items() if v is False})            # gespeichert wird nur, was abgeschaltet ist (Standard: alles an)
+    if "profi" in daten:                                                    # Profi-Ansicht (serverweit): zeigt alle Technik-Einstellungen
+        setzen("profi", True if daten["profi"] is True else None)
     if "aliase" in daten:
         liste = daten["aliase"] if isinstance(daten["aliase"], list) else []
         sauber = []
@@ -4059,6 +4126,7 @@ KOPPEL = {}                       # code -> {"t": Zeit, "ziel": None|Kennung, "i
 KOPPEL_LOCK = threading.Lock()
 KOPPEL_ZEICHEN = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"        # ohne leicht verwechselbare Zeichen (0/O, 1/I)
 KOPPEL_LEBEN = 900
+KOPPEL_NACHFRIST = 120                       # so lange nach dem Abholen des Zugangs antwortet ein vergebener Code noch (danach gilt er als verbraucht)
 
 
 def koppel_aufraeumen(jetzt):
@@ -4110,6 +4178,12 @@ def koppeln_status(request: Request, response: Response, code: str = ""):
     if not eintrag:
         raise HTTPException(404, "Code unbekannt oder abgelaufen")
     z = eintrag["ziel"]
+    if z:                                        # der Code ist einmalig: nach dem Abholen des Zugangs gilt er nur noch kurz (falls die Antwort verloren ging)
+        with KOPPEL_LOCK:
+            eintrag.setdefault("geholt", time.time())
+            if time.time() - eintrag["geholt"] > KOPPEL_NACHFRIST:
+                KOPPEL.pop(code.strip().upper(), None)
+                raise HTTPException(404, "Code unbekannt oder abgelaufen")
     if z and z in TV_ZIELE:                      # das Geraet ist zugewiesen: es bekommt seinen eigenen, lange gueltigen Zugang (nur fuer die Rahmen-Seiten)
         response.set_cookie(GERAET_COOKIE, zugang_ausstellen(z), max_age=GERAET_COOKIE_TAGE * 86400, httponly=True,
                             samesite="strict", secure=request.headers.get("x-forwarded-proto") == "https")
@@ -4134,6 +4208,11 @@ def koppeln_wartend(_=Depends(anmeldung)):
     return {"geraete": liste}
 
 
+# Voreinstellungen beim Anlegen eines Rahmens ("Wofuer ist das Tablet?"); alles laesst sich spaeter am Geraet aendern
+VORLAGEN = {"kueche": {"anzeige": ["zeit", "datum"], "sek": 10},
+            "senior": {"anzeige": ["datum", "zeit"], "sek": 15, "termine_vorschau": 3}}
+
+
 @app.post("/api/koppeln/neues-geraet")
 def koppeln_neues_geraet(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     """Legt fuer ein wartendes Geraet (Code) gleich ein neues Geraet an und verbindet es - ein Schritt ohne Code-Eingabe."""
@@ -4146,7 +4225,8 @@ def koppeln_neues_geraet(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
     art = str(daten.get("art") or eintrag.get("art") or "rahmen")
     if art not in ("rahmen", "tv"):
         raise HTTPException(400, "Bitte Rahmen oder Fernseher wählen")
-    neu = geraet_anlegen({"art": art, "name": daten.get("name")}, None, None)
+    vorlage = VORLAGEN.get(str(daten.get("vorlage") or ""), {}) if art == "rahmen" else {}
+    neu = geraet_anlegen({"art": art, "name": daten.get("name"), **vorlage}, None, None)
     with KOPPEL_LOCK:
         if code not in KOPPEL:
             raise HTTPException(404, "Das Gerät wartet nicht mehr - bitte die Adresse dort noch einmal öffnen")
@@ -4201,7 +4281,7 @@ def rahmen_wache_pruefen(jetzt=None):
 
 
 # Weitere Meldungen (je Art in den Einstellungen abschaltbar): Immich nicht erreichbar, Speicherplatz knapp, Handy-Kalender veraltet, Monatsbrief
-MELDUNGEN_ARTEN = {"immich": "Immich nicht erreichbar", "speicher": "Speicherplatz knapp", "kalender": "Handy-Kalender nicht aktualisiert", "monat": "Monatsbrief"}
+MELDUNGEN_ARTEN = {"immich": "Immich nicht erreichbar", "speicher": "Speicherplatz knapp", "kalender": "Handy-Kalender nicht aktualisiert", "monat": "Monatsbrief", "woche": "Wochenbericht"}
 STATISTIK_FILE = os.environ.get("RAHMEN_WEB_STATISTIK_FILE", os.path.join(os.path.dirname(EINST_FILE), "rahmen_web_statistik.json"))
 STATISTIK = lies_json(STATISTIK_FILE, {})                                  # "2026-10" -> {"min_online": {Rahmen: n}, "min_offline": {...}, "ausfaelle": {...}}
 if not isinstance(STATISTIK, dict):
@@ -4255,6 +4335,29 @@ def monatsbrief_text(jahr, monat):
     return (f"Dein Rückblick auf den {MONATE[monat - 1]}", "\n".join(teile) or "Keine Daten für diesen Monat.")
 
 
+def wochenbericht_text(jetzt=None):
+    """Sonntagabend: wie es den Rahmen gerade geht (in Ordnung oder was Aufmerksamkeit braucht)."""
+    jetzt = jetzt or time.time()
+    zeilen, offen = [], 0
+    for z, name in RAHMEN_ZIELE.items():
+        t, st = TV[z], FULLY_STATE.get(z) or {}
+        probleme = []
+        if jetzt - t["hb"] >= 120:
+            probleme.append("offline" + (f" seit {int((jetzt - t['hb']) // 3600)} Std." if t["hb"] and jetzt - t["hb"] >= 3600 else ""))
+        else:
+            if t.get("ambient") and (t.get("bild_alter") or 0) > ANZEIGE_HAENGT_SEK:
+                probleme.append("Bild wechselt nicht mehr")
+            if t.get("app") and (app_version_ordnung(t["app"]) or (0, 0, 0)) < app_version_ordnung(APP_AKTUELL):
+                probleme.append(f"App veraltet ({t['app']})")
+        if st.get("akku") is not None and st["akku"] <= FULLY_AKKU_MIN and not st.get("laedt"):
+            probleme.append(f"Akku {st['akku']} % ohne Strom")
+        offen += bool(probleme)
+        zeilen.append(f"{name}: " + ("; ".join(probleme) if probleme else "in Ordnung" + (f" (Akku {st['akku']} %)" if st.get("akku") is not None else "")))
+    if not zeilen:
+        return None
+    return ("Wochenbericht: alle Rahmen in Ordnung" if not offen else f"Wochenbericht: {offen} von {len(zeilen)} Rahmen brauchen Aufmerksamkeit", "\n".join(zeilen))
+
+
 def weitere_wache_pruefen(jetzt=None):
     """Alle 60 Sekunden: meldet (Pushover), wenn Immich laenger weg ist, der Speicher knapp wird oder ein Handy-Kalender veraltet; Monatsbrief am 1. des Monats."""
     jetzt = jetzt or datetime.datetime.now()
@@ -4306,6 +4409,16 @@ def weitere_wache_pruefen(jetzt=None):
             meldungen.append(monatsbrief_text(vor.year, vor.month))
         with GERAETE_LOCK:
             EINST["monatsbrief"] = schluessel
+            einst_speichern()
+    # Wochenbericht: sonntags ab 18 Uhr (einmal je Woche)
+    woche = f"{jetzt.isocalendar()[0]}-W{jetzt.isocalendar()[1]:02d}"
+    if jetzt.weekday() == 6 and jetzt.hour >= 18 and EINST.get("wochenbericht") != woche:
+        if meldung_an("woche"):
+            bericht = wochenbericht_text()
+            if bericht:
+                meldungen.append(bericht)
+        with GERAETE_LOCK:
+            EINST["wochenbericht"] = woche
             einst_speichern()
     for titel, text in meldungen:
         H.log.warning("Meldung: %s - %s", titel, text)
@@ -4462,6 +4575,27 @@ def steuer_senden(daten):
 
 
 LG_RE = re.compile(r"(an|aus|fehler|suche):\d{1,3}:\d{1,3}")
+APP_RE = re.compile(r"FramesideTV/(\d+(?:\.\d+){1,2})")
+APP_AKTUELL = "1.3.0"                      # neueste Version der Android-App (android/app/build.gradle, versionName); ein Test haelt beide gleich
+ANZEIGE_HAENGT_SEK = 600                  # so lange darf das Bild im Dauerprogramm stehen, bevor der Tablet-Check "haengt" meldet
+NEUSTARTTEST_LUECKE = 25                   # Sekunden ohne Herzschlag, ab denen das Tablet als "aus" gilt
+NEUSTARTTEST_MAX = 900                     # nach so vielen Sekunden gilt der Neustart-Test als gescheitert
+
+
+def app_version_ordnung(text):
+    """'1.3' -> (1, 3, 0); None bei Unsinn."""
+    try:
+        t = tuple(int(x) for x in str(text).split("."))
+    except ValueError:
+        return None
+    return (t + (0, 0, 0))[:3] if 1 <= len(t) <= 3 else None
+
+
+def neustarttest_beachten(t, vorher, jetzt):
+    """Herzschlag nach einer Pause waehrend eines laufenden Neustart-Tests: das Tablet ist von selbst wieder da."""
+    nt = t.get("neustarttest")
+    if nt and not nt.get("fertig") and vorher and jetzt - vorher >= NEUSTARTTEST_LUECKE and vorher >= nt["start"] - 5 and jetzt - nt["start"] <= NEUSTARTTEST_MAX:
+        nt["fertig"], nt["aus_sek"] = jetzt, int(jetzt - vorher)
 URSPRUNG_RE = re.compile(r"https?://[A-Za-z0-9.-]{1,120}(:\d{1,5})?")
 
 
@@ -4476,7 +4610,11 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
             response.set_cookie(GERAET_COOKIE, zugang_ausstellen(ziel), max_age=GERAET_COOKIE_TAGE * 86400, httponly=True,
                                 samesite="strict", secure=request.headers.get("x-forwarded-proto") == "https")
     t = tv_ziel(ziel)
+    neustarttest_beachten(t, t.get("hb"), time.time())
     t["hb"] = time.time()
+    m_app = APP_RE.search(request.headers.get("user-agent", ""))
+    t["modell"] = ua_beschreibung(request.headers.get("user-agent"))[0]       # z. B. "Fire-Tablet", "Android-Tablet" (fuer die passende Anleitung im Tablet-Check)
+    t["app"] = m_app.group(1) if m_app else ""                                 # Version der Frameside-App (aus dem Browser-Kennzeichen), sonst leer
     t["tv_laeuft"], t["tv_name"], t["tv_musik"] = bool(s), n[:60], (m if KAT_RE.match(m or "") else "")
     t["ambient"], t["bild_alter"] = bool(a), (ra if ra >= 0 else None)       # Dauerprogramm aktiv / Sekunden seit dem letzten Bildwechsel
     t["fully_js"] = bool(fj)                                                  # die Seite laeuft in Fully Kiosk mit aktiver JavaScript-Schnittstelle
@@ -4487,6 +4625,7 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
     except ValueError:
         t["ip"], t["extern"] = "", None
     t["ursprung"] = o if URSPRUNG_RE.fullmatch(o or "") and t.get("extern") else ""      # Adresse, unter der der Rahmen von aussen laeuft (Vorschlag fuer Links)
+    t["https"] = o.startswith("https://") if URSPRUNG_RE.fullmatch(o or "") else None    # nur mit HTTPS gibt es die Offline-Reserve (Service Worker); None = nicht gemeldet
     t["lg"] = lg if LG_RE.fullmatch(lg or "") else ""                         # Ladegrenze der Android-App: "an:20:80" (Steckdose an, Untergrenze, Obergrenze)
     if fj and 0 <= ak <= 100:
         akku_melden(ziel, ak, pl == 1)
