@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.35.1]
+### Behoben
+- **Eine neue Version der Seite lädt sich von selbst neu.** Bisher erschien nur ein Banner „Neue Version verfügbar – tippen zum Aktualisieren“, und eine lange offene Seite blieb auf dem alten Stand. Jetzt lädt sich die Seite selbst neu, sobald kein Fenster offen ist und nichts getippt wird; sonst liegt das Banner über allen Fenstern und die Seite lädt neu, sobald alles zu ist. Geprüft wird alle 30 Sekunden und beim Zurückkehren zur Seite.
+
 ## [2.35.0]
 ### Neu
 - **Die Android-App aktualisiert sich selbst (App 1.4.0 und 1.4.1).** Gibt es eine neuere App, zeigt das Menü der App (langes Drücken aufs Bild) „Update auf … installieren“, und der Tablet-Check in Frameside bietet bei einer veralteten App den Knopf **„App jetzt aktualisieren“**. Das Tablet lädt die neue Datei von GitHub und startet die Installation; Android nimmt nur eine Datei an, die mit demselben Schlüssel signiert ist, und fragt einmal „Aktualisieren?“. Beim ersten Mal erlaubt man der App einmalig „Apps installieren“. Nach dem Update startet die App von selbst wieder. Ein Hinweisfenster mitten in der Diashow gibt es nicht. Die Version 1.3.x kann das noch nicht und muss einmal von Hand aktualisiert werden.

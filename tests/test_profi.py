@@ -27,3 +27,12 @@ def test_technik_abschnitte_haengen_am_profi_schalter():
         assert "nur-profi" in zeile, kennung
     assert "body:not(.profi) .nur-profi" in html
     assert 'id="assiApp" open' in html                                                      # der App-Weg ist der aufgeklappte Standard
+
+
+def test_neue_version_laedt_die_seite_von_selbst_neu():
+    html = open(os.path.join(RAIZ, "static", "index.html"), encoding="utf-8").read()
+    i = html.index("async function versionPruefen()")
+    funktion = html[i:html.index("$(\"#updateBanner\")", i)]
+    assert "location.reload()" in funktion and "tvdialog:not(.versteckt)" in funktion        # automatisch, solange kein Fenster offen ist
+    assert "setInterval(versionPruefen, 30000)" in html
+    assert "z-index: 100000" in html.split(".updatebanner {", 1)[1].split("}", 1)[0]          # das Banner liegt ueber den Fenstern
