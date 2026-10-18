@@ -240,3 +240,27 @@ def test_offline_reserve_gibt_es_nur_mit_https(app_laden):
     assert gelesen()["reserve"]["status"] == "ok"
     c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3")                         # kein Wert gemeldet (aeltere Seite): kein Urteil
     assert "reserve" not in gelesen()
+
+
+def test_app_kann_sich_selbst_aktualisieren_befehl_und_version(app_laden):
+    import os
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    assert c.get("/api/config").json()["app_aktuell"] == w.APP_AKTUELL                     # die App fragt hier nach der aktuellen Version
+    r = c.post("/api/geraete/rahmen/befehl", json={"aktion": "appupdate"}, headers=H)
+    assert r.status_code == 200 and w.TV["rahmen"]["befehl"] == "appupdate"
+    assert c.post("/api/geraete/rahmen/befehl", json={"aktion": "quatsch"}, headers=H).status_code == 400
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    seite = open(os.path.join(raiz, "static", "tv", "index.html"), encoding="utf-8").read()
+    assert "fully.updateApp" in seite                                                       # die Rahmen-Seite reicht den Befehl an die App weiter
+    kotlin = open(os.path.join(raiz, "android", "app", "src", "main", "java", "com", "dirkvoss", "frameside", "tv", "FullyBruecke.java"), encoding="utf-8").read()
+    assert "public void updateApp()" in kotlin and "@JavascriptInterface" in kotlin
+
+
+def test_tablet_app_wird_nicht_auf_1920_pixel_verkleinert():
+    import os
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    seite = open(os.path.join(raiz, "static", "tv", "index.html"), encoding="utf-8").read()
+    assert "/FramesideTV/.test(navigator.userAgent) && !/FramesideTablet/.test(navigator.userAgent)" in seite       # nur der Fernseher bekommt die 1920er Breite
+    app = open(os.path.join(raiz, "android", "app", "src", "main", "java", "com", "dirkvoss", "frameside", "tv", "MainActivity.java"), encoding="utf-8").read()
+    assert '" FramesideTablet"' in app and "istFernseher()" in app

@@ -121,6 +121,7 @@ public class MainActivity extends Activity {
 
     private void zeigeSeite(String server) {
         fehlerSichtbar = false;
+        AppUpdate.pruefen(this, null);                  // gibt es eine neuere App? (fuer den Eintrag im Menue)
         wurzel.removeAllViews();
         if (web == null) {
             web = new WebView(this);
@@ -133,7 +134,7 @@ public class MainActivity extends Activity {
             w.setCacheMode(WebSettings.LOAD_DEFAULT);
             w.setUseWideViewPort(true);                 // die Seite ist fuer 1920 x 1080 gebaut (meldet sich ueber den Benutzer-Agent "FramesideTV")
             w.setLoadWithOverviewMode(istFernseher());          // nur am Fernseher auf die Breite schrumpfen; am Tablet in normaler Groesse (wie Fully: Weitwinkel an, Uebersicht aus)
-            w.setUserAgentString(w.getUserAgentString() + " FramesideTV/" + version());
+            w.setUserAgentString(w.getUserAgentString() + " FramesideTV/" + version() + (istFernseher() ? "" : " FramesideTablet"));      // die Seite verkleinert sich nur am Fernseher auf 1920 Pixel
             web.addJavascriptInterface(new FullyBruecke(this), "fully");     // Akku, Helligkeit, Neustart fuer die Rahmen-Seite (wie die Fully-Schnittstelle)
             web.setWebChromeClient(new WebChromeClient());
             web.setWebViewClient(new WebViewClient() {
@@ -280,14 +281,18 @@ public class MainActivity extends Activity {
     }
 
     private void menue() {
-        final String[] punkte = {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)"};
-        new AlertDialog.Builder(this).setTitle("Frameside").setItems(punkte, (d, i) -> {
+        final boolean neu = !AppUpdate.neuere.isEmpty();
+        final String[] punkte = neu ? new String[] {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)", "Update auf " + AppUpdate.neuere + " installieren"}
+                : new String[] {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)"};
+        AppUpdate.pruefen(this, null);                                                // fuers naechste Mal
+        new AlertDialog.Builder(this).setTitle("Frameside " + AppUpdate.installiert(this)).setItems(punkte, (d, i) -> {
             if (i == 0 && !Server.gemerkt(this).isEmpty()) zeigeSeite(Server.gemerkt(this));
             else if (i == 1) { Server.merken(this, ""); zeigeSuche(); }
             else if (i == 2) adresseAbfragen();
             else if (i == 3) finish();
             else if (i == 4) autostartErlauben();
             else if (i == 5) LadegrenzeDialog.zeigen(this);
+            else if (i == 6) AppUpdate.starten(this, false);
         }).show();
     }
 

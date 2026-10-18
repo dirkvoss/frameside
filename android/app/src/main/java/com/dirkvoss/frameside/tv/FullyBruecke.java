@@ -67,4 +67,8 @@ class FullyBruecke {
 
     @JavascriptInterface
     public void restartApp() { a.neuStarten(); }
+
+    /** Befehl vom Handy ("App jetzt aktualisieren"): laedt die neue App und startet die Installation. */
+    @JavascriptInterface
+    public void updateApp() { a.runOnUiThread(() -> AppUpdate.starten(a, true)); }
 }

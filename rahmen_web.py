@@ -680,7 +680,7 @@ def logout(response: Response, _=Depends(csrf)):
 def konfig(ziel: str = ""):
     """Oeffentliche Darstellung der Installation (kein Geheimnis): Name, Beispiele fuer die Suche, Adresse der Fernseher-Seite. Mit ?ziel= gelten die Einstellungen dieses Geraets."""
     z = ziel if ziel in GERAETE else None
-    return {"name": APP_NAME, "version": VERSION, "profi": bool(EINST.get("profi")), "modus": MODUS, "auth": AUTH, "musik_upload": MUSIK_UPLOAD, "hochladen": bool(UPLOAD_KEY) or AUTH != "pin", "hochladen_mb": UPLOAD_MAX_MB, "konfiguriert": konfiguriert(), "tv_url": tv_url(), "beispiele": BEISPIELE, "beispiele_en": BEISPIELE_EN,
+    return {"name": APP_NAME, "version": VERSION, "profi": bool(EINST.get("profi")), "app_aktuell": APP_AKTUELL, "modus": MODUS, "auth": AUTH, "musik_upload": MUSIK_UPLOAD, "hochladen": bool(UPLOAD_KEY) or AUTH != "pin", "hochladen_mb": UPLOAD_MAX_MB, "konfiguriert": konfiguriert(), "tv_url": tv_url(), "beispiele": BEISPIELE, "beispiele_en": BEISPIELE_EN,
             "ziele": {k: v for k, v in TV_ZIELE.items() if k not in TV_VERSTECKT and k not in RAHMEN_ZIELE},
             "rahmen": list(RAHMEN_ZIELE), "rahmen_namen": dict(RAHMEN_ZIELE), "rahmen_sek": gwert(z, "sek", std_sek()), "rahmen_fuellung": gwert(z, "fuellung", std_fuellung_rahmen()), "tv_fuellung": gwert(z, "fuellung", std_fuellung_tv()),
             "rahmen_anzeige": gwert(z, "anzeige", std_anzeige()), "rahmen_layout": layout_fuer(z), "rahmen_bewegung": bool((GERAETE.get(z) or {}).get("bewegung")), "rahmen_paare": bool((GERAETE.get(z) or {}).get("paare")), "rahmen_nacht": rahmen_nacht(z), "rahmen_qualitaet": (GERAETE.get(z) or {}).get("qualitaet") or "", "rahmen_zusatz": zusatz_liste(z), "koppeln": True,
@@ -3531,11 +3531,11 @@ def geraet_zugang_widerrufen(z: str, _=Depends(anmeldung), __=Depends(csrf)):
 
 @app.post("/api/geraete/{z}/befehl")
 def geraet_befehl(z: str, daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
-    """Schickt einem Geraet (beim naechsten Abruf, meist binnen 2 s) einen Befehl: 'neuladen' (Seite neu laden) oder 'neustart' (Anzeige neu starten, mit Fully)."""
+    """Schickt einem Geraet (beim naechsten Abruf, meist binnen 2 s) einen Befehl: 'neuladen' (Seite neu laden), 'neustart' (Anzeige neu starten, mit Fully oder der App) oder 'appupdate' (die Android-App aktualisiert sich selbst)."""
     aktion = str((daten or {}).get("aktion", ""))
     if z not in TV_ZIELE:
         raise HTTPException(404, "Gerät nicht gefunden")
-    if aktion not in ("neuladen", "neustart"):
+    if aktion not in ("neuladen", "neustart", "appupdate"):
         raise HTTPException(400, "Unbekannter Befehl")
     TV[z]["befehl"] = aktion
     H.log.info("Befehl an %s: %s", z, aktion)
@@ -4576,7 +4576,7 @@ def steuer_senden(daten):
 
 LG_RE = re.compile(r"(an|aus|fehler|suche):\d{1,3}:\d{1,3}")
 APP_RE = re.compile(r"FramesideTV/(\d+(?:\.\d+){1,2})")
-APP_AKTUELL = "1.3.1"                      # neueste Version der Android-App (android/app/build.gradle, versionName); ein Test haelt beide gleich
+APP_AKTUELL = "1.4.1"                      # neueste Version der Android-App (android/app/build.gradle, versionName); ein Test haelt beide gleich
 ANZEIGE_HAENGT_SEK = 600                  # so lange darf das Bild im Dauerprogramm stehen, bevor der Tablet-Check "haengt" meldet
 NEUSTARTTEST_LUECKE = 25                   # Sekunden ohne Herzschlag, ab denen das Tablet als "aus" gilt
 NEUSTARTTEST_MAX = 900                     # nach so vielen Sekunden gilt der Neustart-Test als gescheitert

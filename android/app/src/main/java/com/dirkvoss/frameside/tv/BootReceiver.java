@@ -10,7 +10,8 @@ import android.provider.Settings;
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context c, Intent i) {
-        if (!Intent.ACTION_BOOT_COMPLETED.equals(i.getAction())) return;
+        String a = i.getAction();
+        if (!Intent.ACTION_BOOT_COMPLETED.equals(a) && !Intent.ACTION_MY_PACKAGE_REPLACED.equals(a)) return;      // auch nach einem Update der App wieder starten
         if (Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(c)) return;
         Intent start = new Intent(c, MainActivity.class);
         start.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -1,6 +1,13 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.35.0]
+### Neu
+- **Die Android-App aktualisiert sich selbst (App 1.4.0 und 1.4.1).** Gibt es eine neuere App, zeigt das Menü der App (langes Drücken aufs Bild) „Update auf … installieren“, und der Tablet-Check in Frameside bietet bei einer veralteten App den Knopf **„App jetzt aktualisieren“**. Das Tablet lädt die neue Datei von GitHub und startet die Installation; Android nimmt nur eine Datei an, die mit demselben Schlüssel signiert ist, und fragt einmal „Aktualisieren?“. Beim ersten Mal erlaubt man der App einmalig „Apps installieren“. Nach dem Update startet die App von selbst wieder. Ein Hinweisfenster mitten in der Diashow gibt es nicht. Die Version 1.3.x kann das noch nicht und muss einmal von Hand aktualisiert werden.
+- **Die Konfiguration des Servers nennt die aktuelle App-Version** (`app_aktuell`), danach fragt die App.
+### Behoben
+- **Android-App 1.4.1: Schrift und Symbole auf Tablets waren noch zu klein.** Die Rahmen-Seite verkleinerte sich für die Fernseher-App auf 1920 Pixel Breite, und diese Regel traf auch Tablets. Die App meldet jetzt, ob sie auf einem Tablet läuft; nur am Fernseher wird verkleinert.
+
 ## [2.34.1]
 ### Behoben
 - **Android-App 1.3.1: Schrift und Symbole auf Tablets waren zu klein.** Die App stellte die Seite im „Übersichtsmodus“ dar und verkleinerte sie damit auf einem Tablet; jetzt gilt der Übersichtsmodus nur noch am Fernseher, am Tablet ist die Darstellung wie in Fully.

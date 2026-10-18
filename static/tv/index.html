@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script src="/i18n.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>/* Frameside-TV-App (Android TV): der WebView meldet dort nur 960 x 540 CSS-Pixel; die Seite ist fuer 1920 x 1080 gebaut */
-if (/FramesideTV/.test(navigator.userAgent)) { var sk = Math.min(1, (screen.width || 960) / 1920); document.querySelector('meta[name=viewport]').setAttribute('content', 'width=1920, initial-scale=' + sk + ', minimum-scale=' + sk + ', maximum-scale=' + sk + ', user-scalable=no'); }</script>
+<script>/* Frameside-TV-App (Android TV): der WebView meldet dort nur 960 x 540 CSS-Pixel; die Seite ist fuer 1920 x 1080 gebaut. Die App auf einem Tablet meldet zusaetzlich "FramesideTablet": dort bleibt es bei der normalen Breite */
+if (/FramesideTV/.test(navigator.userAgent) && !/FramesideTablet/.test(navigator.userAgent)) { var sk = Math.min(1, (screen.width || 960) / 1920); document.querySelector('meta[name=viewport]').setAttribute('content', 'width=1920, initial-scale=' + sk + ', minimum-scale=' + sk + ', maximum-scale=' + sk + ', user-scalable=no'); }</script>
 <title>Frameside TV</title>
 <style>
 @font-face { font-family: "Cormorant Garamond"; font-weight: 600; src: url(/fonts/cormorant-600.woff2) format("woff2"); }
@@ -629,6 +629,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
   }
   // Befehl aus der App (Geraete -> Seite neu laden / Anzeige neu starten)
   function befehlAusfuehren(b) {
+    try { if (b === "appupdate") { if (window.fully && window.fully.updateApp) window.fully.updateApp(); return; } } catch (e) {}      // nur die Android-App ab 1.4.0 kann sich selbst aktualisieren
     try { if (b === "neustart" && window.fully && window.fully.restartApp) { window.fully.restartApp(); return; } } catch (e) {}
     location.reload();
   }

@@ -856,7 +856,9 @@
   "Wochenbericht": "Rapport hebdomadaire",
   "Bei WLAN-Ausfall zeigt das Tablet bis zu 150 schon gesehene Fotos weiter (HTTPS ist aktiv).": "En cas de panne du Wi-Fi, la tablette continue d'afficher jusqu'à 150 photos déjà vues (HTTPS est actif).",
   "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter.": "Sans HTTPS (https://), la tablette ne garde pas de réserve de photos : en cas de panne du Wi-Fi, le diaporama ne continue pas avec des photos en mémoire.",
-  "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "Si la tablette est en dehors de votre réseau domestique, saisissez cette adresse dans l'app :"
+  "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "Si la tablette est en dehors de votre réseau domestique, saisissez cette adresse dans l'app :",
+  "App jetzt aktualisieren": "Mettre à jour l'app maintenant",
+  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "Cette version de l'app ne peut pas encore se mettre à jour toute seule : mettez-la à jour à la main une fois, ensuite cela marche avec un bouton."
  },
  "muster": [
   [

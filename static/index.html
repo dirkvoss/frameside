@@ -2705,6 +2705,10 @@ const CHECK_TEXTE = {                                      // Texte zum Tablet-C
   neustarttest: { info: "Zum Schluss einmal neu starten: Die Diashow muss ohne Berührung und ohne Dialog kommen." }
 };
 let letzterCheck = [];
+function appKannUpdate(wert) {                              // ab App 1.4.0 gibt es die Selbst-Aktualisierung
+  const v = String(wert || "").split(":")[0].split(".").map(n => parseInt(n, 10) || 0);
+  return v[0] > 1 || (v[0] === 1 && v[1] >= 4);
+}
 function checkZeile(x, keinFire) {
   const t = keinFire && x.id === "sperrbildschirm" && x.status === "info" ? "Der Sperrbildschirm muss aus sein, sonst startet die Anzeige nach einem Neustart erst nach einem Wisch. Android: Einstellungen → Sicherheit → Bildschirmsperre → Keine." : (CHECK_TEXTE[x.id] || {})[x.status];
   if (!t) return null;
@@ -2726,7 +2730,12 @@ $("#gfCheck").addEventListener("click", async e => {
     for (const x of r.punkte.map(p => checkZeile(p, anderes)).filter(Boolean)) {
       const li = document.createElement("li"); li.style.margin = "4px 0";
       const sym = document.createElement("b"); sym.textContent = x.symbol + " "; if (x.farbe) sym.style.color = x.farbe;
-      li.append(sym, document.createTextNode(x.text)); liste.append(li);
+      li.append(sym, document.createTextNode(x.text));
+      if (x.id === "app" && x.status === "warnung") {
+        if (appKannUpdate(x.wert)) { const b = document.createElement("button"); b.type = "button"; b.className = "btn klein"; b.style.marginLeft = "8px"; b.textContent = RW_T("App jetzt aktualisieren"); b.addEventListener("click", () => { gfReparieren("appupdate"); }); li.append(b); }
+        else li.append(document.createTextNode(" " + RW_T("Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.")));
+      }
+      liste.append(li);
     }
   } catch (err) { liste.textContent = "✗ " + err.message; }
   e.currentTarget.disabled = false;

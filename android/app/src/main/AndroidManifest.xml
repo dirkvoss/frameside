@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Laeuft auf Android TV (Leanback) und auf Fire TV; Touchscreen ist nicht noetig -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
@@ -37,8 +38,12 @@
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Antwort des Paketinstallers beim Aktualisieren der App -->
+        <receiver android:name=".UpdateReceiver" android:exported="false" />
 
         <!-- Bildschirmschoner (Android TV: Einstellungen -> Geraeteeinstellungen -> Bildschirmschoner) -->
         <service

@@ -856,7 +856,9 @@
   "Wochenbericht": "Weekly report",
   "Bei WLAN-Ausfall zeigt das Tablet bis zu 150 schon gesehene Fotos weiter (HTTPS ist aktiv).": "If the Wi-Fi fails, the tablet keeps showing up to 150 photos it has already seen (HTTPS is active).",
   "Ohne HTTPS (https://) hält das Tablet keine Foto-Reserve vor: Bei WLAN-Ausfall läuft die Diashow nicht mit gespeicherten Fotos weiter.": "Without HTTPS (https://) the tablet keeps no photo reserve: if the Wi-Fi fails, the slideshow does not continue with stored photos.",
-  "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "If the tablet is outside your home network, enter this address in the app:"
+  "Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein:": "If the tablet is outside your home network, enter this address in the app:",
+  "App jetzt aktualisieren": "Update app now",
+  "Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.": "This app version cannot update itself yet: update it by hand once, after that it works with a button."
  },
  "muster": [
   [
