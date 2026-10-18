@@ -274,3 +274,32 @@ def test_app_waehlt_einen_einzelnen_entwicklungs_server_nicht_von_selbst():
     j = app.index("Server.merken(MainActivity.this, treffer.get(0).adresse)")
     assert i < j                                                                              # der Dev-Fall steht VOR der automatischen Wahl
     assert "zeigeSeite" not in app[i:j]                                                      # und verbindet nicht selbst
+
+
+def test_geraeteliste_zeigt_hinweise_ohne_netzzugriff(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24", RAHMEN_WEB_RAHMEN_ZIELE="rahmen=Bilderrahmen", RAHMEN_WEB_TV_ZIELE="lg=LG TV")
+    c = client()
+    liste = lambda: {g["id"]: g for g in c.get("/api/geraete").json()["geraete"]}
+    assert liste()["rahmen"]["check"] == {"status": "ok", "hinweise": []}                       # offline: die Liste zeigt es selbst
+    assert "check" not in liste()["lg"]                                                         # Fernseher haben keine Tablet-Hinweise
+    ua = {"User-Agent": "FramesideTV/1.0.0"}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3&fj=1&ak=60&pl=1", headers=ua)
+    assert liste()["rahmen"]["check"] == {"status": "warnung", "hinweise": ["app"]}               # App veraltet
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3&fj=1&ak=30&pl=0", headers={"User-Agent": "FramesideTV/" + w.APP_AKTUELL})
+    assert liste()["rahmen"]["check"]["status"] == "ok"                                         # 30 % ohne Strom ist mit Ladegrenze normal
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=3&fj=1&ak=10&pl=0&lg=fehler:20:80", headers={"User-Agent": "FramesideTV/" + w.APP_AKTUELL})
+    assert liste()["rahmen"]["check"] == {"status": "fehler", "hinweise": ["akku", "ladegrenze"]}
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&a=1&ra=" + str(w.ANZEIGE_HAENGT_SEK + 1) + "&fj=1&ak=80&pl=1", headers={"User-Agent": "FramesideTV/" + w.APP_AKTUELL})
+    assert liste()["rahmen"]["check"] == {"status": "warnung", "hinweise": ["anzeige"]}
+
+
+def test_alter_verlauf_wird_vergessen_gemerktes_bleibt(app_laden, monkeypatch, tmp_path):
+    import datetime
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    monkeypatch.setattr(w, "shows_datei", lambda: str(tmp_path / "shows.json"))
+    jetzt = datetime.datetime.now()
+    vor = lambda tage: (jetzt - datetime.timedelta(days=tage)).strftime("%Y-%m-%dT%H:%M")
+    d = {"shows": [{"id": "neu", "name": "Neu", "ids": [], "zeit": vor(1)}, {"id": "alt", "name": "Alt", "ids": [], "zeit": vor(w.VERLAUF_TAGE + 5)},
+                   {"id": "gemerkt", "name": "Gemerkt", "ids": [], "zeit": vor(400), "gemerkt": True}, {"id": "ohnezeit", "name": "?", "ids": []}]}
+    w.daten_schreiben(d)
+    assert [s["id"] for s in d["shows"]] == ["neu", "gemerkt", "ohnezeit"]

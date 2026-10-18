@@ -441,3 +441,49 @@ def test_tablet_art_gibt_voreinstellungen_beim_anlegen(app_laden):
         assert g.get("sek") == sek and g.get("termine_vorschau") == vorschau, name
         tablet.cookies.clear()
     assert w.GERAETE["opa"]["anzeige"] == ["datum", "zeit"]
+
+
+def test_eine_show_darf_bis_5000_fotos_haben(app_laden):
+    import uuid
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    assert w.MAX_IDS == 5000
+    ids = [str(uuid.uuid4()) for _ in range(5001)]
+    assert len(w.ids_pruefen(ids[:5000])) == 5000
+    import pytest
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as e:
+        w.ids_pruefen(ids)
+    assert e.value.status_code == 400 and "5000" in e.value.detail
+
+
+def test_sicherung_und_wiederherstellen_hin_und_zurueck(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    c = client(); H = {"X-Rahmen": "1"}
+    assert c.post("/api/verwaltung/geraete", json={"art": "rahmen", "name": "Flur", "sek": 12, "kalender_url": "https://k.example.org/a.ics", "kalender_user": "anna", "kalender_pw": "geheim"}, headers=H).status_code == 200
+    assert c.put("/api/einstellungen", json={"sek": 9, "alarm_min": 45, "profi": True}, headers=H).status_code == 200
+    ohne = c.get("/api/verwaltung/sicherung").json()                                              # ohne Zugangsdaten
+    assert ohne["frameside"] == 1 and ohne["mit_zugangsdaten"] is False
+    assert "kalender_pw" not in str(ohne) and "geheim" not in str(ohne) and ohne["einstellungen"]["sek"] == 9
+    mit = c.get("/api/verwaltung/sicherung?mit_zugangsdaten=1").json()
+    assert mit["geraete"][0]["kalender_pw"] == "geheim"
+    # alles verstellen, loeschen, dann einspielen
+    c.put("/api/einstellungen", json={"sek": 20, "alarm_min": 5}, headers=H)
+    c.put("/api/verwaltung/geraete/flur", json={"sek": 30}, headers=H)
+    vor = c.post("/api/verwaltung/wiederherstellen", json={"sicherung": mit, "anwenden": False}, headers=H).json()["vorschau"]
+    assert vor["geraete_vorhanden"] == ["Flur"] and vor["geraete_neu"] == [] and w.EINST["sek"] == 20          # Vorschau aendert nichts
+    r = c.post("/api/verwaltung/wiederherstellen", json={"sicherung": mit, "anwenden": True}, headers=H).json()
+    assert r["ok"] is True, r
+    assert w.EINST["sek"] == 9 and w.EINST["alarm_min"] == 45 and w.GERAETE["flur"]["sek"] == 12
+    # ein geloeschtes Geraet wird neu angelegt
+    c.delete("/api/verwaltung/geraete/flur", headers=H)
+    assert "flur" not in w.GERAETE
+    r = c.post("/api/verwaltung/wiederherstellen", json={"sicherung": ohne, "anwenden": True}, headers=H).json()
+    assert r["ok"] is True and w.GERAETE["flur"]["sek"] == 12 and "kalender_pw" not in w.GERAETE["flur"]
+
+
+def test_wiederherstellen_lehnt_fremde_dateien_ab(app_laden):
+    w, client, _ = app_laden(RAHMEN_WEB_LAN="192.168.1.0/24")
+    c = client(); H = {"X-Rahmen": "1"}
+    for muell in ({"sicherung": {"hallo": 1}}, {"sicherung": "text"}, {"sicherung": {"frameside": 2, "geraete": [], "einstellungen": {}}}):
+        assert c.post("/api/verwaltung/wiederherstellen", json=muell, headers=H).status_code == 400
+    assert client("203.0.113.9").get("/api/verwaltung/sicherung").status_code in (401, 403)           # nur angemeldet

@@ -225,6 +225,8 @@ main { padding: 12px 16px; max-width: 1100px; margin: 0 auto; }
 .geraet { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 8px 0; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 12px; }
 .geraet .punkt { width: 12px; height: 12px; border-radius: 50%; background: #6b7280; flex: none; }
 .geraet.online .punkt { background: #3ecf8e; }
+.geraet.hinweis-warnung .punkt { background: #e0b359; } .geraet.hinweis-fehler .punkt { background: #e5484d; }
+.geraet .hinweis { font-size: 13px; font-weight: 600; margin-top: 2px; } .hinweis-warnung .hinweis { color: #e0b359; } .hinweis-fehler .hinweis { color: #e5484d; }
 .geraet .name { font-weight: 600; }
 .geraet .zustand { font-size: 13px; color: var(--muted); }
 .geraet .art { font-size: 22px; }
@@ -656,37 +658,48 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
 <div id="einstDialog" class="tvdialog versteckt" role="dialog" aria-modal="true" aria-labelledby="einstTitel">
   <div class="tvkarte">
     <h2 id="einstTitel">Einstellungen</h2>
-    <div class="gf">
+    <div class="gt-leiste" id="eTabs" role="tablist">
+      <button type="button" class="gt-tab gt-aktiv" role="tab" data-gt="allg">Allgemein</button>
+      <button type="button" class="gt-tab" role="tab" data-gt="meld">Meldungen</button>
+      <button type="button" class="gt-tab" role="tab" data-gt="zug">Zugang</button>
+    </div>
+    <div class="gf gt-panel gt-aktiv" data-gt="allg">
       <label class="tvfeld"><span>Ansicht</span> <select id="eAnsicht" aria-label="Ansicht"><option value="standard">Standard</option><option value="profi">Profi</option></select></label>
       <p class="tipp">Standard zeigt nur den einfachen Weg mit der App. Profi zeigt zusätzlich Fully, ADB und die manuellen Wege.</p>
       <h3>Vorgaben für alle Rahmen</h3>
       <p class="tipp">Gelten, wenn bei einem Rahmen (⚙ unter „Geräte“) nichts anderes eingestellt ist.</p>
       <label class="tvfeld"><span>Sekunden pro Foto</span> <input id="eSek" type="number" min="3" max="120" inputmode="numeric" aria-label="Sekunden pro Foto"></label>
       <label class="tvfeld"><span>Hintergrund (Rahmen)</span> <select id="eFuellungR" aria-label="Hintergrund (Rahmen)"><option value="">Standard</option><option value="unscharf">Unscharf</option><option value="zuschnitt">Zuschnitt</option><option value="balken">Schwarze Balken</option></select></label>
-      <label class="tvfeld"><span>Hintergrund (Fernseher)</span> <select id="eFuellungT" aria-label="Hintergrund (Fernseher)"><option value="">Standard</option><option value="unscharf">Unscharf</option><option value="zuschnitt">Zuschnitt</option><option value="balken">Schwarze Balken</option></select></label>
+      <label class="tvfeld nur-profi"><span>Hintergrund (Fernseher)</span> <select id="eFuellungT" aria-label="Hintergrund (Fernseher)"><option value="">Standard</option><option value="unscharf">Unscharf</option><option value="zuschnitt">Zuschnitt</option><option value="balken">Schwarze Balken</option></select></label>
       <h3>Wetter und Termine (Standard)</h3>
       <p class="tipp">Gelten für Rahmen, die unter ⚙ keinen eigenen Ort bzw. Kalender-Link haben. Die Anordnung, den Wetter-Ort, den Kalender-Link und die Handys stellst du für jeden Rahmen einzeln unter ⚙ ein. Für das Wetter wird nur der Ortsname an open-meteo.com geschickt.</p>
       <div class="tvfeld"><span>Ort</span> <span id="eOrtName" style="flex:1;text-align:right"></span> <button class="btn klein versteckt" id="eOrtWeg" type="button">Entfernen</button></div>
       <label class="tvfeld"><span>Ort suchen</span> <input id="eOrtSuche" type="text" autocomplete="off" aria-label="Ort suchen" placeholder="Berlin"></label>
       <div id="eOrtTreffer"></div>
-      <label class="tvfeld stapel"><span>Kalender-Link (iCal)</span> <input id="eKal" type="text" autocomplete="off" aria-label="Kalender-Link" placeholder="https://…"></label>
-      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eWetterTest" type="button">Wetter testen</button><button class="btn klein" id="eKalTest" type="button">Kalender testen</button><button class="btn klein gefahr versteckt" id="eKalWeg" type="button">Kalender-Link entfernen</button></div>
+      <label class="tvfeld stapel nur-profi"><span>Kalender-Link (iCal)</span> <input id="eKal" type="text" autocomplete="off" aria-label="Kalender-Link" placeholder="https://…"></label>
+      <div class="tvknoepfe nur-profi" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eWetterTest" type="button">Wetter testen</button><button class="btn klein" id="eKalTest" type="button">Kalender testen</button><button class="btn klein gefahr versteckt" id="eKalWeg" type="button">Kalender-Link entfernen</button></div>
       <h3>Kalender von Handys</h3>
       <p class="tipp">In der iPhone-App unter „App-Einstellungen“ → „Meine Termine auf dem Rahmen zeigen“ gibt jede Person ihre Termine frei. Hier siehst du, wer das tut, und kannst ein Handy entfernen. Auf welchem Rahmen die Termine eines Handys erscheinen, legst du beim Rahmen unter ⚙ fest (neue Handys erscheinen zunächst auf keinem).</p>
       <div id="eTelefone"></div>
-      <h3>Benachrichtigungen aufs Handy (Pushover)</h3>
-      <p class="tipp">Warnt zum Beispiel, wenn ein Rahmen offline ist oder der Akku fast leer ist. Den Zugang gibt es unter pushover.net.</p>
-      <label class="tvfeld"><span>User-Key</span> <input id="ePoUser" type="password" autocomplete="off" aria-label="User-Key"></label>
-      <label class="tvfeld"><span>App-Token</span> <input id="ePoToken" type="password" autocomplete="off" aria-label="App-Token"></label>
-      <label class="tvfeld"><span>Alarm, wenn ein Rahmen so viele Minuten offline ist (0 = aus)</span> <input id="eAlarm" type="number" min="0" max="1440" inputmode="numeric" aria-label="Minuten bis zum Alarm"></label>
-      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="ePoTest" type="button">Test-Nachricht senden</button><button class="btn klein gefahr versteckt" id="ePoWeg" type="button">Zugang entfernen</button></div>
-      <p class="tipp"><b>Diese Meldungen sende ich dir:</b> (zusätzlich zu den Meldungen über nicht erreichbare Rahmen)</p>
-      <div id="eMeldungen"></div>
-      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eMonatTest" type="button">Monatsbrief (Vormonat) jetzt senden</button></div>
+      <div class="nur-profi">
       <h3>Spitznamen für Personen</h3>
       <p class="tipp">Damit die Suche „Oma“ versteht, obwohl die Person in Immich anders heißt.</p>
       <div id="eAliase"></div>
       <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eAliasNeu" type="button">＋ Spitzname</button></div>
+      </div>
+    </div>
+    <div class="gf gt-panel" data-gt="meld">
+      <h3>Benachrichtigungen aufs Handy (Pushover)</h3>
+      <p class="tipp">Warnt zum Beispiel, wenn ein Rahmen offline ist oder der Akku fast leer ist. Den Zugang gibt es unter pushover.net.</p>
+      <label class="tvfeld"><span>User-Key</span> <input id="ePoUser" type="password" autocomplete="off" aria-label="User-Key"></label>
+      <label class="tvfeld"><span>App-Token</span> <input id="ePoToken" type="password" autocomplete="off" aria-label="App-Token"></label>
+      <label class="tvfeld nur-profi"><span>Alarm, wenn ein Rahmen so viele Minuten offline ist (0 = aus)</span> <input id="eAlarm" type="number" min="0" max="1440" inputmode="numeric" aria-label="Minuten bis zum Alarm"></label>
+      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="ePoTest" type="button">Test-Nachricht senden</button><button class="btn klein gefahr versteckt" id="ePoWeg" type="button">Zugang entfernen</button></div>
+      <p class="tipp"><b>Diese Meldungen sende ich dir:</b> (zusätzlich zu den Meldungen über nicht erreichbare Rahmen)</p>
+      <div id="eMeldungen"></div>
+      <div class="tvknoepfe nur-profi" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eMonatTest" type="button">Monatsbrief (Vormonat) jetzt senden</button></div>
+    </div>
+    <div class="gf gt-panel" data-gt="zug">
       <div id="ePinBlock">
       <h3>Zugang (PIN)</h3>
       <p class="tipp">Hier änderst du die gemeinsame PIN. Im Heimnetz brauchst du die bisherige PIN nicht, zum Beispiel wenn du sie vergessen hast.</p>
@@ -699,9 +712,17 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       <p class="tipp">In der App „Frameside“ den QR-Code scannen – sie trägt die Adresse dieses Servers selbst ein.</p>
       <div id="eAppQr" style="width:180px;max-width:60%;margin:6px auto;background:#fff;padding:10px;border-radius:12px"></div>
       <p class="tipp" id="eAppAdresse" style="text-align:center"></p>
+      <h3>Sicherung</h3>
+      <p class="tipp">Speichert Einstellungen, Geräte und gemerkte Shows in einer Datei. Damit stellst du alles nach einer Neuinstallation oder einem Umzug wieder her.</p>
+      <label class="tvfeld"><span>Zugangsdaten einschließen (Passwörter, Kalender-Links, Pushover)</span> <input type="checkbox" id="eSichGeheim" style="flex:none"></label>
+      <p class="tipp">Die Datei enthält dann Geheimnisse: gut aufbewahren, nicht weitergeben.</p>
+      <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="eSichLaden" type="button">Sicherung laden</button> <button class="btn klein" id="eSichWahl" type="button">Aus Sicherung wiederherstellen …</button><input type="file" id="eSichDatei" accept="application/json,.json" class="versteckt"></div>
+      <p class="tipp versteckt" id="eSichErg" role="status"></p>
+      <div class="nur-profi">
       <h3>Adresse der Fernseher-Seite</h3>
       <label class="tvfeld"><span>Adresse</span> <input id="eTvUrl" type="text" autocomplete="off" aria-label="Adresse der Fernseher-Seite" placeholder="tv.example.com"></label>
       <p class="tipp">Wird für die Anleitungen und QR-Codes beim Verbinden von Geräten genutzt.</p>
+      </div>
     </div>
     <div class="tvknoepfe"><button class="btn" id="einstAbbrechen" type="button">Schließen</button><button class="btn primaer" id="einstSpeichern" type="button">Speichern</button></div>
   </div>
@@ -1112,7 +1133,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
 "use strict";
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const MAX_AUSWAHL = 1000, EMPFEHLUNG = 300;
+const MAX_AUSWAHL = 5000, EMPFEHLUNG = 1000;
 
 // ---------------------------------------------------------------- Zustand
 const auswahl = new Map();          // id -> {tag, fav}
@@ -1605,7 +1626,7 @@ function sortiere(fotos) { const l = fotos.slice(); if (l.every(f => f.tag)) l.s
 async function tvOeffnen(fotos, name) {
   fotos = fotos || [...auswahl].map(([id, v]) => ({ id, tag: v.tag, v: v.v }));
   if (!fotos.length) return;
-  if (fotos.length > 1000) { toast("Höchstens 1000 Fotos pro Show.", true); return; }
+  if (fotos.length > MAX_AUSWAHL) { toast(`Höchstens ${MAX_AUSWAHL} Fotos pro Show.`, true); return; }
   tv.quelle = { fotos: sortiere(fotos), name: (name || $("#showName").value.trim() || "Auswahl").slice(0, 60) };
   const n = fotos.length;
   const nv = fotos.filter(f => f.v).length;
@@ -1945,6 +1966,7 @@ function vorZeit(sek) {
   if (sek == null) return "";
   return sek < 90 ? RW_T("gerade eben") : sek < 5400 ? RW_T("vor {n} min").replace("{n}", Math.round(sek / 60)) : RW_T("vor {n} h").replace("{n}", Math.round(sek / 3600));
 }
+const HINWEIS_KURZ = { anzeige: "Bild wechselt nicht mehr", app: "App veraltet", akku: "Akku niedrig, lädt nicht", ladegrenze: "Ladegrenze meldet einen Fehler" };
 async function geraeteLaden() {
   try {
     const d = await api("geraete"), box = $("#geraeteListe"); box.innerHTML = "";
@@ -1957,7 +1979,13 @@ async function geraeteLaden() {
       z.textContent = !g.online ? RW_T("offline") + (g.zuletzt_vor_s != null ? " · " + RW_T("zuletzt") + " " + vorZeit(g.zuletzt_vor_s) : "")
         : g.spielt ? "▶ " + g.spielt : g.dauerprogramm ? RW_T("Dauerprogramm") + (g.bild_alter_s != null ? " · " + RW_T("Bild seit") + " " + g.bild_alter_s + " s" : "") : RW_T("bereit");
       if (g.akku != null) z.textContent += " · 🔋 " + g.akku + " %" + (g.laedt ? " ⚡" : "");
-      mitte.append(n, z); const punkt = document.createElement("span"); punkt.className = "punkt";
+      mitte.append(n, z);
+      if (g.check && g.check.status !== "ok") {                                  // Ampel: was dem Geraet fehlt, ohne dass man "Tablet pruefen" druecken muss
+        zeile.classList.add("hinweis-" + g.check.status);
+        const h = document.createElement("div"); h.className = "hinweis";
+        h.textContent = (g.check.status === "fehler" ? "✗ " : "⚠ ") + g.check.hinweise.map(k => RW_T(HINWEIS_KURZ[k] || k)).join(" · "); mitte.append(h);
+      }
+      const punkt = document.createElement("span"); punkt.className = "punkt";
       zeile.append(punkt, ik, mitte);
       if (g.fully) {
         const an = g.bildschirm !== "aus", b = document.createElement("button"); b.type = "button"; b.className = "btn klein";
@@ -2031,6 +2059,12 @@ function quellenSchreiben(box) {
   }
   return teile.join(", ");
 }
+function etWaehlen(t) {                                    // Reiter in den allgemeinen Einstellungen
+  for (const b of document.querySelectorAll("#eTabs .gt-tab")) { const a = b.dataset.gt === t; b.classList.toggle("gt-aktiv", a); b.setAttribute("aria-selected", a ? "true" : "false"); }
+  for (const p of document.querySelectorAll("#einstDialog .gt-panel")) p.classList.toggle("gt-aktiv", p.dataset.gt === t);
+  const k = document.querySelector("#einstDialog .tvkarte"); if (k) k.scrollTop = 0;
+}
+for (const b of document.querySelectorAll("#eTabs .gt-tab")) b.addEventListener("click", () => etWaehlen(b.dataset.gt));
 function gtWaehlen(t) {                                    // Reiter im Gerätedialog umschalten
   for (const b of document.querySelectorAll("#gfTabs .gt-tab")) { const a = b.dataset.gt === t; b.classList.toggle("gt-aktiv", a); b.setAttribute("aria-selected", a ? "true" : "false"); }
   for (const p of document.querySelectorAll("#geraetDialog .gt-panel")) p.classList.toggle("gt-aktiv", p.dataset.gt === t);
@@ -2399,7 +2433,7 @@ function appQrZeigen() {                                    // QR mit der Adress
 async function einstOeffnen() {
   $("#konto").open = false;
   try { einstFuellen(await api("einstellungen")); } catch (e) { fehler(e); return; }
-  appQrZeigen(); $("#einstDialog").classList.remove("versteckt"); telefoneLaden();
+  appQrZeigen(); etWaehlen("allg"); $("#einstDialog").classList.remove("versteckt"); telefoneLaden();
 }
 function einstSammeln() {
   const k = { sek: $("#eSek").value, fuellung_rahmen: $("#eFuellungR").value, fuellung_tv: $("#eFuellungT").value, tv_url: $("#eTvUrl").value.trim(), alarm_min: $("#eAlarm").value, profi: $("#eAnsicht").value === "profi",
@@ -2413,6 +2447,28 @@ async function einstSpeichern(still) {
   const r = await api("einstellungen", { method: "PUT", body: JSON.stringify(einstSammeln()) });
   einstFuellen(r.einstellungen); if (!still) toast(RW_T("Gespeichert.")); return r;
 }
+$("#eSichLaden").addEventListener("click", async () => {
+  try {
+    const r = await fetch("/api/verwaltung/sicherung?mit_zugangsdaten=" + ($("#eSichGeheim").checked ? 1 : 0), { credentials: "same-origin" });
+    if (!r.ok) throw new Error("Fehler " + r.status);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "frameside-sicherung-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".json"; a.click();
+  } catch (e) { fehler(e); }
+});
+$("#eSichWahl").addEventListener("click", () => $("#eSichDatei").click());
+$("#eSichDatei").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const erg = $("#eSichErg"); erg.classList.remove("versteckt"); erg.style.color = "";
+  try {
+    const sich = JSON.parse(await f.text());
+    const v = (await api("verwaltung/wiederherstellen", { method: "POST", body: JSON.stringify({ sicherung: sich, anwenden: false }) })).vorschau;
+    const liste = a => a.length ? a.join(", ") : "–";
+    if (!confirm(RW_T("Aus der Sicherung wiederherstellen?") + "\n\n" + RW_T("Neue Geräte") + ": " + liste(v.geraete_neu) + "\n" + RW_T("Vorhandene Geräte (werden überschrieben)") + ": " + liste(v.geraete_vorhanden) + "\n" + RW_T("Gemerkte Shows") + ": " + v.shows)) { erg.classList.add("versteckt"); return; }
+    erg.textContent = RW_T("Stelle wieder her …");
+    const r = await api("verwaltung/wiederherstellen", { method: "POST", body: JSON.stringify({ sicherung: sich, anwenden: true }) });
+    erg.textContent = r.ok ? "✓ " + RW_T("Wiederhergestellt.") : "⚠ " + RW_T("Nicht alles ging:") + " " + (r.fehler || []).join("; "); erg.style.color = r.ok ? "var(--ok, #3ecf8e)" : "var(--warn, #e6b450)";
+    await konfigLaden(); einstOeffnen();
+  } catch (err) { erg.textContent = "✗ " + (err.message === "Unexpected end of JSON input" || err instanceof SyntaxError ? RW_T("Das ist keine Frameside-Sicherung") : err.message); erg.style.color = "var(--danger, #f87171)"; }
+});
 $("#einstBtn").addEventListener("click", einstOeffnen);
 if (/ShowcaseApp\//.test(navigator.userAgent) && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.showcase) {      // in der iPhone-App: Zugang zu den App-Einstellungen
   $("#appEinstBtn").classList.remove("versteckt");
@@ -2765,7 +2821,8 @@ $("#gfCheck").addEventListener("click", async e => {
     liste.textContent = ""; letzterCheck = r.punkte;
     const fire = r.punkte.some(x => x.id === "geraet" && x.wert === "Fire-Tablet"), anderes = r.punkte.some(x => x.id === "geraet" && x.wert !== "Fire-Tablet");
     $("#gfReparatur").classList.toggle("versteckt", !r.punkte.some(x => x.status === "warnung" || x.status === "fehler"));
-    for (const x of r.punkte.map(p => checkZeile(p, anderes)).filter(Boolean)) {
+    const zeilen = r.punkte.map(p => checkZeile(p, anderes)).filter(Boolean);
+    const bau = x => {
       const li = document.createElement("li"); li.style.margin = "4px 0";
       const sym = document.createElement("b"); sym.textContent = x.symbol + " "; if (x.farbe) sym.style.color = x.farbe;
       li.append(sym, document.createTextNode(x.text));
@@ -2773,7 +2830,18 @@ $("#gfCheck").addEventListener("click", async e => {
         if (appKannUpdate(x.wert)) { const b = document.createElement("button"); b.type = "button"; b.className = "btn klein"; b.style.marginLeft = "8px"; b.textContent = RW_T("App jetzt aktualisieren"); b.addEventListener("click", () => { gfReparieren("appupdate"); }); li.append(b); }
         else li.append(document.createTextNode(" " + RW_T("Diese App-Version kann sich noch nicht selbst aktualisieren: einmal von Hand aktualisieren, danach geht es mit einem Knopf.")));
       }
-      liste.append(li);
+      return li;
+    };
+    const schlecht = x => x.status === "warnung" || x.status === "fehler", probleme = zeilen.filter(schlecht), rest = zeilen.filter(x => !schlecht(x));
+    const kopf = document.createElement("li"); kopf.style.cssText = "font-weight:600;margin:6px 0";           // eine Zeile zuerst: alles gut oder wie viele Hinweise
+    const ks = document.createElement("b"), schlimm = probleme.some(x => x.status === "fehler");
+    ks.textContent = (probleme.length ? (schlimm ? "✗ " : "⚠ ") : "✓ "); ks.style.color = probleme.length ? (schlimm ? "var(--danger, #f87171)" : "var(--warn, #e6b450)") : "var(--ok, #3ecf8e)";
+    kopf.append(ks, document.createTextNode(probleme.length ? probleme.length + " " + RW_T(probleme.length === 1 ? "Hinweis" : "Hinweise") : RW_T("Alles in Ordnung."))); liste.append(kopf);
+    for (const x of probleme) liste.append(bau(x));                                                           // Hinweise bleiben sichtbar
+    if (rest.length) {                                                                                         // der Rest (alles in Ordnung, Infos) klappt auf
+      const li = document.createElement("li"), det = document.createElement("details"), sm = document.createElement("summary"), ul = document.createElement("ul");
+      sm.textContent = RW_T("Alle Einzelheiten") + " (" + rest.length + ")"; sm.style.cursor = "pointer"; ul.style.cssText = "list-style:none;padding-left:0";
+      for (const x of rest) ul.append(bau(x)); det.append(sm, ul); li.append(det); liste.append(li);
     }
   } catch (err) { liste.textContent = "✗ " + err.message; }
   e.currentTarget.disabled = false;

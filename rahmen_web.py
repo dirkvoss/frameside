@@ -133,7 +133,7 @@ COOKIE_TAGE = 90
 FEHLVERSUCHE = 5
 SPERRE_SEK = 15 * 60
 GLOBAL_ALARM = 20          # Fehlversuche pro Stunde (alle IPs) -> Pushover
-MAX_IDS = 1000
+MAX_IDS = 5000                                                                # Fotos je Show (Server und Oberflaeche; die Liste liegt in shows.json, ca. 40 Byte je Foto)
 ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 AUTH_LOCK = threading.Lock()
@@ -1310,6 +1310,7 @@ def fokus_aus_gesichtern(gesichter):
 # --------------------------------------------------------------------------- Shows / Verlauf / Zurueck
 
 VERLAUF_MAX = 25      # nicht gemerkte Eintraege ("Zuletzt gezeigt")
+VERLAUF_TAGE = 30     # ... und aelter als so viele Tage werden vergessen (gemerkte bleiben)
 GEMERKT_MAX = 50
 
 
@@ -1327,6 +1328,13 @@ def daten_lesen():
     return d
 
 
+def _verlauf_zu_alt(s):
+    try:
+        return (datetime.datetime.now() - datetime.datetime.strptime(str(s.get("zeit"))[:16], "%Y-%m-%dT%H:%M")).days >= VERLAUF_TAGE
+    except (ValueError, TypeError):
+        return False                                                          # ohne lesbare Zeit lieber behalten
+
+
 def daten_schreiben(d):
     gem = ver = 0
     behalten = []
@@ -1337,7 +1345,7 @@ def daten_schreiben(d):
                 behalten.append(s)
         else:
             ver += 1
-            if ver <= VERLAUF_MAX:
+            if ver <= VERLAUF_MAX and not _verlauf_zu_alt(s):
                 behalten.append(s)
     d["shows"] = behalten
     schreibe_json(shows_datei(), d)
@@ -3212,6 +3220,23 @@ def fully_wache_starten():
     threading.Thread(target=fully_wache_schleife, daemon=True).start()
 
 
+def geraet_hinweise(z):
+    """Kurzer Zustand fuer die Geraeteliste, nur aus dem, was das Geraet selbst meldet (kein Netzzugriff): ('ok'|'warnung'|'fehler', [Kennungen der Hinweise])."""
+    t, st = TV.get(z) or {}, FULLY_STATE.get(z) or {}
+    if time.time() - t.get("hb", 0) >= 10:
+        return "ok", []                                                       # offline zeigt die Liste schon selbst
+    hinweise, schlimm = [], False
+    if t.get("ambient") and (t.get("bild_alter") or 0) > ANZEIGE_HAENGT_SEK:
+        hinweise.append("anzeige")
+    if t.get("app") and app_version_ordnung(t["app"]) is not None and app_version_ordnung(t["app"]) < app_version_ordnung(APP_AKTUELL):
+        hinweise.append("app")
+    if st.get("akku") is not None and st["akku"] <= FULLY_AKKU_MIN and not st.get("laedt"):     # wie die Pushover-Warnung (bei einer Ladegrenze ist 30 % ohne Strom normal)
+        hinweise.append("akku"); schlimm = True
+    if str(t.get("lg") or "").startswith("fehler"):
+        hinweise.append("ladegrenze"); schlimm = True
+    return ("fehler" if schlimm else "warnung" if hinweise else "ok"), hinweise
+
+
 def geraete_liste():
     jetzt = time.time()
     liste = []
@@ -3228,6 +3253,9 @@ def geraete_liste():
                       "zuletzt_vor_s": int(jetzt - d["hb"]) if d["hb"] else None, "spielt": spielt, "dauerprogramm": dauer,
                       "bild_alter_s": d.get("bild_alter") if online else None,
                       "fully": z in FULLY and not meldet_selbst(z), "selbst": meldet_selbst(z), "bildschirm": st.get("bildschirm"), "akku": st.get("akku"), "laedt": st.get("laedt")})
+        if z in RAHMEN_ZIELE:
+            s, h = geraet_hinweise(z)
+            liste[-1]["check"] = {"status": s, "hinweise": h}
     return liste
 
 
@@ -3827,6 +3855,87 @@ def ladeverlauf_lesen(z: str, _=Depends(anmeldung)):
     if z not in GERAETE:
         raise HTTPException(404, "Gerät nicht gefunden")
     return {"verlauf": list(reversed(LADEVERLAUF.get(z, [])))[:20], "akku": (FULLY_STATE.get(z) or {}).get("akku"), "laedt": (FULLY_STATE.get(z) or {}).get("laedt")}
+
+
+# --------------------------------------------------------------------------- Sicherung und Wiederherstellen (Einstellungen, Geraete, gemerkte Shows)
+SICHERUNG_EINST = ("sek", "fuellung_rahmen", "fuellung_tv", "anzeige", "layout", "alarm_min", "tv_url", "wetter", "aliase", "meldungen", "profi")
+SICHERUNG_EINST_GEHEIM = ("kalender_url", "pushover")
+SICHERUNG_GERAET_GEHEIM = ("kalender_url", "kalender_user", "kalender_pw", "fully_pw", "fully_ad_pw")
+SICHERUNG_MAX_BYTES = 3_000_000
+
+
+def sicherung_erstellen(mit_geheimnissen=False):
+    """Einstellungen, Geraete und gemerkte Shows als ein JSON. Zugangsdaten (Passwoerter, Kalender-Links, Pushover) nur auf ausdruecklichen Wunsch."""
+    einst = {k: EINST[k] for k in SICHERUNG_EINST if k in EINST}
+    if mit_geheimnissen:
+        einst.update({k: EINST[k] for k in SICHERUNG_EINST_GEHEIM if k in EINST})
+    geraete = []
+    with GERAETE_LOCK:
+        for z, e in GERAETE.items():
+            g = {"id": z, **{k: v for k, v in e.items() if mit_geheimnissen or k not in SICHERUNG_GERAET_GEHEIM}}
+            geraete.append(g)
+    with H.LOCK:
+        shows = [s for s in daten_lesen()["shows"] if s.get("gemerkt")]
+    return {"frameside": 1, "version": VERSION, "zeit": jetzt(), "mit_zugangsdaten": bool(mit_geheimnissen), "einstellungen": einst, "geraete": geraete, "shows": shows}
+
+
+def sicherung_pruefen(daten):
+    if not isinstance(daten, dict) or daten.get("frameside") != 1 or not isinstance(daten.get("geraete"), list) or not isinstance(daten.get("einstellungen"), dict):
+        raise HTTPException(400, "Das ist keine Frameside-Sicherung")
+    if len(json.dumps(daten)) > SICHERUNG_MAX_BYTES:
+        raise HTTPException(400, "Die Sicherung ist zu groß")
+    return daten
+
+
+@app.get("/api/verwaltung/sicherung")
+def sicherung_laden(mit_zugangsdaten: int = 0, _=Depends(anmeldung)):
+    return Response(json.dumps(sicherung_erstellen(bool(mit_zugangsdaten)), ensure_ascii=False, indent=1), media_type="application/json",
+                    headers={"Content-Disposition": f'attachment; filename="frameside-sicherung-{datetime.date.today():%Y%m%d}.json"', "Cache-Control": "no-store"})
+
+
+@app.post("/api/verwaltung/wiederherstellen")
+def sicherung_einspielen(daten: dict, _=Depends(anmeldung), __=Depends(csrf)):
+    """Mit "anwenden": false nur zeigen, was die Sicherung enthaelt; sonst einspielen. Alles laeuft durch dieselben Pruefungen wie die normalen Dialoge."""
+    sich = sicherung_pruefen(daten.get("sicherung"))
+    anwenden = daten.get("anwenden") is True
+    neue, vorhandene = [], []
+    for g in sich["geraete"]:
+        if not isinstance(g, dict) or g.get("art") not in ("rahmen", "tv"):
+            continue
+        (vorhandene if str(g.get("id")) in GERAETE else neue).append(g)
+    shows = [s for s in sich.get("shows", []) if isinstance(s, dict) and re.fullmatch(r"[0-9a-f]{12}", str(s.get("id", "")))]
+    vorschau = {"geraete_neu": [g.get("name", "?") for g in neue], "geraete_vorhanden": [g.get("name", "?") for g in vorhandene], "shows": len(shows),
+                "einstellungen": len(sich["einstellungen"]), "mit_zugangsdaten": bool(sich.get("mit_zugangsdaten"))}
+    if not anwenden:
+        return {"ok": True, "vorschau": vorschau}
+    fehler = []
+    try:
+        einstellungen_aendern({k: v for k, v in sich["einstellungen"].items() if k in SICHERUNG_EINST + SICHERUNG_EINST_GEHEIM}, None, None)
+    except HTTPException as e:
+        fehler.append(f"Einstellungen: {e.detail}")
+    felder = lambda g: {k: v for k, v in g.items() if k not in ("id", "art")}
+    for g in vorhandene:
+        try:
+            geraet_aendern(str(g["id"]), {**felder(g), "art": g["art"]}, None, None)
+        except HTTPException as e:
+            fehler.append(f"{g.get('name', g.get('id'))}: {e.detail}")
+    for g in neue:
+        try:
+            geraet_anlegen({**felder(g), "art": g["art"]}, None, None)
+        except HTTPException as e:
+            fehler.append(f"{g.get('name', '?')}: {e.detail}")
+    if shows:
+        with H.LOCK:
+            d = daten_lesen()
+            vorh = {s["id"] for s in d["shows"]}
+            for s in shows:
+                if s["id"] not in vorh and isinstance(s.get("ids"), list) and isinstance(s.get("name"), str):
+                    try:
+                        d["shows"].append({"id": s["id"], "name": name_pruefen(s["name"]), "ids": ids_pruefen(s["ids"]), "zeit": str(s.get("zeit") or jetzt())[:16], "gemerkt": True})
+                    except HTTPException:
+                        fehler.append(f"Show „{str(s.get('name'))[:30]}“ übersprungen")
+            daten_schreiben(d)
+    return {"ok": not fehler, "vorschau": vorschau, "fehler": fehler}
 
 
 @app.post("/api/verwaltung/neustarttest")

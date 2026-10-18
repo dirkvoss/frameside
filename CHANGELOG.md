@@ -1,6 +1,16 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.37.0]
+### Neu
+- **Ampel in der Geräteliste:** Hat ein Rahmen ein Problem, steht es direkt in der Liste unter „Geräte“, ohne dass du „Tablet prüfen“ drücken musst: ein farbiger Punkt und ein Satz („⚠ App veraltet“, „✗ Akku niedrig, lädt nicht“, „Bild wechselt nicht mehr“, „Ladegrenze meldet einen Fehler“). Der Server wertet nur aus, was das Gerät selbst meldet. Bei einer Ladegrenze zählen 30 % ohne Strom als normal; gewarnt wird wie bei der Pushover-Meldung bei 15 %.
+- **Sicherung und Wiederherstellen** (Einstellungen → Zugang → Sicherung): Eine Datei mit den Einstellungen, allen Geräten und den gemerkten Shows. Passwörter, Kalender-Links und Pushover kommen nur mit, wenn du es ausdrücklich ankreuzt. Beim Wiederherstellen zeigt Frameside zuerst, was die Datei enthält (neue und vorhandene Geräte, Shows), und fragt nach; alles läuft durch dieselben Prüfungen wie die normalen Dialoge.
+### Geändert
+- **Der Tablet-Check beginnt mit einer Zeile:** „✓ Alles in Ordnung“ oder „⚠ 2 Hinweise“. Die Hinweise bleiben sichtbar, der Rest (alles in Ordnung, Infos) klappt unter „Alle Einzelheiten“ auf.
+- **Die allgemeinen Einstellungen sind in drei Reiter geordnet** (Allgemein, Meldungen, Zugang) und haben wie der Gerätedialog einen klaren Standard und eine Profi-Ansicht. Im Standard bleiben Ansicht, Sekunden und Hintergrund, Wetter-Ort, Handy-Kalender, Pushover mit Meldungen, PIN und iPhone-App; in die Profi-Ansicht wanderten Hintergrund für Fernseher, der allgemeine Kalender-Link, Wetter testen, Spitznamen, die Alarm-Minuten, der Monatsbrief-Test und die Adresse der Fernseher-Seite.
+- **Eine Show darf jetzt bis zu 5000 Fotos haben** (vorher 1000). Der Hinweis „sehr viele“ erscheint erst ab 1000 ausgewählten Fotos. Für den Fernseher-Weg und AirPlay-Videos gelten weiter die eigenen, kleineren Grenzen. Für sehr große Mengen bleibt das Dauerprogramm mit Quellen die bessere Wahl, denn dort gibt es keine Obergrenze.
+- **Alte Einträge im Verlauf „Zuletzt gezeigt“ verschwinden nach 30 Tagen** (gemerkte Shows bleiben).
+
 ## [2.36.1]
 ### Geändert
 - **Standard und Profi unterscheiden sich im Gerätedialog jetzt deutlich** (im Standard etwa 57 sichtbare Bedienelemente statt 133 in der Profi-Ansicht). Im Standard bleibt, was eine normale Person einstellt: Name, Hintergrund, Sekunden und Zoom; bei der Anzeige je Element nur Haken und Lage; das Dauerprogramm, Erinnerungen und die Nachtruhe-Zeiten; der Tablet-Check; Notiz, Gruß und Einfacher Zugang. In die Profi-Ansicht gewandert sind: Hochkant-Paare, bei jedem Anzeige-Element Größe, Farbe, Schrift und Zusatzoptionen, „Anordnung übernehmen“, die Vorschau-Tage, der Kalender-Link, Zeitplan, Favoriten, Geburtstagsfotos, Nachtruhe nach Sonnenstand, „Fest mit Gästefotos“ und „Wartung“.
