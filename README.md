@@ -10,6 +10,11 @@ Search in plain sentences ("Grandma and Anna, Christmas 2019, on the beach"), ta
 - 📺 **TVs without an app:** any TV with a web browser works; picture frames run in a plain tablet browser.
 - 🔌 **Devices pair themselves:** open the address on the TV, it appears in the app, give it a name. No codes, no config files – everything is set up in the interface.
 - 👨‍👩‍👧 **Made for families:** shared PIN or each person's own Immich account, notes and greetings with a photo, guest uploads by QR code for parties, appointments from the phone calendar.
+- 🪄 **A tablet frame in five minutes:** a free Android/Fire app that updates itself, plus a **tablet check** that tells you in plain words what is still missing (autostart, lock screen, battery, stuck picture) and a guided restart test.
+- 🔋 **Battery care built in:** the app keeps a tablet on its charger between 20 and 80 % with a smart plug – no scripts, no cloud.
+- 👵 **One link for grandma:** a very simple page with big buttons ("add photos", "make a show", "back to normal") that works in her own Immich account and can only point at her frame. Revocable at any time.
+- 🚦 **You see problems before the family does:** the device list shows a coloured dot and one sentence ("battery low", "picture stuck", "app outdated"); a weekly report arrives on your phone.
+- 💾 **Backup and restore** of settings, devices and saved shows in one click; a clear **Standard / Expert view** so the screens stay simple.
 - 🛡 **Safe by design:** it can never delete a photo.
 - 📱 **Works on every phone today** through the web interface (add it to the home screen). A native **iPhone app follows later**.
 
@@ -39,6 +44,12 @@ With weather and appointments at the top right, device pairing by code/QR on the
 |---|---|---|
 | ![Weather](docs/screenshots/rahmen-zusatz.png) | ![Pairing](docs/screenshots/koppeln.png) | ![Devices](docs/screenshots/geraete.png) |
 
+Status at a glance, the tablet check, and the tidy device settings:
+
+| Status in the device list | Tablet check | Device settings in tabs |
+|---|---|---|
+| ![Status](docs/screenshots/geraete-ampel.png) | ![Check](docs/screenshots/tablet-check.png) | ![Tabs](docs/screenshots/geraet-reiter.png) |
+
 *(All screenshots use invented sample photos.)*
 
 ## What it does
@@ -49,6 +60,22 @@ With weather and appointments at the top right, device pairing by code/QR on the
 - **Picture frames:** an own player for any tablet – **a plain browser is enough** ([Fully Kiosk](https://www.fully-kiosk.com) is an optional extra). Without a request it shows a continuous programme with a clock; a show from the app interrupts it, "Stop" brings the programme back. **Several frames** are supported: add and set them up in the app (programme sources, schedule, night rest, Fully Kiosk), send a show to one or more of them, or give each frame its own show.
 - **Background music** from your own folders (none is included).
 - **Safe by design:** the app can never delete a photo, runs as non-root in a read-only container, and every person can use their own Immich account.
+
+## How Frameside compares
+There are good Immich slideshow projects, and they are much more widely used: [ImmichFrame](https://github.com/immichFrame/ImmichFrame) (about 2.4k stars) and [Immich Kiosk](https://github.com/damongolding/immich-kiosk) (about 1.7k). If you want a **player that shows a mix of albums, people and tags by itself**, they are mature choices and have far bigger communities. Frameside is built for a different job: **the family chooses what the screens show.**
+
+| | Frameside | ImmichFrame | Immich Kiosk |
+|---|---|---|---|
+| Main idea | Family searches and **sends** photos from the phone to TVs and frames, plus a continuous programme | Slideshow player with filters | Slideshow in the browser, configured by file/URL |
+| Send a chosen selection from the phone | ✅ built in | not documented | not documented |
+| Notes, greetings with a photo, guest upload by QR | ✅ | not documented | not documented |
+| Very simple page for one person (e.g. grandma) | ✅ own link, own Immich account | – | – |
+| Tablet app | ✅ Android/Fire, self-updating, **battery limit**, tablet check | Android app | browser |
+| Photo size | large variant up to 4K for big screens | "preview" size (about 1440 px, read from its source code) | not checked |
+| Devices pair themselves | ✅ | – | – |
+| Setup | interface (Docker needed) | admin page or file | file/URL parameters |
+
+*Status 2026-10, from their public documentation and, for the photo size, the ImmichFrame source code. "Not documented" means we did not find it, not that it is impossible. Corrections are welcome as an issue.*
 
 ## What you need
 - A running **Immich** (tested with 3.2.x) and a user account on it.

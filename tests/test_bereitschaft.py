@@ -303,3 +303,18 @@ def test_alter_verlauf_wird_vergessen_gemerktes_bleibt(app_laden, monkeypatch, t
                    {"id": "gemerkt", "name": "Gemerkt", "ids": [], "zeit": vor(400), "gemerkt": True}, {"id": "ohnezeit", "name": "?", "ids": []}]}
     w.daten_schreiben(d)
     assert [s["id"] for s in d["shows"]] == ["neu", "gemerkt", "ohnezeit"]
+
+
+def test_mit_der_app_ist_ein_alter_fully_zugang_kein_fehler(app_laden, monkeypatch):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    aufrufe = []
+    monkeypatch.setattr(w, "fully_get", lambda url, timeout=6: aufrufe.append(url) or (_ for _ in ()).throw(OSError("keine Verbindung")))
+    c.put("/api/verwaltung/geraete/rahmen", json={"fully_host": "192.168.1.55", "fully_pw": "geheim"}, headers=H)
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1&ak=60&pl=1", headers={"User-Agent": "Mozilla/5.0 Fully"})                 # Fully (kein App-Kennzeichen): Fehler ist echt
+    p = {x["id"]: x for x in c.post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).json()["punkte"]}
+    assert p["fully"]["status"] == "fehler" and aufrufe
+    aufrufe.clear()
+    c.get("/api/tv/abfrage?ziel=rahmen&seq=-1&fj=1&ak=60&pl=1", headers={"User-Agent": "Mozilla/5.0 FramesideTV/1.4.2 FramesideTablet"})   # die App laeuft
+    p = {x["id"]: x for x in c.post("/api/verwaltung/bereitschaft", json={"id": "rahmen"}, headers=H).json()["punkte"]}
+    assert p["fully"]["status"] == "info" and not aufrufe                                                               # kein Zugriff auf Fully, kein Fehler

@@ -3807,7 +3807,8 @@ def bereitschaft_pruefen(z, daten):
     akku, laedt = st.get("akku"), st.get("laedt")
     host = str(daten.get("fully_host") or g.get("fully_host") or g.get("fully_ad_host") or "").strip()
     pw = str(daten.get("fully_pw") or g.get("fully_pw") or g.get("fully_ad_pw") or os.environ.get("RAHMEN_WEB_FULLY_PASSWORT", ""))
-    if FULLY_RE.fullmatch(host):
+    app_aktiv = online and bool(t.get("app"))                             # laeuft die Frameside-App, ist Fully nicht im Spiel (alte Fully-Zugangsdaten bleiben stehen, sind aber kein Fehler)
+    if FULLY_RE.fullmatch(host) and not app_aktiv:
         host = host if ":" in host else host + ":2323"
         try:
             def fragen(befehl):

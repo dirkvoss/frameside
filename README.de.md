@@ -10,6 +10,11 @@ Suche in ganzen Sätzen („Oma und Anna Weihnachten 2019 am Strand“), tippe d
 - 📺 **Fernseher ohne App:** jeder Fernseher mit Browser genügt; Bilderrahmen laufen im ganz normalen Tablet-Browser.
 - 🔌 **Geräte koppeln sich selbst:** Adresse am Fernseher öffnen, in der App erscheint er, Namen eingeben. Keine Codes, keine Konfigurationsdateien, alles steht in der Oberfläche.
 - 👨‍👩‍👧 **Für Familien gemacht:** gemeinsame PIN oder das eigene Immich-Konto jeder Person, Notizen und Grüße mit Foto, Gäste-Upload per QR-Code für Feste, Termine aus dem Handy-Kalender.
+- 🪄 **Ein Tablet-Rahmen in fünf Minuten:** eine kostenlose Android-/Fire-App, die sich selbst aktualisiert, dazu ein **Tablet-Check**, der in klaren Worten sagt, was noch fehlt (Autostart, Sperrbildschirm, Akku, hängendes Bild), und ein geführter Neustart-Test.
+- 🔋 **Akkupflege eingebaut:** Die App hält ein Tablet am Netzteil mit einer schaltbaren Steckdose zwischen 20 und 80 % – ohne Skripte, ohne Cloud.
+- 👵 **Ein Link für Oma:** eine ganz einfache Seite mit großen Knöpfen („Fotos hinzufügen“, „Show machen“, „zurück zum normalen Programm“), die im eigenen Immich-Konto arbeitet und nur auf ihren Rahmen zeigen kann. Jederzeit widerrufbar.
+- 🚦 **Du siehst Probleme vor der Familie:** Die Geräteliste zeigt einen farbigen Punkt und einen Satz („Akku niedrig“, „Bild hängt“, „App veraltet“); ein Wochenbericht kommt aufs Handy.
+- 💾 **Sichern und Wiederherstellen** von Einstellungen, Geräten und gemerkten Shows mit einem Klick; eine klare **Standard-/Profi-Ansicht** hält die Bildschirme einfach.
 - 🛡 **Sicher gebaut:** Es kann nie ein Foto löschen.
 - 📱 **Funktioniert schon heute auf jedem Handy** über die Web-Oberfläche (zum Home-Bildschirm hinzufügen). Eine eigene **iPhone-App folgt später**.
 
@@ -39,6 +44,12 @@ Mit Wetter und Terminen oben rechts, Gerätekopplung per Code/QR am Fernseher un
 |---|---|---|
 | ![Wetter](docs/screenshots/rahmen-zusatz.png) | ![Kopplung](docs/screenshots/koppeln.png) | ![Geräte](docs/screenshots/geraete.png) |
 
+Status auf einen Blick, der Tablet-Check und die aufgeräumten Geräte-Einstellungen:
+
+| Status in der Geräteliste | Tablet-Check | Geräte-Einstellungen in Reitern |
+|---|---|---|
+| ![Status](docs/screenshots/geraete-ampel.png) | ![Check](docs/screenshots/tablet-check.png) | ![Reiter](docs/screenshots/geraet-reiter.png) |
+
 *(Alle Bilder zeigen erfundene Beispielfotos und die englische Oberfläche.)*
 
 ## Was es kann
@@ -49,6 +60,22 @@ Mit Wetter und Terminen oben rechts, Gerätekopplung per Code/QR am Fernseher un
 - **Bilderrahmen:** eigener Player für jedes Tablet – **ein ganz normaler Browser genügt** ([Fully Kiosk](https://www.fully-kiosk.com) ist ein optionales Extra). Ohne Wunsch läuft ein Dauerprogramm mit Uhr; eine Show aus der App unterbricht es, „Stopp“ bringt es zurück. **Mehrere Rahmen** sind möglich: in der App anlegen und einstellen (Programm-Quellen, Zeitplan, Nachtruhe, Fully Kiosk), eine Show an einen oder mehrere schicken – oder jedem Rahmen eine eigene Show geben.
 - **Hintergrundmusik** aus eigenen Ordnern (es wird keine mitgeliefert).
 - **Sicher gebaut:** Die App kann **nie ein Foto löschen**, läuft ohne Root in einem schreibgeschützten Container, und jede Person kann ihr eigenes Immich-Konto nutzen.
+
+## Wie sich Frameside einordnet
+Es gibt gute Immich-Diashow-Projekte, und sie sind viel weiter verbreitet: [ImmichFrame](https://github.com/immichFrame/ImmichFrame) (rund 2,4k Sterne) und [Immich Kiosk](https://github.com/damongolding/immich-kiosk) (rund 1,7k). Wenn du einen **Player willst, der von allein eine Mischung aus Alben, Personen und Tags zeigt**, sind sie ausgereifte Wahlen mit viel größeren Communities. Frameside ist für eine andere Aufgabe gebaut: **Die Familie bestimmt, was die Bildschirme zeigen.**
+
+| | Frameside | ImmichFrame | Immich Kiosk |
+|---|---|---|---|
+| Grundidee | Familie sucht und **schickt** Fotos vom Handy an Fernseher und Rahmen, dazu ein Dauerprogramm | Diashow-Player mit Filtern | Diashow im Browser, per Datei/URL eingestellt |
+| Ausgewählte Fotos vom Handy schicken | ✅ eingebaut | nicht dokumentiert | nicht dokumentiert |
+| Notizen, Grüße mit Foto, Gäste-Upload per QR | ✅ | nicht dokumentiert | nicht dokumentiert |
+| Ganz einfache Seite für eine Person (z. B. Oma) | ✅ eigener Link, eigenes Immich-Konto | – | – |
+| Tablet-App | ✅ Android/Fire, selbst-aktualisierend, **Akku-Grenze**, Tablet-Check | Android-App | Browser |
+| Fotogröße | große Variante bis 4K für große Bildschirme | „Preview“-Größe (rund 1440 px, aus dem Quelltext gelesen) | nicht geprüft |
+| Geräte koppeln sich selbst | ✅ | – | – |
+| Einrichtung | Oberfläche (Docker nötig) | Admin-Seite oder Datei | Datei/URL-Parameter |
+
+*Stand 10/2026, aus der öffentlichen Dokumentation und, bei der Fotogröße, aus dem Quelltext von ImmichFrame. „Nicht dokumentiert“ heißt: nicht gefunden, nicht: unmöglich. Korrekturen gern als Issue.*
 
 ## Was du brauchst
 - Ein laufendes **Immich** (getestet mit 3.2.x) und ein Benutzerkonto dort.

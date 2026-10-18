@@ -1,6 +1,12 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.37.1]
+### Behoben
+- **Der Tablet-Check meldete einen falschen Fully-Fehler bei Tablets mit der Frameside-App.** Waren für ein Gerät noch Fully-Adresse und -Passwort gespeichert, die App läuft aber, stand „Die Fernsteuerung von Fully ist nicht erreichbar“ als Fehler im Check. Meldet sich ein Gerät mit der App, wird Fully jetzt gar nicht erst abgefragt.
+### Dokumentation
+- **README (Englisch und Deutsch):** neue Stärken (Tablet-App mit Selbst-Update, Akkupflege, Link für Oma, Ampel in der Geräteliste, Sicherung), ein sachlicher Vergleich mit ImmichFrame und Immich Kiosk und drei neue Bilder.
+
 ## [2.37.0]
 ### Neu
 - **Ampel in der Geräteliste:** Hat ein Rahmen ein Problem, steht es direkt in der Liste unter „Geräte“, ohne dass du „Tablet prüfen“ drücken musst: ein farbiger Punkt und ein Satz („⚠ App veraltet“, „✗ Akku niedrig, lädt nicht“, „Bild wechselt nicht mehr“, „Ladegrenze meldet einen Fehler“). Der Server wertet nur aus, was das Gerät selbst meldet. Bei einer Ladegrenze zählen 30 % ohne Strom als normal; gewarnt wird wie bei der Pushover-Meldung bei 15 %.
