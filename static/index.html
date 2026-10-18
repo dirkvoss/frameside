@@ -809,14 +809,14 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
         <div class="gf">
           <label class="tvfeld nur-gf-dauer"><span>Sekunden pro Foto</span> <input id="gfSek" type="number" min="3" max="120" inputmode="numeric" aria-label="Sekunden pro Foto"></label>
           <label class="tvfeld"><span>Sanfter Zoom bei jedem Foto</span> <input type="checkbox" id="gfBewegung" style="flex:none"></label>
-          <label class="tvfeld"><span>Zwei Hochkant-Fotos nebeneinander</span> <input type="checkbox" id="gfPaare" style="flex:none"></label>
+          <label class="tvfeld nur-profi"><span>Zwei Hochkant-Fotos nebeneinander</span> <input type="checkbox" id="gfPaare" style="flex:none"></label>
         </div>
       </div>
       <div class="gf gt-panel" data-gt="anz">
           <h3>Anzeige auf diesem Rahmen</h3>
           <p class="tipp">Was eingeblendet wird und wo. Jeder Rahmen hat seine eigene Anordnung.</p>
           <div id="gfLayout"></div>
-          <label class="tvfeld versteckt" id="gfUebernehmenZeile"><span>Anordnung übernehmen von</span> <select id="gfUebernehmen" aria-label="Anordnung übernehmen von"><option value="">–</option></select></label>
+          <label class="tvfeld versteckt nur-profi" id="gfUebernehmenZeile"><span>Anordnung übernehmen von</span> <select id="gfUebernehmen" aria-label="Anordnung übernehmen von"><option value="">–</option></select></label>
           <h3>Wetter und Termine auf diesem Rahmen</h3>
           <div class="tvfeld"><span>Wetter-Ort</span> <span id="gfOrtName" style="flex:1;text-align:right"></span> <button class="btn klein versteckt" id="gfOrtWeg" type="button">Entfernen</button></div>
           <label class="tvfeld"><span>Ort suchen</span> <input id="gfOrtSuche" type="text" autocomplete="off" aria-label="Ort suchen" placeholder="Belgrad"></label>
@@ -824,9 +824,9 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <p class="tipp">Ohne eigenen Ort gilt der Standard aus den Einstellungen.</p>
           <p class="tipp"><b>Termine von diesen Handys zeigt der Rahmen:</b></p>
           <div id="gfHandys"></div>
-          <label class="tvfeld"><span>Wenn heute nichts mehr ansteht: Termine bis zu … Tage voraus zeigen (0 = nur heute, 1 = auch morgen)</span> <input id="gfVorschau" type="number" min="0" max="14" inputmode="numeric" aria-label="Tage vorausschauen"></label>
-          <p class="tipp">Gilt für Termine aus dem Kalender-Link. Der Rahmen zeigt zuerst, was heute noch kommt; ist das nichts, den nächsten Tag mit Terminen innerhalb dieser Tage.</p>
-          <details class="gfdetails" id="gfKalDetails">
+          <label class="tvfeld nur-profi"><span>Wenn heute nichts mehr ansteht: Termine bis zu … Tage voraus zeigen (0 = nur heute, 1 = auch morgen)</span> <input id="gfVorschau" type="number" min="0" max="14" inputmode="numeric" aria-label="Tage vorausschauen"></label>
+          <p class="tipp nur-profi">Gilt für Termine aus dem Kalender-Link. Der Rahmen zeigt zuerst, was heute noch kommt; ist das nichts, den nächsten Tag mit Terminen innerhalb dieser Tage.</p>
+          <details class="gfdetails nur-profi" id="gfKalDetails">
             <summary>Kalender-Link (iCal)</summary>
           <label class="tvfeld stapel"><span>Kalender-Link (iCal) nur für diesen Rahmen</span> <input id="gfKal" type="text" autocomplete="off" aria-label="Kalender-Link" placeholder="https://…"></label>
           <label class="tvfeld"><span>Benutzer für den Kalender (nur wenn er geschützt ist)</span> <input id="gfKalUser" type="text" autocomplete="off" aria-label="Benutzer für den Kalender"></label>
@@ -842,17 +842,19 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <p class="tipp">Was der Rahmen zeigt, wenn niemand etwas schickt. Ohne Eintrag gilt die allgemeine Einstellung der Installation.</p>
           <div id="gfQuellen"></div>
           <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfQuelleNeu" type="button">＋ Quelle</button></div>
+          <div class="nur-profi">
           <h3>Zeitplan (optional)</h3>
           <p class="tipp">Zu bestimmten Tagen und Uhrzeiten zeigt der Rahmen andere Quellen als das Dauerprogramm oben.</p>
           <div id="gfPlan"></div>
           <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein" id="gfPlanNeu" type="button">＋ Zeitfenster</button></div>
           </div>
+          </div>
           <h3 class="nur-gf-dauer">Besondere Fotos</h3>
           <label class="tvfeld nur-gf-dauer"><span>Erinnerungen („An diesem Tag“) im Dauerprogramm</span> <select id="gfErinnerungen" aria-label="Erinnerungen"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
-          <label class="tvfeld nur-gf-dauer"><span>Favoriten (⭐ in Immich) öfter zeigen</span> <select id="gfFavoriten" aria-label="Favoriten"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
-          <label class="tvfeld nur-gf-dauer"><span>Am Geburtstag Fotos der Person zeigen</span> <input type="checkbox" id="gfGeburtstagsfotos" style="flex:none"></label>
+          <label class="tvfeld nur-gf-dauer nur-profi"><span>Favoriten (⭐ in Immich) öfter zeigen</span> <select id="gfFavoriten" aria-label="Favoriten"><option value="">Aus</option><option value="selten">Selten</option><option value="oft">Öfter</option><option value="sehr">Oft</option></select></label>
+          <label class="tvfeld nur-gf-dauer nur-profi"><span>Am Geburtstag Fotos der Person zeigen</span> <input type="checkbox" id="gfGeburtstagsfotos" style="flex:none"></label>
           <h3>Nachtruhe</h3>
-          <label class="tvfeld"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
+          <label class="tvfeld nur-profi"><span>Nachtruhe nach Sonnenstand (Sonnenuntergang bis -aufgang, braucht den Wetter-Ort)</span> <input type="checkbox" id="gfNachtSonne" style="flex:none"></label>
           <div class="tvfeld" id="gfNachtZeiten"><span>Nachtruhe (Bildschirm aus)</span><span class="reihe"><input id="gfNachtVon" type="time" aria-label="von"> – <input id="gfNachtBis" type="time" aria-label="bis"></span></div>
       </div>
       <div class="gf gt-panel" data-gt="tab">
@@ -912,7 +914,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn klein primaer" id="gfNotizSenden" type="button">Notiz senden</button><button class="btn klein gefahr" id="gfNotizWeg" type="button">Notiz entfernen</button></div>
             <p class="tipp versteckt" id="gfNotizErg" role="status"></p>
           </div>
-          <div id="gfGaesteBlock" class="versteckt">
+          <div id="gfGaesteBlock" class="versteckt nur-profi">
             <h3>Fest: Fotos von Gästen</h3>
             <p class="tipp">Am Rahmen erscheint ein QR-Code. Gäste scannen ihn, laden Fotos hoch und sehen sie gleich am Rahmen. Die Fotos landen in deinem Immich (Album „Showcase-Uploads“, Namen mit „Gast-“).</p>
             <label class="tvfeld"><span>Dauer</span> <select id="gfGaesteDauer" aria-label="Dauer"><option value="4">4 Stunden</option><option value="8" selected>8 Stunden</option><option value="24">1 Tag</option><option value="72">3 Tage</option></select></label>
@@ -941,7 +943,7 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
             <div class="tvknoepfe" style="justify-content:flex-start;margin-top:0"><button class="btn primaer" id="gfEinfachAnlegen" type="button" style="margin-top:6px">Zugang anlegen</button></div>
             <p class="tipp versteckt" id="gfEinfachErg" role="status"></p>
           </details>
-          <details id="gfWartung" class="gfdetails versteckt">
+          <details id="gfWartung" class="gfdetails versteckt nur-profi">
             <summary>Wartung und Zugang von außen</summary>
             <label class="tvfeld nur-gf-dauer"><span>Meldung aufs Handy, wenn der Rahmen länger nicht erreichbar ist (Minuten, 0 = nie)</span> <input id="gfAlarm" type="number" min="0" max="1440" inputmode="numeric" aria-label="Meldung nach Minuten"></label>
             <p class="tipp nur-gf-dauer">Leer lassen = allgemeine Einstellung. Für einen Rahmen an einem anderen Ort ist ein größerer Wert sinnvoll, damit kurze Störungen nicht gleich melden.</p>
@@ -2158,9 +2160,9 @@ function layoutEditor(mount, start, standard) {
     const zeile = document.createElement("div"); zeile.className = "led-zeile";
     const lab = document.createElement("label"); lab.className = "name"; const an = document.createElement("input"); an.type = "checkbox"; lab.append(an, document.createTextNode(RW_T(titel)));
     const sel = document.createElement("select"); sel.setAttribute("aria-label", RW_T("Lage")); for (const [k, t] of LED_LAGEN) { const o = document.createElement("option"); o.value = k; o.textContent = RW_T(t); sel.append(o); }
-    const gr = document.createElement("input"); gr.type = "range"; gr.min = 40; gr.max = 300; gr.step = 10; gr.setAttribute("aria-label", RW_T("Größe"));
+    const gr = document.createElement("input"); gr.type = "range"; gr.min = 40; gr.max = 300; gr.step = 10; gr.setAttribute("aria-label", RW_T("Größe")); gr.className = "nur-profi";
     zeile.append(lab, sel, gr);
-    const extra = document.createElement("div"); extra.className = "led-zusatz";
+    const extra = document.createElement("div"); extra.className = "led-zusatz nur-profi";
     const fl = document.createElement("label"); const fi = document.createElement("input"); fi.type = "color"; fi.setAttribute("aria-label", RW_T("Farbe")); fl.append(document.createTextNode(RW_T("Farbe") + " "), fi);
     const fw = document.createElement("button"); fw.type = "button"; fw.className = "btn klein"; fw.textContent = "✕"; fw.setAttribute("aria-label", RW_T("Farbe zurücksetzen")); fw.title = RW_T("Farbe zurücksetzen");
     const sl = document.createElement("label"); const ss = document.createElement("select"); ss.setAttribute("aria-label", RW_T("Schrift"));
@@ -2175,8 +2177,8 @@ function layoutEditor(mount, start, standard) {
       pc.addEventListener("change", () => { w[n].person = pc.checked; zeichne(n); });
     }
     if (n === "fotodatum") {
-      const zl = document.createElement("label"); zl.className = "led-schalter"; const zc = document.createElement("input"); zc.type = "checkbox"; zl.append(zc, document.createTextNode(RW_T("Uhrzeit der Aufnahme mitanzeigen"))); zeile.insertBefore(zl, extra); z.zeit = zc;
-      const fz = document.createElement("label"); fz.className = "led-schalter"; const fs = document.createElement("select"); fs.setAttribute("aria-label", RW_T("Datumsformat"));
+      const zl = document.createElement("label"); zl.className = "led-schalter nur-profi"; const zc = document.createElement("input"); zc.type = "checkbox"; zl.append(zc, document.createTextNode(RW_T("Uhrzeit der Aufnahme mitanzeigen"))); zeile.insertBefore(zl, extra); z.zeit = zc;
+      const fz = document.createElement("label"); fz.className = "led-schalter nur-profi"; const fs = document.createElement("select"); fs.setAttribute("aria-label", RW_T("Datumsformat"));
       for (const [k, t] of [["lang", "Datum ausgeschrieben (4. Dezember 2025)"], ["kurz", "Datum kurz (04.12.2025)"]]) { const o = document.createElement("option"); o.value = k; o.textContent = RW_T(t); fs.append(o); }
       fz.append(document.createTextNode(RW_T("Datumsformat") + " "), fs); zeile.insertBefore(fz, extra); z.format = fs;
       fs.addEventListener("change", () => { w[n].format = fs.value; zeichne(n); });

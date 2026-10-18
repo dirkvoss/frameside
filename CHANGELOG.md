@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.36.1]
+### Geändert
+- **Standard und Profi unterscheiden sich im Gerätedialog jetzt deutlich** (im Standard etwa 57 sichtbare Bedienelemente statt 133 in der Profi-Ansicht). Im Standard bleibt, was eine normale Person einstellt: Name, Hintergrund, Sekunden und Zoom; bei der Anzeige je Element nur Haken und Lage; das Dauerprogramm, Erinnerungen und die Nachtruhe-Zeiten; der Tablet-Check; Notiz, Gruß und Einfacher Zugang. In die Profi-Ansicht gewandert sind: Hochkant-Paare, bei jedem Anzeige-Element Größe, Farbe, Schrift und Zusatzoptionen, „Anordnung übernehmen“, die Vorschau-Tage, der Kalender-Link, Zeitplan, Favoriten, Geburtstagsfotos, Nachtruhe nach Sonnenstand, „Fest mit Gästefotos“ und „Wartung“.
+
 ## [2.36.0]
 ### Geändert
 - **Der Dialog „Gerät einstellen“ ist aufgeräumt: fünf Reiter statt eines langen Formulars.** **Allgemein** (Name, Hintergrund, Sekunden pro Foto, Zoom, Hochkant-Paare), **Anzeige** (Anordnung der Einblendungen, Wetter-Ort, Termine von Handys, Vorschau-Tage, der Kalender-Link in einem zugeklappten Block), **Programm** (Dauerprogramm, Zeitplan, besondere Fotos, Nachtruhe), **Tablet** (Tablet-Check, Neustart-Test, Ladeverlauf, Zugang widerrufen) und **Mehr** (Notiz, Fest mit Gästefotos, Gruß mit Foto, Einfacher Zugang, Wartung). Kein Feld ist weggefallen, jedes liegt in genau einem Reiter.

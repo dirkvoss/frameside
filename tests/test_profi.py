@@ -72,7 +72,8 @@ def test_geraetedialog_hat_reiter_und_verliert_kein_feld():
                 assert kennung not in gesehen, (kennung, gesehen.get(kennung), tab)
                 gesehen[kennung] = tab
     assert gesehen["gfName"] == "allg" and gesehen["gfLayout"] == "anz" and gesehen["gfQuellen"] == "prog" and gesehen["gfCheck"] == "tab" and gesehen["gfNotizBlock"] == "mehr"
-    for kennung in ("gfArtZeile", "gfKennungZeile", "gfDirekt", "gfVerbindenZeile"):                 # Technik gehoert in die Profi-Ansicht
+    for kennung in ("gfArtZeile", "gfKennungZeile", "gfDirekt", "gfVerbindenZeile", "gfPaare", "gfUebernehmenZeile", "gfFavoriten", "gfGeburtstagsfotos",
+                    "gfVorschau", "gfKalDetails", "gfGaesteBlock", "gfWartung", "gfNachtSonne"):                    # Technik und Feinheiten gehoeren in die Profi-Ansicht
         zeile = next(z for z in dialog.splitlines() if f'id="{kennung}"' in z)
         assert "nur-profi" in zeile, kennung
     assert "body:not(.profi) .nur-profi" in html
