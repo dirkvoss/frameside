@@ -36,3 +36,14 @@ def test_neue_version_laedt_die_seite_von_selbst_neu():
     assert "location.reload()" in funktion and "tvdialog:not(.versteckt)" in funktion        # automatisch, solange kein Fenster offen ist
     assert "setInterval(versionPruefen, 30000)" in html
     assert "z-index: 100000" in html.split(".updatebanner {", 1)[1].split("}", 1)[0]          # das Banner liegt ueber den Fenstern
+
+
+def test_tablet_check_zeile_traegt_kennung_und_der_update_knopf_haengt_daran():
+    """Fehler in 2.35.0/2.35.1: die Zeilen kannten ihre Kennung nicht, deshalb erschien der Knopf 'App jetzt aktualisieren' nie."""
+    html = open(os.path.join(RAIZ, "static", "index.html"), encoding="utf-8").read()
+    i = html.index("function checkZeile(")
+    zeile = html[i:html.index("\n}\n", i)]
+    assert "id: x.id" in zeile and "status: x.status" in zeile and "wert: x.wert" in zeile
+    j = html.index("for (const x of r.punkte.map(p => checkZeile(p, anderes))")
+    schleife = html[j:j + 1500]
+    assert 'x.id === "app" && x.status === "warnung"' in schleife and "App jetzt aktualisieren" in schleife

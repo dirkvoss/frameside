@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.35.2]
+### Behoben
+- **Der Knopf „App jetzt aktualisieren“ im Tablet-Check erschien nie** (Fehler seit 2.35.0). Die Zeilen des Tablet-Checks kannten ihre Kennung nicht, deshalb wusste die Seite nicht, bei welcher Zeile der Knopf stehen soll. Jetzt trägt jede Zeile Kennung, Status und Wert mit; ein Test hält das fest.
+
 ## [2.35.1]
 ### Behoben
 - **Eine neue Version der Seite lädt sich von selbst neu.** Bisher erschien nur ein Banner „Neue Version verfügbar – tippen zum Aktualisieren“, und eine lange offene Seite blieb auf dem alten Stand. Jetzt lädt sich die Seite selbst neu, sobald kein Fenster offen ist und nichts getippt wird; sonst liegt das Banner über allen Fenstern und die Seite lädt neu, sobald alles zu ist. Geprüft wird alle 30 Sekunden und beim Zurückkehren zur Seite.

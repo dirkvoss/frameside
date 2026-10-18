@@ -2718,7 +2718,7 @@ function checkZeile(x, keinFire) {
   else if (x.id === "weg") text += ": " + RW_T(x.wert === "aussen" ? "von außen (über das Internet)" : "aus dem Heimnetz");
   else if (x.id === "ladegrenze" && x.wert) { const [z, u, o] = x.wert.split(":"); text += " (" + RW_T(z === "an" ? "Steckdose an" : z === "aus" ? "Steckdose aus" : "Steckdose wird gesucht") + ", " + u + "–" + o + " %)"; }
   else if (x.id === "akku") { const [n, l] = x.wert.split(":"); text = RW_T("Akku") + " " + n + " %, " + RW_T(l === "1" ? "lädt" : "nicht am Strom") + (x.status === "warnung" ? ". " + RW_T("Das Tablet lädt nicht. Netzteil und Kabel prüfen.") : ""); }
-  return { symbol: { ok: "✓", warnung: "⚠", fehler: "✗", info: "ℹ" }[x.status], farbe: { ok: "var(--ok, #3ecf8e)", warnung: "var(--warn, #e6b450)", fehler: "var(--danger, #f87171)", info: "" }[x.status], text };
+  return { symbol: { ok: "✓", warnung: "⚠", fehler: "✗", info: "ℹ" }[x.status], farbe: { ok: "var(--ok, #3ecf8e)", warnung: "var(--warn, #e6b450)", fehler: "var(--danger, #f87171)", info: "" }[x.status], text, id: x.id, status: x.status, wert: x.wert };       // Kennung, Status und Wert gehen mit (fuer Knoepfe neben einer Zeile)
 }
 $("#gfCheck").addEventListener("click", async e => {
   const liste = $("#gfCheckListe"); liste.classList.remove("versteckt"); liste.textContent = RW_T("Prüfe …"); e.currentTarget.disabled = true;
