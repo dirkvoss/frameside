@@ -607,7 +607,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
   }
   function abfrage() {
     if (pinModus) return;
-    var meldung = "&ra=" + (laeuft ? Math.round((new Date().getTime() - letzterWechsel) / 1000) : -1) + "&a=" + (ambient ? 1 : 0) + "&s=" + (laeuft && !ambient ? 1 : 0) + "&n=" + encodeURIComponent(laeuft && !ambient ? name : "") + "&m=" + (audio && !audio.paused ? musikKey : "");
+    var meldung = "&ra=" + (laeuft ? Math.round((new Date().getTime() - letzterWechsel) / 1000) : -1) + "&a=" + (ambient ? 1 : 0) + "&s=" + (laeuft && !ambient ? 1 : 0) + "&n=" + encodeURIComponent(laeuft && !ambient ? name : "") + "&m=" + (audio && !audio.paused ? musikKey : "") + (laeuft && liste[idx] && /^[0-9a-f-]{36}$/.test(liste[idx]) ? "&b=" + liste[idx] : "");
     api("/api/tv/abfrage?ziel=" + ziel + "&seq=" + seq + meldung + fullyInfo() + ursprungInfo(), function (st, d) {
       letzterStatus = st;
       if (st === 401) { zugangKopplung(); return; }

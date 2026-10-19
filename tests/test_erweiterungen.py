@@ -222,3 +222,42 @@ def test_kaputte_aktiv_datei_stoert_den_start_nicht(app_laden, tmp_path):
     (tmp_path / "data" / "rahmen_web_aktiv.json").write_text("{kaputt")
     w, client, _ = app_laden(**LAN)
     assert w.TV["rahmen"]["aktiv"] is None
+
+
+# ---------------------------------------------------------------- Programm nach gespeicherter Suche
+def test_suche_quelle_lesen(app_laden):
+    w, _, _ = app_laden(RAHMEN_WEB_RAHMEN_QUELLEN="suche=Sommer 2022 am Strand:60, suche=Oma, neu7:10, suche=")
+    q = w.rahmen_quellen()
+    assert q[0] == {"typ": "suche", "text": "Sommer 2022 am Strand", "gewicht": 60.0}
+    assert q[1] == {"typ": "suche", "text": "Oma", "gewicht": 1.0} and q[2]["typ"] == "neu" and len(q) == 3
+
+
+def test_rahmen_zeigt_treffer_der_gespeicherten_suche(app_laden, monkeypatch):
+    w, _, _ = app_laden(**{**LAN, "RAHMEN_WEB_RAHMEN_QUELLEN": "suche=Strand"})
+    ids = [f"{i:08x}-0000-0000-0000-000000000000" for i in range(30)]
+    monkeypatch.setattr(w, "suchen", lambda text, maximum=400, lang="de": {"fotos": [{"id": i} for i in ids]})
+    w.SUCHE_CACHE.clear()
+    gezeigt = w.rahmen_auswahl(8)
+    assert len(gezeigt) == 8 and set(gezeigt) <= set(ids)
+
+
+def test_kaputte_suche_quelle_legt_rahmen_nicht_lahm(app_laden, monkeypatch):
+    w, _, _ = app_laden(**{**LAN, "RAHMEN_WEB_RAHMEN_QUELLEN": "suche=Strand:1, *:1"})
+    def kaputt(*a, **k):
+        raise OSError("Immich weg")
+    monkeypatch.setattr(w, "suchen", kaputt)
+    w.SUCHE_CACHE.clear()
+    assert w.rahmen_auswahl(5)                                   # die andere Quelle springt ein
+
+
+# ---------------------------------------------------------------- Vorschaubild je Geraet
+def test_geraeteliste_zeigt_das_aktuelle_foto(app_laden):
+    w, client, _ = app_laden(**{**LAN, "RAHMEN_WEB_RAHMEN_ZIELE": "flur=Flur"})
+    foto = "00000001-0000-4000-8000-000000000001"
+    lan = client("192.168.1.50")
+    assert lan.get(f"/api/tv/abfrage?ziel=flur&seq=-1&a=1&ra=3&b={foto}").status_code == 200
+    flur = next(g for g in lan.get("/api/geraete").json()["geraete"] if g["id"] == "flur")
+    assert flur["bild"] == foto
+    lan.get("/api/tv/abfrage?ziel=flur&seq=-1&a=1&ra=3&b=../../etc/passwd")                   # unsinnige Kennung wird verworfen
+    flur = next(g for g in lan.get("/api/geraete").json()["geraete"] if g["id"] == "flur")
+    assert flur["bild"] is None

@@ -231,6 +231,7 @@ main { padding: 12px 16px; max-width: 1100px; margin: 0 auto; }
 .geraet .zustand { font-size: 13px; color: var(--muted); }
 .geraet .art { font-size: 22px; }
 .geraet .einst { flex: none; min-width: 40px; }
+.geraet .vorschaubild { flex: none; width: 64px; height: 44px; object-fit: cover; border-radius: 8px; background: var(--line, rgba(255,255,255,.12)); }
 .gf { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 10px 0; }
 .gf h3 { margin: 12px 0 0; }
 .gf .tvfeld { min-height: 44px; min-width: 0; }
@@ -598,7 +599,8 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
       </form>
       <p class="tipp">🎤 Tipp: Auf der Tastatur das Mikrofon antippen und einfach sprechen, z. B. <span id="sucheBsp">„Sommer 2022 am Strand“</span>.</p>
       <div id="sucheHinweis"></div>
-      <div class="alle versteckt" id="alleSucheZeile"><button class="btn klein" id="alleSuche">✓ Alle Treffer auswählen</button><button class="btn klein primaer" id="diaSuche" title="Die Treffer als Diashow abspielen">▶ Diashow</button></div>
+      <div class="alle versteckt" id="alleSucheZeile"><button class="btn klein" id="alleSuche">✓ Alle Treffer auswählen</button><button class="btn klein primaer" id="diaSuche" title="Die Treffer als Diashow abspielen">▶ Diashow</button>
+        <span id="sucheProgZeile" class="versteckt"><select id="sucheProgGeraet" aria-label="Rahmen"></select><button class="btn klein" id="sucheProg" title="Dieser Rahmen zeigt die Treffer künftig im Dauerprogramm">📌 Als Dauerprogramm speichern</button></span></div>
       <div id="sucheListe"></div>
     </section>
 
@@ -1370,6 +1372,7 @@ $("#sucheForm").addEventListener("submit", async e => {
     h.innerHTML = `<div class="hinweis">${esc(d.nachricht)}${d.gesamt > d.fotos.length ? ` · ${d.gesamt} gefunden, ${d.fotos.length} davon sinnvoll verteilt` : ""}${d.fotos.length ? "<br>Alle Treffer sind schon ausgewählt – tippe ein Foto an, um es abzuwählen." : ""}</div>`;
     merke(); auswahl.clear(); showBearbeiten = null;
     $("#alleSucheZeile").classList.toggle("versteckt", !d.fotos.length);
+    if (d.fotos.length) sucheProgLaden();
     if (d.fotos.length) {
       d.fotos.forEach(f => auswahl.set(f.id, { tag: f.tag, fav: f.fav }));
       if (!$("#showName").value) $("#showName").value = text.slice(0, 60);
@@ -1377,6 +1380,26 @@ $("#sucheForm").addEventListener("submit", async e => {
     } else if (!d.ok) h.innerHTML = `<div class="hinweis">${esc(d.nachricht)}</div>`;
     aktualisiere();
   } catch (err) { h.innerHTML = ""; fehler(err); }
+});
+let sucheProgRahmen = [];
+async function sucheProgLaden() {                          // Rahmen zur Wahl fuer "Als Dauerprogramm speichern"
+  try {
+    sucheProgRahmen = (await api("verwaltung")).geraete.filter(x => x.art === "rahmen");
+    const sel = $("#sucheProgGeraet"); sel.innerHTML = "";
+    for (const g of sucheProgRahmen) { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name; sel.append(o); }
+    $("#sucheProgZeile").classList.toggle("versteckt", !sucheProgRahmen.length);
+  } catch (e) { $("#sucheProgZeile").classList.add("versteckt"); }
+}
+$("#sucheProg").addEventListener("click", async () => {
+  const g = sucheProgRahmen.find(x => x.id === $("#sucheProgGeraet").value), text = $("#sucheText").value.trim().replace(/[,:;]/g, " ").replace(/\s+/g, " ").slice(0, 100);
+  if (!g || !text) return;
+  const alt = (g.quellen || "").trim();
+  if (alt.split(",").some(t => t.trim().toLowerCase() === "suche=" + text.toLowerCase())) { toast(RW_T("Diese Suche läuft dort schon im Dauerprogramm.")); return; }
+  if (!alt && !confirm(`„${g.name}“: ` + RW_T("Das Dauerprogramm besteht bisher aus der allgemeinen Einstellung. Mit dieser Suche zeigt der Rahmen danach NUR noch die Treffer. Weiter?"))) return;
+  try {
+    const r = await api("verwaltung/geraete/" + encodeURIComponent(g.id), { method: "PUT", body: JSON.stringify({ quellen: (alt ? alt + ", " : "") + "suche=" + text }) });
+    g.quellen = (alt ? alt + ", " : "") + "suche=" + text; toast(`✓ „${g.name}“: ` + RW_T("Die Suche ist jetzt im Dauerprogramm."));
+  } catch (e) { fehler(e); }
 });
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -1987,6 +2010,9 @@ async function geraeteLaden() {
       }
       const punkt = document.createElement("span"); punkt.className = "punkt";
       zeile.append(punkt, ik, mitte);
+      if (g.bild && /^[0-9a-f-]{36}$/.test(g.bild)) {                            // Vorschaubild: was das Geraet gerade zeigt
+        const vb = document.createElement("img"); vb.className = "vorschaubild"; vb.alt = RW_T("Aktuelles Foto"); vb.loading = "lazy"; vb.src = "/api/vorschau/" + g.bild; vb.onerror = () => vb.remove(); zeile.append(vb);
+      }
       if (g.fully) {
         const an = g.bildschirm !== "aus", b = document.createElement("button"); b.type = "button"; b.className = "btn klein";
         b.textContent = an ? RW_T("Bildschirm aus") : RW_T("Bildschirm an");
@@ -2014,7 +2040,7 @@ $("#geraeteBtn").addEventListener("click", () => geraeteOeffnen(""));
 
 // ---------------------------------------------------------------- Geraete verwalten (Rahmen/Fernseher anlegen und einstellen)
 let gfId = null, gfArt = "rahmen", gSelbst = false, gHatHost = false;                                           // null = neues Geraet
-const QUELLEN_ARTEN = [["alle", "Ganze Bibliothek"], ["neu", "Neueste Fotos (Tage)"], ["heute", "Heute vor Jahren"], ["person", "Person"], ["album", "Album (ID)"]];
+const QUELLEN_ARTEN = [["alle", "Ganze Bibliothek"], ["neu", "Neueste Fotos (Tage)"], ["heute", "Heute vor Jahren"], ["person", "Person"], ["suche", "Suche (Text)"], ["album", "Album (ID)"]];
 function quelleZeile(q) {
   q = q || { art: "alle", wert: "", gew: "" };
   const z = document.createElement("div"); z.className = "qzeile";
@@ -2026,7 +2052,7 @@ function quelleZeile(q) {
   const weg = document.createElement("button"); weg.type = "button"; weg.className = "btn klein"; weg.textContent = "✕"; weg.setAttribute("aria-label", RW_T("Entfernen"));
   const anpassen = () => {
     const a = sel.value; wert.style.visibility = a === "alle" ? "hidden" : "visible";
-    wert.placeholder = a === "neu" ? "14" : a === "heute" ? "2" : a === "person" ? "Anna+Ben" : a === "album" ? "xxxxxxxx-xxxx-…" : "";
+    wert.placeholder = a === "neu" ? "14" : a === "heute" ? "2" : a === "person" ? "Anna+Ben" : a === "suche" ? "Sommer 2022 am Strand" : a === "album" ? "xxxxxxxx-xxxx-…" : "";
     wert.inputMode = a === "neu" || a === "heute" ? "numeric" : "text";
   };
   sel.addEventListener("change", anpassen); weg.addEventListener("click", () => z.remove()); anpassen();
@@ -2041,6 +2067,11 @@ function quellenLesen(text) {
       if (i >= 0 && /^\d+(\.\d+)?$/.test(rest.slice(i + 1))) { gew = rest.slice(i + 1); rest = rest.slice(0, i); }
       reihen.push({ art: "person", wert: rest, gew }); continue;
     }
+    if (/^suche=/i.test(tok)) {
+      let rest = tok.slice(6), gew = ""; const i = rest.lastIndexOf(":");
+      if (i >= 0 && /^\d+(\.\d+)?$/.test(rest.slice(i + 1))) { gew = rest.slice(i + 1); rest = rest.slice(0, i); }
+      reihen.push({ art: "suche", wert: rest, gew }); continue;
+    }
     const i = tok.indexOf(":"), name = i >= 0 ? tok.slice(0, i) : tok, gew = i >= 0 ? tok.slice(i + 1) : "";
     if (name === "*") reihen.push({ art: "alle", wert: "", gew });
     else if ((m = name.match(/^neu(\d{1,3})$/))) reihen.push({ art: "neu", wert: m[1], gew });
@@ -2053,8 +2084,8 @@ function quellenSchreiben(box) {
   const teile = [];
   for (const z of (box || $("#gfQuellen")).querySelectorAll(".qzeile")) {
     const a = z.querySelector(".qart").value, w = z.querySelector(".qwert").value.trim().replace(/[,:]/g, ""), g = z.querySelector(".qgew").value.trim();
-    let t = a === "alle" ? "*" : a === "neu" ? "neu" + (w || "14") : a === "heute" ? "heute" + w : a === "person" ? "person=" + w : w;
-    if (!t || t === "person=") continue;
+    let t = a === "alle" ? "*" : a === "neu" ? "neu" + (w || "14") : a === "heute" ? "heute" + w : a === "person" ? "person=" + w : a === "suche" ? "suche=" + w : w;
+    if (!t || t === "person=" || t === "suche=") continue;
     teile.push(t + (g && g !== "1" ? ":" + g : ""));
   }
   return teile.join(", ");

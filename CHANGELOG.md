@@ -1,6 +1,11 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.38.0]
+### Neu
+- **Eine Suche als Dauerprogramm speichern:** Im Reiter „Suchen“ gibt es neben „▶ Diashow“ die Auswahl eines Rahmens und den Knopf „📌 Als Dauerprogramm speichern“. Der Rahmen zeigt die Treffer danach im Dauerprogramm, neben seinen anderen Quellen. In den Quellen eines Geräts gibt es dafür die neue Art „Suche (Text)“ (`suche=Sommer 2022 am Strand`, mit Gewicht `suche=Oma:60`). Die Treffer werden eine Stunde gemerkt; eine fehlgeschlagene Suche stört die anderen Quellen nicht. Hat der Rahmen noch keine eigenen Quellen, fragt Frameside vor dem Speichern nach, weil er danach nur noch diese Treffer zeigt.
+- **Vorschaubild in der Geräteliste:** Zu jedem Gerät, das gerade Fotos zeigt, steht ein kleines Bild des aktuellen Fotos. Der Player meldet dafür bei der regelmäßigen Abfrage die Kennung des gezeigten Fotos.
+
 ## [2.37.1]
 ### Behoben
 - **Der Tablet-Check meldete einen falschen Fully-Fehler bei Tablets mit der Frameside-App.** Waren für ein Gerät noch Fully-Adresse und -Passwort gespeichert, die App läuft aber, stand „Die Fernsteuerung von Fully ist nicht erreichbar“ als Fehler im Check. Meldet sich ein Gerät mit der App, wird Fully jetzt gar nicht erst abgefragt.

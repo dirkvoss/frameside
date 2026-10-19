@@ -2231,6 +2231,13 @@ def quelle_lesen(e):
             teil, gw = rest, ""
         namen = [n.strip() for n in teil.split("+") if n.strip()]
         return {"typ": "person", "namen": namen, "gewicht": float(gw) if gw else 1.0} if namen else None
+    if e.lower().startswith("suche="):                               # suche=Sommer 2022 Strand  |  suche=Oma am Strand:60  (Treffer einer Suche, wie im Reiter "Suchen")
+        rest = e[6:]
+        teil, sep, gw = rest.rpartition(":")
+        if not sep or not re.fullmatch(r"\d+(\.\d+)?", gw):
+            teil, gw = rest, ""
+        text = " ".join(teil.split())
+        return {"typ": "suche", "text": text[:100], "gewicht": float(gw) if gw else 1.0} if text else None
     name, _, gw = e.partition(":")
     try:
         gewicht = max(0.0, float(gw)) if gw else 1.0
@@ -2318,6 +2325,29 @@ def person_ids(namen):
             H.log.warning("Rahmen-Quelle person=%s: unbekannt in Immich", name)
             return None
         ids.append(treffer[0])
+    return ids
+
+
+SUCHE_CACHE = {}
+SUCHE_CACHE_SEK = 3600
+SUCHE_FEHLER_SEK = 300
+
+
+def suche_ids(text):
+    """Foto-IDs einer gespeicherten Suchquelle (gleiche Suche wie im Reiter "Suchen"); je Text eine Stunde gemerkt, ein Fehlschlag nur fuenf Minuten."""
+    jetzt = time.time()
+    alt = SUCHE_CACHE.get(text)
+    if alt and jetzt < alt[0]:
+        return alt[1]
+    try:
+        ids = [f["id"] for f in suchen(text, 400, "de").get("fotos", [])]
+        ablauf = jetzt + (SUCHE_CACHE_SEK if ids else SUCHE_FEHLER_SEK)
+    except Exception as e:  # noqa: BLE001 - eine kaputte Suche legt das Dauerprogramm nicht lahm
+        H.log.warning("Rahmen-Quelle suche=%s: %s", text, e)
+        ids, ablauf = (alt[1] if alt else []), jetzt + SUCHE_FEHLER_SEK
+    if len(SUCHE_CACHE) > 50:
+        SUCHE_CACHE.clear()
+    SUCHE_CACHE[text] = (ablauf, ids)
     return ids
 
 
@@ -2453,8 +2483,8 @@ def rahmen_auswahl(n, ziel=None):
     for q, k in zip(quellen, verteilen([q["gewicht"] for q in quellen], n)):
         if k <= 0:
             continue
-        if q["typ"] == "heute":
-            kandidaten = list(heute_ids(q["tage"]))
+        if q["typ"] in ("heute", "suche"):
+            kandidaten = list(heute_ids(q["tage"]) if q["typ"] == "heute" else suche_ids(q["text"]))
             random.shuffle(kandidaten)
             frisch = [i for i in kandidaten if i not in bereits]
             neu = [i for i in frisch if i not in gesehen] or frisch
@@ -3251,7 +3281,7 @@ def geraete_liste():
         liste.append({"id": z, "name": n, "art": "rahmen" if z in RAHMEN_ZIELE else "tv", "online": online,
                       "zustand": "offline" if not online else "spielt" if spielt else "dauerprogramm" if dauer else "bereit",
                       "zuletzt_vor_s": int(jetzt - d["hb"]) if d["hb"] else None, "spielt": spielt, "dauerprogramm": dauer,
-                      "bild_alter_s": d.get("bild_alter") if online else None,
+                      "bild_alter_s": d.get("bild_alter") if online else None, "bild": d.get("bild") if (spielt or dauer) else None,
                       "fully": z in FULLY and not meldet_selbst(z), "selbst": meldet_selbst(z), "bildschirm": st.get("bildschirm"), "akku": st.get("akku"), "laedt": st.get("laedt")})
         if z in RAHMEN_ZIELE:
             s, h = geraet_hinweise(z)
@@ -4710,7 +4740,7 @@ URSPRUNG_RE = re.compile(r"https?://[A-Za-z0-9.-]{1,120}(:\d{1,5})?")
 
 
 @app.get("/api/tv/abfrage")
-def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, lg: str = "", o: str = "", g=Depends(geraet)):
+def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s: int = 0, n: str = "", m: str = "", ra: int = -1, a: int = 0, fj: int = 0, ak: int = -1, pl: int = -1, lg: str = "", o: str = "", b: str = "", g=Depends(geraet)):
     """Vom Fernseher alle 2 s aufgerufen (zaehlt zugleich als 'online'). s/n/m = was der Fernseher gerade wirklich tut."""
     if g.get("typ") == "geraet":
         if g.get("geraet") != ziel:
@@ -4727,6 +4757,7 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
     t["app"] = m_app.group(1) if m_app else ""                                 # Version der Frameside-App (aus dem Browser-Kennzeichen), sonst leer
     t["tv_laeuft"], t["tv_name"], t["tv_musik"] = bool(s), n[:60], (m if KAT_RE.match(m or "") else "")
     t["ambient"], t["bild_alter"] = bool(a), (ra if ra >= 0 else None)       # Dauerprogramm aktiv / Sekunden seit dem letzten Bildwechsel
+    t["bild"] = b if ID_RE.match(b or "") else None                           # Foto, das das Geraet gerade zeigt (Vorschaubild in der Geraeteliste)
     t["fully_js"] = bool(fj)                                                  # die Seite laeuft in Fully Kiosk mit aktiver JavaScript-Schnittstelle
     ip = client_ip(request)
     try:
