@@ -741,7 +741,9 @@ body.mit-leiste { padding-bottom: calc(env(safe-area-inset-bottom) + 190px); }
           <li>Frameside öffnen: Es sucht den Server (oder du tippst seine Adresse ein) und zeigt „Android-Tablet gefunden“ – hier oben erscheint das Gerät, du tippst auf <b>Verbinden</b>.</li>
         </ol>
         <div id="assiAppQr" style="max-width:180px;margin:8px auto"></div>
-        <p class="tipp">Steht das Tablet außerhalb deines Heimnetzes, gib in der App diese Adresse ein: <code id="assiAppServer"></code></p>
+        <p class="tipp">Steht das Tablet außerhalb deines Heimnetzes (zum Beispiel bei den Eltern), muss die App den Server nicht suchen: In der App im Menü „QR-Code scannen“ wählen und diesen Code scannen. Die Adresse darunter kannst du ändern, zum Beispiel auf die Adresse, unter der der Server von außen erreichbar ist.</p>
+        <div id="assiServerQr" style="max-width:180px;margin:8px auto"></div>
+        <label class="tvfeld"><span>Adresse des Servers</span> <input id="assiAppServer" type="text" autocomplete="off" aria-label="Adresse des Servers" inputmode="url"></label>
         <div class="assi-adr"><code id="assiAppLink">github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk</code></div>
         <p class="tipp">Fire-Tablets haben keinen Google-Play-Store: Dort die Datei mit dem Silk-Browser laden. Steht der Server in einem anderen Netz als das Tablet, die Adresse in der App unter „Adresse eintippen“ eingeben.</p>
       </details>
@@ -2614,10 +2616,15 @@ async function assiSuchen() {
     if (assiZielCode && !d.geraete.some(g => g.code === assiZielCode)) $("#assiFindStatus").textContent = RW_T("Der Code am Fernseher gilt nicht mehr oder gehört zu einem anderen Server. Lade die Seite dort neu und scanne den neuen Code.");
   } catch (e) {}
 }
+function assiServerQr() {                                    // QR-Code mit der Server-Adresse, den die Android-App per Kamera liest
+  const adr = basisNormal($("#assiAppServer").value) || tvBasis();
+  try { const qr = qrcode(0, "M"); qr.addData(adr); qr.make(); $("#assiServerQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { $("#assiServerQr").innerHTML = ""; }
+}
+$("#assiAppServer").addEventListener("input", assiServerQr);
 function assiOeffnen(zielCode) {
   assiZielCode = typeof zielCode === "string" ? zielCode : ""; assiZielErledigt = false;
   $("#assiTitel").textContent = RW_T("Gerät hinzufügen"); $("#assiFinden").classList.remove("versteckt"); $("#assiHandarbeit").classList.remove("versteckt"); $("#assiHandarbeit").open = false; $("#assiSchritt2").classList.add("versteckt");
-  $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, ""); $("#assiAppServer").textContent = tvBasis();
+  $("#assiFindAdresse").textContent = tvBasis().replace(/^https?:\/\//, ""); $("#assiAppServer").value = tvBasis(); assiServerQr();
   $("#assiTvAppAdr").textContent = tvBasis().replace(/^https?:\/\//, "") + "/app";       // kurze Adresse, die zur App-Datei weiterleitet (am Fernseher in Downloader tippen)
   if (!$("#assiAppQr").innerHTML) { try { const qr = qrcode(0, "M"); qr.addData("https://github.com/dirkvoss/frameside/releases/latest/download/Frameside-TV.apk"); qr.make(); $("#assiAppQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) { /* ohne QR bleibt der Link */ } }
   $("#assiName").value = ""; $("#assiArt").value = "rahmen"; $("#assiWartend").textContent = ""; $("#assiDialog").classList.remove("versteckt");

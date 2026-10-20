@@ -10,8 +10,8 @@ android {
         applicationId "com.dirkvoss.frameside.tv"
         minSdk 21            // Android TV ab 5.0 (aeltere Fernseher, Fire TV Gen 2)
         targetSdk 34
-        versionCode 9
-        versionName "1.4.2"
+        versionCode 10
+        versionName "1.5.0"
     }
 
     signingConfigs {
@@ -37,4 +37,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    implementation 'com.google.zxing:core:3.5.3'     // liest den QR-Code mit der Server-Adresse (reine Java-Bibliothek, keine Google-Dienste noetig)
 }

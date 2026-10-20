@@ -4716,7 +4716,7 @@ def steuer_senden(daten):
 
 LG_RE = re.compile(r"(an|aus|fehler|suche):\d{1,3}:\d{1,3}")
 APP_RE = re.compile(r"FramesideTV/(\d+(?:\.\d+){1,2})")
-APP_AKTUELL = "1.4.2"                      # neueste Version der Android-App (android/app/build.gradle, versionName); ein Test haelt beide gleich
+APP_AKTUELL = "1.5.0"                      # neueste Version der Android-App (android/app/build.gradle, versionName); ein Test haelt beide gleich
 ANZEIGE_HAENGT_SEK = 600                  # so lange darf das Bild im Dauerprogramm stehen, bevor der Tablet-Check "haengt" meldet
 NEUSTARTTEST_LUECKE = 25                   # Sekunden ohne Herzschlag, ab denen das Tablet als "aus" gilt
 NEUSTARTTEST_MAX = 900                     # nach so vielen Sekunden gilt der Neustart-Test als gescheitert

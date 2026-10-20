@@ -1,6 +1,14 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.39.0]
+### Neu
+- **Android-App 1.5.0: Foto-Reserve.** Fällt das Netz oder der Server aus, zeigt der Rahmen weiter Fotos, die er schon gesehen hat (bis zu 150 liegen auf dem Gerät), statt einer Fehlerseite; auch nach einem Neustart der App und auch ohne HTTPS. Die Rahmen-Seite, die Einstellungen und die Foto-Liste des Dauerprogramms werden dafür mitgemerkt. Fotos kommen zuerst aus dem Speicher (ein Foto ändert sich nicht), alles andere zuerst aus dem Netz. Gilt auch für den Bildschirmschoner.
+- **Android-App 1.5.0: Server per QR-Code finden.** Im Menü (langes Drücken auf das Bild) und auf dem Suchbildschirm gibt es „QR-Code scannen“. Das ist der Weg für ein Tablet in einem anderen Netz (zum Beispiel bei den Eltern), wo die Suche im Heimnetz nichts findet. Die App prüft die gescannte Adresse, bevor sie sie speichert. Die Kamera-Freigabe fragt Android beim ersten Mal; Geräte ohne Kamera (viele Fernseher) zeigen den Punkt nicht.
+- **Unter „Gerät hinzufügen“ steht ein QR-Code mit der Server-Adresse** (änderbar, zum Beispiel auf die Adresse von außen), den die App scannt.
+### Geändert
+- Das App-Menü ist neu aufgebaut; der Eintrag „QR-Code scannen“ kommt dazu. Die Tablet-Prüfung meldet Geräte mit älterer App als veraltet, bis das Update (App 1.5.0) einmal bestätigt ist.
+
 ## [2.38.0]
 ### Neu
 - **Eine Suche als Dauerprogramm speichern:** Im Reiter „Suchen“ gibt es neben „▶ Diashow“ die Auswahl eines Rahmens und den Knopf „📌 Als Dauerprogramm speichern“. Der Rahmen zeigt die Treffer danach im Dauerprogramm, neben seinen anderen Quellen. In den Quellen eines Geräts gibt es dafür die neue Art „Suche (Text)“ (`suche=Sommer 2022 am Strand`, mit Gewicht `suche=Oma:60`). Die Treffer werden eine Stunde gemerkt; eine fehlgeschlagene Suche stört die anderen Quellen nicht. Hat der Rahmen noch keine eigenen Quellen, fragt Frameside vor dem Speichern nach, weil er danach nur noch diese Treffer zeigt.

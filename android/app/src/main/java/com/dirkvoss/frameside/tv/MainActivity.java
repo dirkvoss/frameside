@@ -139,6 +139,11 @@ public class MainActivity extends Activity {
             web.setWebChromeClient(new WebChromeClient());
             web.setWebViewClient(new WebViewClient() {
                 @Override
+                public android.webkit.WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {       // Foto-Reserve: bei Ausfall von Netz oder Server weiter schon gesehene Fotos zeigen
+                    return Reserve.holen(MainActivity.this, Server.gemerkt(MainActivity.this), r);
+                }
+
+                @Override
                 public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                     if (r.isForMainFrame()) zeigeFehler();
                 }
@@ -222,6 +227,11 @@ public class MainActivity extends Activity {
         hand.setOnClickListener(v -> adresseAbfragen());
         l.addView(nochmal);
         l.addView(hand);
+        if (hatKamera()) {
+            final Button qr = knopf("QR-Code scannen");
+            qr.setOnClickListener(v -> qrScannen());
+            l.addView(qr);
+        }
         ersetze(l);
         hand.requestFocus();
 
@@ -285,19 +295,52 @@ public class MainActivity extends Activity {
     }
 
     private void menue() {
-        final boolean neu = !AppUpdate.neuere.isEmpty();
-        final String[] punkte = neu ? new String[] {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)", "Update auf " + AppUpdate.neuere + " installieren"}
-                : new String[] {"Seite neu laden", "Anderen Server wählen", "Adresse eintippen", "Beenden", "Start nach dem Einschalten erlauben", "Ladegrenze (Steckdose)"};
+        final List<String> namen = new ArrayList<>();
+        final List<Runnable> aktionen = new ArrayList<>();
+        namen.add("Seite neu laden"); aktionen.add(() -> { if (!Server.gemerkt(this).isEmpty()) zeigeSeite(Server.gemerkt(this)); });
+        namen.add("Anderen Server wählen"); aktionen.add(() -> { Server.merken(this, ""); zeigeSuche(); });
+        namen.add("Adresse eintippen"); aktionen.add(this::adresseAbfragen);
+        if (hatKamera()) { namen.add("QR-Code scannen (Server-Adresse)"); aktionen.add(this::qrScannen); }
+        namen.add("Beenden"); aktionen.add(this::finish);
+        namen.add("Start nach dem Einschalten erlauben"); aktionen.add(this::autostartErlauben);
+        namen.add("Ladegrenze (Steckdose)"); aktionen.add(() -> LadegrenzeDialog.zeigen(this));
+        if (!AppUpdate.neuere.isEmpty()) { namen.add("Update auf " + AppUpdate.neuere + " installieren"); aktionen.add(() -> AppUpdate.starten(this, false)); }
         AppUpdate.pruefen(this, null);                                                // fuers naechste Mal
-        new AlertDialog.Builder(this).setTitle("Frameside " + AppUpdate.installiert(this)).setItems(punkte, (d, i) -> {
-            if (i == 0 && !Server.gemerkt(this).isEmpty()) zeigeSeite(Server.gemerkt(this));
-            else if (i == 1) { Server.merken(this, ""); zeigeSuche(); }
-            else if (i == 2) adresseAbfragen();
-            else if (i == 3) finish();
-            else if (i == 4) autostartErlauben();
-            else if (i == 5) LadegrenzeDialog.zeigen(this);
-            else if (i == 6) AppUpdate.starten(this, false);
-        }).show();
+        new AlertDialog.Builder(this).setTitle("Frameside " + AppUpdate.installiert(this)).setItems(namen.toArray(new String[0]), (d, i) -> aktionen.get(i).run()).show();
+    }
+
+    // ------------------------------------------------------------------ QR-Code mit der Server-Adresse
+
+    private static final int QR_ANFRAGE = 42;
+
+    private boolean hatKamera() {
+        try { return getPackageManager().hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_ANY); } catch (Exception e) { return false; }
+    }
+
+    private void qrScannen() {
+        startActivityForResult(new Intent(this, QrScanActivity.class), QR_ANFRAGE);
+    }
+
+    @Override
+    protected void onActivityResult(int anfrage, int ergebnis, Intent daten) {
+        super.onActivityResult(anfrage, ergebnis, daten);
+        if (anfrage != QR_ANFRAGE || ergebnis != RESULT_OK || daten == null) return;
+        final String text = daten.getStringExtra("text");
+        final String adresse = Server.ausQr(text);
+        if (adresse.isEmpty()) { qrMeldung("Das ist keine Server-Adresse", "Der QR-Code enthält keine Adresse eines Frameside-Servers. Scanne den QR-Code unter Geräte → Gerät hinzufügen in Frameside."); return; }
+        android.widget.Toast.makeText(this, "Prüfe " + adresse.replace("http://", "") + " …", android.widget.Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            final Server.Treffer t = Server.pruefen(adresse, 4000);
+            ui.post(() -> {
+                if (t == null) { qrMeldung("Kein Frameside gefunden", adresse.replace("http://", "") + " antwortet nicht oder ist kein Frameside-Server. Ist das Tablet im Netz, und stimmt die Adresse?"); return; }
+                Server.merken(this, t.adresse);
+                zeigeSeite(t.adresse);
+            });
+        }, "frameside-qr-pruefen").start();
+    }
+
+    private void qrMeldung(String titel, String text) {
+        new AlertDialog.Builder(this).setTitle(titel).setMessage(text).setPositiveButton("OK", null).show();
     }
 
     /** Einmalig beim ersten Start auf einem Tablet: erklaeren, wie Frameside nach dem Einschalten von selbst startet (Android 10+ verlangt dafuer eine Freigabe). */

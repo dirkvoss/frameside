@@ -5,7 +5,7 @@ Diese Anleitung führt von einem neuen Tablet bis zu einem Bilderrahmen, der nac
 ## Der einfache Weg (Standard)
 In vier Schritten, ohne Fully und ohne Skripte:
 1. **App laden:** In Frameside unter **Geräte → ＋ Gerät hinzufügen** den QR-Code am Tablet scannen (oder `<server>/app` öffnen), die Datei von GitHub laden und installieren. Beim ersten Mal einmalig „Apps aus dieser Quelle installieren“ erlauben.
-2. **Verbinden:** Die App öffnen. Sie findet den Server im Heimnetz selbst (sonst die Adresse eintippen, sie steht im Assistenten). Das Tablet erscheint in Frameside, du gibst ihm einen Namen und wählst „Wofür ist das Tablet?“ → **Verbinden**.
+2. **Verbinden:** Die App öffnen. Sie findet den Server im Heimnetz selbst (steht der Server in einem anderen Netz, zum Beispiel bei den Eltern: im App-Menü **QR-Code scannen** und den Code aus dem Assistenten scannen, oder die Adresse eintippen). Das Tablet erscheint in Frameside, du gibst ihm einen Namen und wählst „Wofür ist das Tablet?“ → **Verbinden**.
 3. **Prüfen:** Am Gerät **⚙ → Tablet prüfen** zeigt mit Haken und Kreuzen, was fehlt, und ob die App aktuell ist. Bei einem Warnzeichen helfen „Seite neu laden“ und „Anzeige neu starten“ direkt darunter.
 4. **Neustart-Test:** **Neustart-Test** drücken, das Tablet neu starten und nichts anfassen. Frameside meldet, wenn es von selbst wieder da ist. Danach, wenn du magst, die **Ladegrenze** in der App einrichten (Menü → „Ladegrenze (Steckdose)“).
 

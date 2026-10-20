@@ -66,6 +66,11 @@ public class FramesideDream extends DreamService {
         w.setUserAgentString(w.getUserAgentString() + " FramesideTV/dream");
         web.setWebViewClient(new WebViewClient() {
             @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {       // Foto-Reserve: bei Ausfall von Netz oder Server weiter schon gesehene Fotos zeigen
+                return Reserve.holen(FramesideDream.this, server, r);
+            }
+
+            @Override
             public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (r.isForMainFrame()) serverWeg();
             }

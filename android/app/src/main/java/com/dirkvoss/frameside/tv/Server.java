@@ -47,6 +47,17 @@ final class Server {
         return s;
     }
 
+    /** Text aus einem QR-Code -> Server-Adresse, oder "" wenn er nicht nach einer Adresse aussieht ("https://rahmen.example.org", "192.168.1.20:8090"). */
+    static String ausQr(String text) {
+        if (text == null) return "";
+        String t = text.trim();
+        if (t.isEmpty() || t.length() > 200 || t.matches(".*\\s.*")) return "";
+        String n = normal(t);
+        if (!n.matches("https?://[A-Za-z0-9.-]{1,120}(:\\d{1,5})?(/.*)?")) return "";
+        int slash = n.indexOf('/', n.indexOf("//") + 2);
+        return slash > 0 ? n.substring(0, slash) : n;                                      // nur Rechner und Port: Pfade wie /tv/ gehoeren nicht zur Server-Adresse
+    }
+
     static final class Treffer {
         final String adresse, name, version;
         Treffer(String adresse, String name, String version) { this.adresse = adresse; this.name = name; this.version = version; }
