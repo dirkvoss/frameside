@@ -1,6 +1,10 @@
 # Änderungsprotokoll
 Format: [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [SemVer](https://semver.org/lang/de/).
 
+## [2.39.1]
+### Behoben
+- **Ein Rahmen blieb nach einem Immich-Neustart im Dauerprogramm hängen**, obwohl für ihn eine Show lief (zum Beispiel zwei Rahmen mit verschiedenen Shows, die plötzlich gleich aussahen). Fällt die Anzeige wegen nicht ladbarer Fotos aus, kehrt sie nach 30 Sekunden zur Show zurück. Zusätzlich schickt der Server einem Gerät, das im Dauerprogramm steckt, obwohl für es eine Show läuft, diese Show erneut (höchstens einmal pro Minute, nicht in der Nachtruhe).
+
 ## [2.39.0]
 ### Neu
 - **Android-App 1.5.0: Foto-Reserve.** Fällt das Netz oder der Server aus, zeigt der Rahmen weiter Fotos, die er schon gesehen hat (bis zu 150 liegen auf dem Gerät), statt einer Fehlerseite; auch nach einem Neustart der App und auch ohne HTTPS. Die Rahmen-Seite, die Einstellungen und die Foto-Liste des Dauerprogramms werden dafür mitgemerkt. Fotos kommen zuerst aus dem Speicher (ein Foto ändert sich nicht), alles andere zuerst aus dem Netz. Gilt auch für den Bildschirmschoner.

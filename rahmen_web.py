@@ -4773,6 +4773,10 @@ def tv_abfrage(request: Request, response: Response, ziel: str, seq: int = -1, s
     befehl = t.pop("befehl", None)               # einmalig: "neuladen" oder "neustart" (aus der App ausgeloest)
     extra = {"befehl": befehl} if befehl else {}
     extra["lv"] = anzeige_version(ziel)          # aendert sich, wenn Anordnung/Termine neu geladen werden muessen (ohne Seite neu zu laden)
+    if a == 1 and not s and t["aktiv"] and seq >= 0 and time.time() - t.get("heilung", 0) > 60 and not in_nacht(ziel=ziel):
+        t["heilung"] = time.time()               # Geraet steckt im Dauerprogramm, obwohl fuer es eine Show laeuft (z. B. nach einem Immich-Neustart): Show noch einmal schicken
+        H.log.info("Geraet %s zeigt das Dauerprogramm statt der Show '%s' - Show wird erneut geschickt", ziel, t["aktiv"].get("name"))
+        return {"seq": t["seq"], "events": [t["aktiv"]], **extra}
     if seq < 0:                                   # Seite neu geladen: laufende Show fortsetzen
         return {"seq": t["seq"], "events": [t["aktiv"]] if t["aktiv"] else [], **extra}
     if seq > t["seq"]:                            # Server wurde neu gestartet

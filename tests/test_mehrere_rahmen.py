@@ -84,3 +84,15 @@ def test_gespeicherte_show_an_gewaehlten_rahmen(app_laden):
     c.post("/api/normal", json={}, headers=H)
     assert c.post(f"/api/shows/{sid}/anzeigen", json={"ziele": ["kueche"]}, headers=H).json()["ziele"] == ["kueche"]
     assert c.get("/api/status?ziel=kueche").json()["laeuft"] == "A" and c.get("/api/status?ziel=flur").json()["laeuft"] is None
+
+
+def test_geraet_im_dauerprogramm_bekommt_seine_show_erneut(app_laden):
+    w, client, _ = app_laden(**LAN)
+    c = client()
+    c.post("/api/anzeigen", json={"name": "Urlaub", "ids": ids(0, 4), "ziele": ["flur"]}, headers=H)
+    seq = c.get("/api/tv/abfrage?ziel=flur&seq=-1").json()["seq"]
+    assert c.get(f"/api/tv/abfrage?ziel=flur&seq={seq}&a=0&s=1&n=Urlaub").json()["events"] == []        # laeuft richtig: nichts zu tun
+    ev = c.get(f"/api/tv/abfrage?ziel=flur&seq={seq}&a=1&s=0").json()["events"]                         # steckt im Dauerprogramm (z. B. nach Immich-Neustart)
+    assert len(ev) == 1 and ev[0]["name"] == "Urlaub"
+    assert c.get(f"/api/tv/abfrage?ziel=flur&seq={seq}&a=1&s=0").json()["events"] == []                 # nicht im Sekundentakt
+    assert c.get(f"/api/tv/abfrage?ziel=kueche&seq=0&a=1&s=0").json()["events"] == []                   # ohne Show bleibt das Dauerprogramm

@@ -168,7 +168,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     qualitaet = d.rahmen_qualitaet || ""; bewegungWunsch = !!d.rahmen_bewegung; paareWunsch = !!d.rahmen_paare; bewegung = extras && bewegungWunsch; paare = extras && paareWunsch;
     document.body.className = (fuellung === "zuschnitt" ? "zuschnitt" : "") + (bewegung ? " bewegung" : "");
   });
-  var seq = -1, liste = [], idx = 0, sek = 8, laeuft = false, pausiert = false, timer = 0, marke = 0, vorn = null, name = "", titelTimer = 0, pin = "";
+  var letzteShow = null, seq = -1, liste = [], idx = 0, sek = 8, laeuft = false, pausiert = false, timer = 0, marke = 0, vorn = null, name = "", titelTimer = 0, pin = "";
   var bildA = document.getElementById("bildA"), bildB = document.getElementById("bildB");
   var mitte = document.getElementById("mitte"), mitteTitel = document.getElementById("mitteTitel"), mitteText = document.getElementById("mitteText");
   var punkt = document.getElementById("punkt"), pinpunkte = document.getElementById("pinpunkte");
@@ -545,7 +545,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
     };
     neu.onerror = function () {
       if (m !== marke) return;
-      if (++fehler > 6) { var rm = rahmenModus; rahmenModus = false; bereit(); rahmenModus = rm; mitteText.textContent = "Die Fotos lassen sich gerade nicht laden."; if (rm) setTimeout(function () { if (!laeuft) startAmbient(); }, 30000); return; }
+      if (++fehler > 6) { var rm = rahmenModus, sh = ambient ? null : letzteShow; rahmenModus = false; bereit(); rahmenModus = rm; mitteText.textContent = "Die Fotos lassen sich gerade nicht laden."; if (sh) setTimeout(function () { if (!laeuft && letzteShow === sh) behandle(sh); }, 30000); else if (rm) setTimeout(function () { if (!laeuft) startAmbient(); }, 30000); return; }
       zeige(idx + 1);
     };
     weiter = 1;
@@ -558,6 +558,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
   function behandle(e) {
     if (!e) return;
     if (e.typ === "start") {
+      letzteShow = e;                                                    // faellt die Anzeige wegen Fotofehlern aus (z. B. Immich-Neustart), kehrt sie zu dieser Show zurueck
       schlicht = !!e.schlicht; bewegung = ex() && !!bewegungWunsch; paare = ex() && !!paareWunsch; document.body.className = (fuellung === "zuschnitt" ? "zuschnitt" : "") + (bewegung ? " bewegung" : "");
       ambient = false; ambientAnzeige(false); nachtEl.style.display = "none";
       liste = e.zufall ? mischen(e.ids) : e.ids.slice(); sek = e.sek || 8; name = e.name || ""; idx = 0; laeuft = true; pausiert = false; fehler = 0;
@@ -568,7 +569,7 @@ body.bewegung .bild.an.kb6 { -webkit-animation: kb6 14s ease-out forwards; anima
       laut = e.laut || 0.3; musikStart(e.musik || "");
       zeige(0); zeigeTitel(name);
     } else if (e.typ === "steuer") {
-      if (e.aktion === "stopp") bereit();
+      if (e.aktion === "stopp") { letzteShow = null; bereit(); }
       else if (!laeuft) return;
       else if (e.aktion === "pause") { pausiert = true; clearTimeout(timer); musikPause(true); if (vorn === vid) { try { vid.pause(); } catch (e4) {} } }
       else if (e.aktion === "weiter") { pausiert = false; musikPause(false); if (vorn === vid) { try { vid.play(); } catch (e5) {} } else plane(); }
